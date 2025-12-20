@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sheraton Niagara Falls - Dashboard</title>
   <style>
-    :root { --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247; --ok:#1f8f4a; --bad:#b33535; --warn:#b38a2a; }
+    :root { --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247; --ok:#1f8f4a; --bad:#b33535; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: var(--text); }
     .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
     .topbar { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-    h1 { font-size: 18px; margin: 0; letter-spacing: .2px; }
+    h1 { font-size: 18px; margin: 0; }
     .pill { font-size: 12px; padding: 6px 10px; border:1px solid var(--line); border-radius: 999px; color: var(--muted); }
     .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     input, button { background:#0f1622; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; }
@@ -21,6 +21,7 @@
     .btn-primary:hover { background:#1b3b63; }
     .btn-danger { background:#3a1720; border-color:#6e2a3a; }
     .btn-danger:hover { background:#4a1d28; }
+
     .card { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 14px; }
     .grid14 { display:grid; grid-template-columns: repeat(14, minmax(120px, 1fr)); gap:10px; overflow:auto; padding-bottom: 6px; }
     .daycard { background:#0f1622; border:1px solid var(--line); border-radius: 14px; padding: 10px; min-width: 120px; }
@@ -28,6 +29,7 @@
     .daytitle { font-size: 12px; color: var(--muted); display:flex; justify-content:space-between; gap:10px; }
     .occ { font-size: 22px; margin-top: 4px; font-weight: 650; }
     .notes { font-size: 12px; color: var(--muted); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     .sectionTitle { margin: 14px 0 10px; font-size: 13px; color: var(--muted); display:flex; align-items:center; gap:10px; }
     .hint { font-size: 12px; color: var(--muted); }
     .tableWrap { overflow:auto; border-radius:14px; border:1px solid var(--line); }
@@ -41,17 +43,24 @@
     .red { background: rgba(179,53,53,.22); }
     .clickable { cursor:pointer; }
     .clickable:hover { outline: 2px solid rgba(155,176,200,.25); outline-offset: -2px; }
-    .loginBox { max-width: 420px; margin: 40px auto; }
+
+    .loginBox { max-width: 440px; margin: 40px auto; }
     .loginBox h2 { margin:0 0 10px; font-size: 18px; }
     .loginBox label { display:block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
     .msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
     .err { color: #ff8a8a; }
     .ok { color: #98f5b2; }
     .small { font-size: 12px; color: var(--muted); }
+    .banner { padding:10px 12px; border:1px dashed #3a5d8a; border-radius:12px; color:#bcd3ee; margin-bottom:12px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="banner">
+      If you can read this, your <code>index.html</code> is loading correctly.
+    </div>
+
     <div id="loginView" class="loginBox card" style="display:none;">
       <h2>Sign in</h2>
       <div class="small">Sheraton Niagara Falls Dashboard</div>
@@ -110,18 +119,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ======= CONFIG (yours) =======
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-    // ==============================
-
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
     const loginMsg = document.getElementById("loginMsg");
     const appMsg = document.getElementById("appMsg");
-
     const rolePill = document.getElementById("rolePill");
     const userPill = document.getElementById("userPill");
     const startDateEl = document.getElementById("startDate");
@@ -131,58 +136,38 @@
     const editHint = document.getElementById("editHint");
 
     const SERVICE_ORDER = [
-      "BREAKFAST ALA CARTE",
-      "BREAKFAST BUFFET REDUCED",
-      "BREAKFAST FULL BUFFET",
-      "BRUNCH",
-      "SPECIAL BREAKFAST- CLOSED",
-      "LUNCH ALA CARTE",
-      "LUNCH BUFFET",
-      "HOLIDAY LUNCH BUFFET BRUNCH",
-      "SPECIAL LUNCH- CLOSED",
-      "DINNER ALA CARTE",
-      "DINNER BUFFET",
-      "DINNER HOLIDAY /SPECIAL BUFFET",
-      "DINNER CLOSED",
-      "MASSIMO BREAKFAST",
-      "MASSIMO LUNCH",
-      "MASSIMO DINNER"
+      "BREAKFAST ALA CARTE","BREAKFAST BUFFET REDUCED","BREAKFAST FULL BUFFET","BRUNCH","SPECIAL BREAKFAST- CLOSED",
+      "LUNCH ALA CARTE","LUNCH BUFFET","HOLIDAY LUNCH BUFFET BRUNCH","SPECIAL LUNCH- CLOSED",
+      "DINNER ALA CARTE","DINNER BUFFET","DINNER HOLIDAY /SPECIAL BUFFET","DINNER CLOSED",
+      "MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"
     ];
 
     let currentUser = null;
     let currentRole = "viewer";
-    let dashboardDays = [];     // rows from get_dashboard
-    let serviceItems = [];      // from service_items
+    let dashboardDays = [];
     let serviceByName = new Map();
 
+    function setMsg(el, text, type="") {
+      el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "ok" : "");
+      el.textContent = text || "";
+    }
+    function canEdit() { return currentRole === "editor" || currentRole === "admin"; }
     function fmtDay(d) {
-      // d is "YYYY-MM-DD"
       const dt = new Date(d + "T00:00:00");
       return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
     }
-
     function isToday(d) {
       const t = new Date(); t.setHours(0,0,0,0);
       const dt = new Date(d + "T00:00:00");
       return dt.getTime() === t.getTime();
     }
 
-    function setMsg(el, text, type="") {
-      el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "ok" : "");
-      el.textContent = text || "";
-    }
-
-    function canEdit() {
-      return currentRole === "editor" || currentRole === "admin";
-    }
-
     async function loadRole() {
       const { data, error } = await supabase
         .from("profiles")
-        .select("role, full_name")
+        .select("role")
         .eq("user_id", currentUser.id)
         .maybeSingle();
-
       if (error) throw error;
       currentRole = data?.role || "viewer";
     }
@@ -192,25 +177,18 @@
         .from("service_items")
         .select("id,name,group_name,sort_order")
         .order("sort_order", { ascending: true });
-
       if (error) throw error;
-      serviceItems = data || [];
-      serviceByName = new Map(serviceItems.map(x => [x.name, x]));
+      serviceByName = new Map((data || []).map(x => [x.name, x]));
     }
 
     async function fetchDashboard(startDate) {
-      const { data, error } = await supabase.rpc("get_dashboard", {
-        p_start_date: startDate,
-        p_days: 14
-      });
+      const { data, error } = await supabase.rpc("get_dashboard", { p_start_date: startDate, p_days: 14 });
       if (error) throw error;
       dashboardDays = data || [];
     }
 
     function buildHeader() {
-      // Clear old headers except first
       while (headRow.children.length > 1) headRow.removeChild(headRow.lastChild);
-
       for (const day of dashboardDays) {
         const th = document.createElement("th");
         th.textContent = fmtDay(day.day);
@@ -220,7 +198,6 @@
 
     function renderOccCards() {
       occCards.innerHTML = "";
-
       for (const day of dashboardDays) {
         const card = document.createElement("div");
         card.className = "daycard" + (isToday(day.day) ? " today" : "");
@@ -231,11 +208,9 @@
 
         const occ = document.createElement("div");
         occ.className = "occ";
-
         const val = (day.occupancy_percent === null || day.occupancy_percent === undefined)
           ? "—"
           : `${Number(day.occupancy_percent).toFixed(1)}%`;
-
         occ.textContent = val;
 
         const notes = document.createElement("div");
@@ -246,112 +221,88 @@
         card.appendChild(occ);
         card.appendChild(notes);
 
-        // Editor: click occupancy to edit quick
         if (canEdit()) {
           card.classList.add("clickable");
           card.title = "Click to edit occupancy + notes";
           card.addEventListener("click", () => openOccEdit(day.day, day.occupancy_percent, day.notes));
         }
-
         occCards.appendChild(card);
       }
     }
 
     function statusForRowDay(serviceName, dayRow) {
-      // Pick-one groups: green if selected name matches
       if (serviceName.startsWith("MASSIMO ")) {
         if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
         if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
         if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
         return false;
       }
-
-      // Breakfast/Lunch/Dinner:
-      // We mark green only for the selected option; all others red.
       const upper = serviceName.toUpperCase();
+      const breakfast = SERVICE_ORDER.slice(0,5);
+      const lunch = SERVICE_ORDER.slice(5,9);
+      const dinner = SERVICE_ORDER.slice(9,13);
 
-      if (SERVICE_ORDER.slice(0,5).includes(upper)) return (dayRow.breakfast || "").toUpperCase() === upper;
-      if (SERVICE_ORDER.slice(5,9).includes(upper)) return (dayRow.lunch || "").toUpperCase() === upper;
-      if (SERVICE_ORDER.slice(9,13).includes(upper)) return (dayRow.dinner || "").toUpperCase() === upper;
-
+      if (breakfast.includes(upper)) return (dayRow.breakfast || "").toUpperCase() === upper;
+      if (lunch.includes(upper)) return (dayRow.lunch || "").toUpperCase() === upper;
+      if (dinner.includes(upper)) return (dayRow.dinner || "").toUpperCase() === upper;
       return false;
     }
 
     function groupForService(serviceName) {
       const item = serviceByName.get(serviceName);
-      if (!item) return null;
-      return item.group_name; // breakfast/lunch/dinner/massimo
+      return item ? item.group_name : null;
     }
 
     async function setPickOneSelection(date, serviceName) {
       const item = serviceByName.get(serviceName);
       if (!item) throw new Error("Service item not found: " + serviceName);
-
       const group = item.group_name;
       if (!["breakfast","lunch","dinner"].includes(group)) return;
 
       const { error } = await supabase
         .from("daily_service_selection")
-        .upsert({
-          date,
-          group_name: group,
-          selected_service_item_id: item.id
-        }, { onConflict: "date,group_name" });
-
+        .upsert({ date, group_name: group, selected_service_item_id: item.id }, { onConflict: "date,group_name" });
       if (error) throw error;
     }
 
     async function toggleMassimo(date, serviceName, currentValue) {
       const item = serviceByName.get(serviceName);
       if (!item) throw new Error("Service item not found: " + serviceName);
-
       const nextVal = !currentValue;
 
       const { error } = await supabase
         .from("daily_massimo_status")
-        .upsert({
-          date,
-          service_item_id: item.id,
-          is_active: nextVal
-        }, { onConflict: "date,service_item_id" });
-
+        .upsert({ date, service_item_id: item.id, is_active: nextVal }, { onConflict: "date,service_item_id" });
       if (error) throw error;
       return nextVal;
     }
 
     function renderStatusGrid() {
       bodyRows.innerHTML = "";
-
       for (const serviceName of SERVICE_ORDER) {
         const tr = document.createElement("tr");
-
         const tdLabel = document.createElement("td");
         tdLabel.textContent = serviceName;
         tr.appendChild(tdLabel);
 
-        for (let i = 0; i < dashboardDays.length; i++) {
-          const dayRow = dashboardDays[i];
+        for (const dayRow of dashboardDays) {
           const isOn = statusForRowDay(serviceName, dayRow);
-
           const td = document.createElement("td");
           td.className = "statusCell " + (isOn ? "green" : "red");
           td.textContent = isOn ? "ON" : "OFF";
 
           if (canEdit()) {
             td.classList.add("clickable");
-
             td.addEventListener("click", async () => {
               try {
                 setMsg(appMsg, "");
                 if (serviceName.startsWith("MASSIMO ")) {
                   const newVal = await toggleMassimo(dayRow.day, serviceName, isOn);
-                  // update local row
                   if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = newVal;
                   if (serviceName === "MASSIMO LUNCH") dayRow.massimo_lunch = newVal;
                   if (serviceName === "MASSIMO DINNER") dayRow.massimo_dinner = newVal;
                 } else {
                   await setPickOneSelection(dayRow.day, serviceName);
-                  // update local row selection
                   const group = groupForService(serviceName);
                   if (group === "breakfast") dayRow.breakfast = serviceName;
                   if (group === "lunch") dayRow.lunch = serviceName;
@@ -367,7 +318,6 @@
 
           tr.appendChild(td);
         }
-
         bodyRows.appendChild(tr);
       }
     }
@@ -386,29 +336,15 @@
       const newNotes = prompt(`Notes for ${date} (optional)`, notes || "");
       if (newNotes === null) return;
 
-      try {
-        setMsg(appMsg, "");
-        const { error } = await supabase
-          .from("daily_forecast")
-          .upsert({
-            date,
-            occupancy_percent: occNum,
-            notes: (newNotes || "").trim() || null
-          }, { onConflict: "date" });
+      const { error } = await supabase
+        .from("daily_forecast")
+        .upsert({ date, occupancy_percent: occNum, notes: (newNotes || "").trim() || null }, { onConflict: "date" });
+      if (error) throw error;
 
-        if (error) throw error;
-
-        // update local
-        const row = dashboardDays.find(x => x.day === date);
-        if (row) {
-          row.occupancy_percent = occNum;
-          row.notes = (newNotes || "").trim() || null;
-        }
-        renderOccCards();
-        setMsg(appMsg, "Saved.", "ok");
-      } catch (e) {
-        setMsg(appMsg, e.message || String(e), "err");
-      }
+      const row = dashboardDays.find(x => x.day === date);
+      if (row) { row.occupancy_percent = occNum; row.notes = (newNotes || "").trim() || null; }
+      renderOccCards();
+      setMsg(appMsg, "Saved.", "ok");
     }
 
     async function refreshAll() {
@@ -428,21 +364,12 @@
     async function showApp() {
       loginView.style.display = "none";
       appView.style.display = "block";
-
       rolePill.textContent = `Role: ${currentRole}`;
       userPill.textContent = `User: ${currentUser.email}`;
+      editHint.textContent = canEdit() ? "Click occupancy cards and grid cells to edit." : "View only";
 
-      editHint.textContent = canEdit()
-        ? "Tip: click an occupancy card to edit. Click a grid cell to change status."
-        : "View only";
-
-      // default date = today
       const t = new Date();
-      const yyyy = t.getFullYear();
-      const mm = String(t.getMonth()+1).padStart(2,"0");
-      const dd = String(t.getDate()).padStart(2,"0");
-      startDateEl.value = `${yyyy}-${mm}-${dd}`;
-
+      startDateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
       await refreshAll();
     }
 
@@ -455,17 +382,12 @@
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
-
-      if (!email || !password) {
-        setMsg(loginMsg, "Enter email and password.", "err");
-        return;
-      }
+      if (!email || !password) return setMsg(loginMsg, "Enter email and password.", "err");
 
       try {
         setMsg(loginMsg, "Signing in…");
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-
         currentUser = data.user;
         await loadRole();
         await showApp();
@@ -484,15 +406,20 @@
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
     startDateEl.addEventListener("change", refreshAll);
 
-    // Boot
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session?.user) {
-        currentUser = data.session.user;
-        await loadRole();
-        await showApp();
-      } else {
-        await showLogin();
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) {
+          currentUser = data.session.user;
+          await loadRole();
+          await showApp();
+        } else {
+          await showLogin();
+        }
+      } catch (e) {
+        // If JS fails, show something readable
+        loginView.style.display = "block";
+        setMsg(loginMsg, "Page loaded, but JavaScript failed. Open browser console for details.", "err");
       }
     })();
   </script>
