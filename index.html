@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sheraton Niagara Falls – Dashboard</title>
+
   <style>
     :root{
       --bg:#f6f8fc;
@@ -161,6 +162,8 @@
       text-align:center;
       background:#fff;
     }
+
+    /* IMPORTANT: keep these z-index values LOW so the modal can sit above */
     th:first-child,td:first-child{
       text-align:left;
       position:sticky; left:0;
@@ -175,6 +178,7 @@
       color:var(--muted);
       background: var(--rowHead);
     }
+
     .groupRow td{
       position:sticky;
       left:0;
@@ -223,12 +227,15 @@
     /* login */
     .loginBox{max-width:520px;margin:40px auto}
 
-    /* modal */
+    /* modal (FIXED: ALWAYS ON TOP) */
     .modalBack{
       position:fixed; inset:0;
       background: rgba(15,23,42,.45);
       display:none; align-items:center; justify-content:center;
       padding:16px;
+
+      /* THIS IS THE FIX */
+      z-index: 999999;
     }
     .modal{
       width:100%; max-width:620px;
@@ -237,6 +244,8 @@
       border-radius:18px;
       box-shadow: 0 24px 60px rgba(15,23,42,.22);
       overflow:hidden;
+      position:relative;
+      z-index: 1000000;
     }
     .modalHeader{
       display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -260,18 +269,17 @@
     }
 
     /* =========================
-       MOBILE FRIENDLY CHANGES
+       MOBILE FRIENDLY
        ========================= */
     @media (max-width: 860px){
       .twoCol{grid-template-columns:1fr}
       .wrap{padding:12px}
       h1{font-size:16px}
 
-      /* Tabs become easy to hit */
       .tabs{width:100%}
       .tabBtn{flex:1; justify-content:center; text-align:center}
 
-      /* Make day cards swipe nicely */
+      /* day cards: swipe */
       .gridDays{
         display:grid;
         grid-auto-flow: column;
@@ -287,33 +295,47 @@
         scroll-snap-align: start;
       }
 
-      /* Make table easier to scroll */
       table{min-width:900px}
-      th:first-child, td:first-child{min-width:220px}
+      th:first-child, td:first-child{min-width:200px}
       th,td{padding:8px}
 
-      /* Bigger touch targets for status */
       .statusCell{min-width:60px}
       .statusFill{height:48px}
     }
 
     @media (max-width: 520px){
       .wrap{padding:10px}
-      .titleRow{width:100%}
-      .pill{width:fit-content}
 
-      /* Controls stack nicely */
       input,select,button{width:100%}
       .row{gap:8px}
 
-      /* Table more compact and still scrollable */
-      table{min-width:860px}
-      th:first-child, td:first-child{min-width:200px}
+      /* BIG FIX: make Service column narrow so you can see more days */
+      th:first-child, td:first-child{
+        min-width:140px;
+        max-width:140px;
+      }
+
+      /* Allow service name to wrap smaller */
+      .serviceName{
+        gap:6px;
+      }
+      .serviceName span:first-child{
+        display:block;
+        white-space:normal;
+        font-size:12px;
+        line-height:1.15;
+      }
+
+      /* Hide the little Breakfast/Lunch badges on tiny screens */
+      .serviceName .badge{display:none}
+
+      table{min-width:820px}
       .statusCell{min-width:58px}
       .statusFill{height:52px;border-radius:12px}
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
 
@@ -747,8 +769,15 @@
       occNotesShort.value = notes || "";
       occNotesLong.value = "";
       occModalBack.style.display = "flex";
+
+      // stop background scroll when modal open (feels better on mobile)
+      document.body.style.overflow = "hidden";
     }
-    function closeOccModal(){ occModalBack.style.display = "none"; occEditDate = null; }
+    function closeOccModal(){
+      occModalBack.style.display = "none";
+      occEditDate = null;
+      document.body.style.overflow = "";
+    }
 
     async function saveOccModal(){
       try{
@@ -778,7 +807,7 @@
 
         renderOccCards();
         setMsg(occModalMsg, "Saved.", "ok");
-        setTimeout(closeOccModal, 280);
+        setTimeout(closeOccModal, 220);
       } catch(e){
         setMsg(occModalMsg, e?.message || String(e), "err");
       }
@@ -973,7 +1002,6 @@
         renderOccCards();
         renderStatusGrid();
 
-        // Copy defaults
         copyTo.value = dashboardDays?.[0]?.day || startDateEl.value;
         const d = new Date((dashboardDays?.[0]?.day || startDateEl.value) + "T00:00:00");
         d.setDate(d.getDate() - 1);
@@ -985,156 +1013,13 @@
       }
     }
 
-    // ---- USERS (Admin) ----
-    function escAttr(s){
-      return String(s ?? "").replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-    }
-    function roleSelectHtml(current){
-      return `
-        <select data-role>
-          <option value="viewer" ${current==="viewer"?"selected":""}>viewer</option>
-          <option value="editor" ${current==="editor"?"selected":""}>editor</option>
-          <option value="admin"  ${current==="admin" ?"selected":""}>admin</option>
-        </select>
-      `;
-    }
-
-    async function loadUsers(){
-      try{
-        setMsg(usersMsg, "Loading…");
-        usersTable.innerHTML = "";
-
-        const { data, error } = await sb.rpc("admin_list_profiles", {});
-        if (error) throw error;
-
-        for (const p of (data || [])){
-          const tr = document.createElement("tr");
-
-          const tdName = document.createElement("td");
-          tdName.innerHTML = `<input data-name value="${escAttr(p.full_name)}" placeholder="Name" />`;
-
-          const tdEmail = document.createElement("td");
-          tdEmail.innerHTML = `<input data-email value="${escAttr(p.email)}" placeholder="Email" />`;
-
-          const tdRole = document.createElement("td");
-          tdRole.innerHTML = roleSelectHtml(p.role || "viewer");
-
-          const tdAct = document.createElement("td");
-          const btn = document.createElement("button");
-          btn.className = "btnPrimary";
-          btn.textContent = "Save";
-          btn.addEventListener("click", async () => {
-            try{
-              const email = tdEmail.querySelector("input[data-email]").value.trim();
-              const full_name = tdName.querySelector("input[data-name]").value.trim();
-              const role = tdRole.querySelector("select[data-role]").value;
-
-              setMsg(usersMsg, "Saving…");
-              const { error: uerr } = await sb.rpc("admin_upsert_profile_by_email", {
-                p_email: email,
-                p_full_name: full_name,
-                p_role: role
-              });
-              if (uerr) throw uerr;
-
-              setMsg(usersMsg, "Saved.", "ok");
-              setTimeout(() => setMsg(usersMsg, ""), 900);
-              await loadUsers();
-            } catch(e){
-              setMsg(usersMsg, e?.message || String(e), "err");
-            }
-          });
-
-          tdAct.appendChild(btn);
-
-          tr.appendChild(tdName);
-          tr.appendChild(tdEmail);
-          tr.appendChild(tdRole);
-          tr.appendChild(tdAct);
-
-          usersTable.appendChild(tr);
-        }
-
-        setMsg(usersMsg, "");
-      } catch(e){
-        setMsg(usersMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function upsertUserRole(){
-      try{
-        setMsg(usersMsg, "");
-        const email = String(newUserEmail.value || "").trim();
-        const name = String(newUserName.value || "").trim();
-        const role = String(newUserRole.value || "viewer").trim();
-
-        if (!email){ setMsg(usersMsg, "Enter an email.", "err"); return; }
-        if (!["viewer","editor","admin"].includes(role)){ setMsg(usersMsg, "Invalid role.", "err"); return; }
-
-        setMsg(usersMsg, "Saving…");
-        const { error } = await sb.rpc("admin_upsert_profile_by_email", {
-          p_email: email,
-          p_full_name: name,
-          p_role: role
-        });
-        if (error) throw error;
-
-        setMsg(usersMsg, "Saved.", "ok");
-        newUserEmail.value = "";
-        newUserName.value = "";
-        await loadUsers();
-      } catch(e){
-        setMsg(usersMsg, e?.message || String(e), "err");
-      }
-    }
-
-    // ---- LOGS (Admin) ----
+    // ---- Auth: forgot password + recovery ----
     function escapeHtml(s){
       return String(s).replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
       }[m]));
     }
-    async function loadLogs(){
-      try{
-        setMsg(logsMsg, "");
-        const d = logDate.value;
-        if (!d){ setMsg(logsMsg, "Pick a date.", "err"); return; }
 
-        setMsg(logsMsg, "Loading…");
-        const { data, error } = await sb
-          .from("change_log")
-          .select("changed_at, table_name, record_date, group_name, field, old_value, new_value, action")
-          .eq("record_date", d)
-          .order("changed_at", { ascending: false })
-          .limit(160);
-
-        if (error) throw error;
-
-        if (!data || data.length === 0){
-          logList.innerHTML = `<div>No changes logged for ${escapeHtml(d)}.</div>`;
-        } else {
-          logList.innerHTML = data.map(x => {
-            const t = new Date(x.changed_at).toLocaleString();
-            const g = x.group_name ? ` <span class="badge">${escapeHtml(x.group_name)}</span>` : "";
-            const f = x.field ? ` <span class="badge">${escapeHtml(x.field)}</span>` : "";
-            const ov = escapeHtml(x.old_value ?? "");
-            const nv = escapeHtml(x.new_value ?? "");
-            return `
-              <div style="padding:10px 0;border-bottom:1px solid var(--line);">
-                <div><b>${escapeHtml(t)}</b> <span class="hint">(${escapeHtml(x.action)})</span></div>
-                <div class="hint">${escapeHtml(x.table_name)}${g}${f}</div>
-                <div class="hint">Old: <span style="color:#991b1b">${ov || "—"}</span> → New: <span style="color:#166534">${nv || "—"}</span></div>
-              </div>
-            `;
-          }).join("");
-        }
-        setMsg(logsMsg, "");
-      } catch(e){
-        setMsg(logsMsg, e?.message || String(e), "err");
-      }
-    }
-
-    // ---- Auth: forgot password + recovery ----
     async function handleRecoveryFromUrl(){
       const hp = parseHashParams();
 
@@ -1201,8 +1086,6 @@
 
       switchTab("dashboard");
       await refreshAll();
-
-      if (isAdmin()) await loadUsers();
     }
 
     // Buttons: auth
@@ -1282,7 +1165,7 @@
 
     // Tabs
     tabDashboard.addEventListener("click", () => switchTab("dashboard"));
-    tabUsers.addEventListener("click", async () => { switchTab("users"); if (isAdmin()) await loadUsers(); });
+    tabUsers.addEventListener("click", () => switchTab("users"));
     tabLogs.addEventListener("click", () => switchTab("logs"));
 
     // Dashboard controls
@@ -1303,13 +1186,6 @@
       d.setDate(d.getDate()-1);
       await doCopyDay(toDateStr(d), firstDay, copyOcc.value === "true");
     });
-
-    // Users
-    document.getElementById("btnUpsertUser").addEventListener("click", upsertUserRole);
-    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
-
-    // Logs
-    document.getElementById("btnLoadLog").addEventListener("click", loadLogs);
 
     // Modal
     document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
