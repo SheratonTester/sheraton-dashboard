@@ -3,48 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sheraton Niagara Falls - Dashboard</title>
+  <title>Sheraton Niagara Falls – Dashboard</title>
   <style>
-    :root { --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: var(--text); }
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
-    .banner { padding:10px 12px; border:1px dashed #3a5d8a; border-radius:12px; color:#bcd3ee; margin-bottom:12px; }
-    .card { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 14px; }
-    .box { max-width: 520px; margin: 16px auto; }
-    h2 { margin:0 0 10px; font-size: 18px; }
-    .small { font-size: 12px; color: var(--muted); }
-    label { display:block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
-    input, button {
-      background:#0f1622; color:var(--text);
-      border:1px solid var(--line); border-radius:10px;
-      padding:10px 12px; font-size:14px; width:100%;
+    :root{
+      --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247;
+      --ok: rgba(31,143,74,.22); --bad: rgba(179,53,53,.22);
+      --btn:#173254; --btnb:#2a4d78; --danger:#3a1720; --dangerb:#6e2a3a;
     }
-    button { cursor:pointer; margin-top: 12px; width:auto; padding:10px 14px; }
-    .btn-primary { background:#173254; border-color:#2a4d78; }
-    .btn-primary:hover { background:#1b3b63; }
-    .btn-danger { background:#3a1720; border-color:#6e2a3a; }
-    .btn-danger:hover { background:#4a1d28; }
-    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
-    .err { color:#ff8a8a; }
-    .ok { color:#98f5b2; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1400px;margin:0 auto;padding:16px}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    h1{font-size:18px;margin:0}
+    .pill{font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    input,button{background:#0f1622;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+    input[type="date"]{padding:9px 12px}
+    button{cursor:pointer}
+    button:hover{border-color:#345070}
+    .btn-primary{background:var(--btn);border-color:var(--btnb)}
+    .btn-primary:hover{background:#1b3b63}
+    .btn-danger{background:var(--danger);border-color:var(--dangerb)}
+    .btn-danger:hover{background:#4a1d28}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .grid14{display:grid;grid-template-columns:repeat(14,minmax(120px,1fr));gap:10px;overflow:auto;padding-bottom:6px}
+    .daycard{background:#0f1622;border:1px solid var(--line);border-radius:14px;padding:10px;min-width:120px}
+    .daycard.today{outline:2px solid #2a4d78}
+    .daytitle{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+    .occ{font-size:22px;margin-top:4px;font-weight:650}
+    .notes{font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sectionTitle{margin:14px 0 10px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hint{font-size:12px;color:var(--muted)}
+    .tableWrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}
+    table{border-collapse:collapse;width:100%;min-width:1200px;background:#0f1622}
+    th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:10px;text-align:center}
+    th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#0f1622;z-index:2}
+    th{font-size:12px;color:var(--muted);position:sticky;top:0;background:#0f1622;z-index:3}
+    .statusCell{font-weight:650;user-select:none}
+    .green{background:var(--ok)}
+    .red{background:var(--bad)}
+    .clickable{cursor:pointer}
+    .clickable:hover{outline:2px solid rgba(155,176,200,.25);outline-offset:-2px}
+    .msg{margin-top:10px;font-size:13px;color:var(--muted)}
+    .err{color:#ff8a8a}
+    .oktxt{color:#98f5b2}
+
+    .loginBox{max-width:440px;margin:30px auto}
+    .loginBox h2{margin:0 0 10px;font-size:18px}
+    .loginBox label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+
+    /* simple modal */
+    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
+    .modal{width:100%;max-width:520px}
+    textarea{width:100%;min-height:90px;resize:vertical}
+    .modalTitle{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .x{background:transparent;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="banner">
-      Auth + Password Reset (working version)
-      <div class="small">If you click a reset link, you should see “Set new password” and the button should work.</div>
-    </div>
-
-    <div id="bootMsg" class="msg"></div>
 
     <!-- LOGIN -->
-    <div id="loginView" class="box card" style="display:none;">
+    <div id="loginView" class="loginBox card" style="display:none;">
       <h2>Sign in</h2>
-      <div class="small">Sheraton Niagara Falls Dashboard</div>
+      <div class="hint">Sheraton Niagara Falls Dashboard</div>
 
       <label>Email</label>
       <input id="email" type="email" placeholder="name@niagarafallshotels.com" />
@@ -52,225 +74,458 @@
       <label>Password</label>
       <input id="password" type="password" placeholder="••••••••" />
 
-      <div class="row">
+      <div class="row" style="margin-top:12px;">
         <button id="btnLogin" class="btn-primary">Sign in</button>
-        <button id="btnForgot" class="btn-danger" title="Send reset email">Forgot password</button>
       </div>
 
       <div id="loginMsg" class="msg"></div>
     </div>
 
-    <!-- RECOVERY -->
-    <div id="recoveryView" class="box card" style="display:none;">
-      <h2>Set new password</h2>
-      <div class="small">You opened a password reset link. Set the new password below.</div>
+    <!-- APP -->
+    <div id="appView" style="display:none;">
+      <div class="topbar">
+        <div class="row">
+          <h1>Sheraton Niagara Falls – Dashboard</h1>
+          <span id="rolePill" class="pill">Role: …</span>
+          <span id="userPill" class="pill">User: …</span>
+        </div>
 
-      <label>New password</label>
-      <input id="newPass" type="password" placeholder="New password" />
-
-      <label>Confirm new password</label>
-      <input id="newPass2" type="password" placeholder="Confirm new password" />
-
-      <div class="row">
-        <button id="btnSetPass" class="btn-primary">Update password</button>
-        <button id="btnCancelRecovery" class="btn-danger">Cancel</button>
+        <div class="row">
+          <input id="startDate" type="date" />
+          <button id="btnRefresh">Refresh</button>
+          <button id="btnLoadLog" class="btn-primary">View log for selected date</button>
+          <button id="btnLogout" class="btn-danger">Logout</button>
+        </div>
       </div>
 
-      <div id="recoveryMsg" class="msg"></div>
-    </div>
+      <div class="sectionTitle">
+        14-Day Occupancy Forecast
+        <span id="editHint" class="hint"></span>
+      </div>
 
-    <!-- APP (placeholder) -->
-    <div id="appView" class="box card" style="display:none;">
-      <h2>Logged in ✅</h2>
-      <div class="small">Next step: we put the full 14-day dashboard back in (with your restaurant grid).</div>
+      <div class="card">
+        <div id="occCards" class="grid14"></div>
+      </div>
 
-      <div class="row" style="margin-top:12px;">
-        <button id="btnLogout" class="btn-danger">Logout</button>
+      <div class="sectionTitle">Restaurant Status (Green = Active)</div>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr id="headRow">
+              <th>Service</th>
+            </tr>
+          </thead>
+          <tbody id="bodyRows"></tbody>
+        </table>
       </div>
 
       <div id="appMsg" class="msg"></div>
+
+      <div id="logBox" class="card" style="margin-top:14px; display:none;">
+        <div class="sectionTitle" style="margin-top:0;">Change Log (Admin only)</div>
+        <div id="logList" class="hint"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Local Supabase library (must exist in repo root) -->
+  <!-- Local Supabase library (NO CDN) -->
   <script src="./supabase.js"></script>
 
   <script>
+    // Your Supabase
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
+    const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
 
-    const bootMsg = document.getElementById("bootMsg");
+    // IMPORTANT: some supabase.js bundles already define a global "supabase"
+    // so we DO NOT name our client "supabase".
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const loginView = document.getElementById("loginView");
-    const recoveryView = document.getElementById("recoveryView");
     const appView = document.getElementById("appView");
-
     const loginMsg = document.getElementById("loginMsg");
-    const recoveryMsg = document.getElementById("recoveryMsg");
     const appMsg = document.getElementById("appMsg");
 
+    const rolePill = document.getElementById("rolePill");
+    const userPill = document.getElementById("userPill");
+    const startDateEl = document.getElementById("startDate");
+    const occCards = document.getElementById("occCards");
+    const headRow = document.getElementById("headRow");
+    const bodyRows = document.getElementById("bodyRows");
+    const editHint = document.getElementById("editHint");
+
+    const logBox = document.getElementById("logBox");
+    const logList = document.getElementById("logList");
+
+    const SERVICE_ORDER = [
+      "BREAKFAST ALA CARTE",
+      "BREAKFAST BUFFET REDUCED",
+      "BREAKFAST FULL BUFFET",
+      "BRUNCH",
+      "SPECIAL BREAKFAST- CLOSED",
+
+      "LUNCH ALA CARTE",
+      "LUNCH BUFFET",
+      "HOLIDAY LUNCH BUFFET BRUNCH",
+      "SPECIAL LUNCH- CLOSED",
+
+      "DINNER ALA CARTE",
+      "DINNER BUFFET",
+      "DINNER HOLIDAY /SPECIAL BUFFET",
+      "DINNER CLOSED",
+
+      "MASSIMO BREAKFAST",
+      "MASSIMO LUNCH",
+      "MASSIMO DINNER"
+    ];
+
+    let currentUser = null;
+    let myRole = "viewer";
+    let dashboardDays = [];
+    let serviceByName = new Map(); // name -> row
+
     function setMsg(el, text, type="") {
-      el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "ok" : "");
+      el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : "");
       el.textContent = text || "";
     }
 
-    function show(view) {
-      loginView.style.display = "none";
-      recoveryView.style.display = "none";
-      appView.style.display = "none";
-      view.style.display = "block";
+    function canEdit() {
+      return myRole === "editor" || myRole === "admin";
     }
 
-    function cleanUrlAll() {
-      const clean = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, clean);
+    function isAdmin() {
+      return myRole === "admin";
     }
 
-    function parseHashParams() {
-      const h = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
-      const p = new URLSearchParams(h);
-      return {
-        type: p.get("type"),
-        access_token: p.get("access_token"),
-        refresh_token: p.get("refresh_token"),
-        error: p.get("error"),
-        error_description: p.get("error_description")
-      };
+    function fmtDay(d) {
+      const dt = new Date(d + "T00:00:00");
+      return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
     }
 
-    async function init() {
-      // Basic library check
-      if (!window.supabase || !window.supabase.createClient) {
-        setMsg(bootMsg, "Supabase library did not load. Make sure supabase.js is in the repo root.", "err");
-        return;
+    function isToday(d) {
+      const t = new Date(); t.setHours(0,0,0,0);
+      const dt = new Date(d + "T00:00:00");
+      return dt.getTime() === t.getTime();
+    }
+
+    async function loadRole() {
+      const { data, error } = await sb
+        .from("profiles")
+        .select("role")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      myRole = data?.role || "viewer";
+    }
+
+    async function loadServiceItems() {
+      const { data, error } = await sb
+        .from("service_items")
+        .select("id,name,group_name,sort_order")
+        .order("sort_order", { ascending: true });
+
+      if (error) throw error;
+      serviceByName = new Map((data || []).map(x => [x.name, x]));
+    }
+
+    async function fetchDashboard(startDate) {
+      const { data, error } = await sb.rpc("get_dashboard", {
+        p_start_date: startDate,
+        p_days: 14
+      });
+      if (error) throw error;
+      dashboardDays = data || [];
+    }
+
+    function buildHeader() {
+      while (headRow.children.length > 1) headRow.removeChild(headRow.lastChild);
+      for (const day of dashboardDays) {
+        const th = document.createElement("th");
+        th.textContent = fmtDay(day.day);
+        headRow.appendChild(th);
+      }
+    }
+
+    function renderOccCards() {
+      occCards.innerHTML = "";
+
+      for (const day of dashboardDays) {
+        const card = document.createElement("div");
+        card.className = "daycard" + (isToday(day.day) ? " today" : "");
+
+        const title = document.createElement("div");
+        title.className = "daytitle";
+        title.innerHTML = `<span>${fmtDay(day.day)}</span><span>${day.day}</span>`;
+
+        const occ = document.createElement("div");
+        occ.className = "occ";
+        occ.textContent = (day.occupancy_percent === null || day.occupancy_percent === undefined)
+          ? "—"
+          : `${Number(day.occupancy_percent).toFixed(1)}%`;
+
+        const notes = document.createElement("div");
+        notes.className = "notes";
+        notes.textContent = day.notes || "";
+
+        card.appendChild(title);
+        card.appendChild(occ);
+        card.appendChild(notes);
+
+        if (canEdit()) {
+          card.classList.add("clickable");
+          card.title = "Click to edit occupancy + notes";
+          card.addEventListener("click", () => openOccEdit(day.day, day.occupancy_percent, day.notes));
+        }
+
+        occCards.appendChild(card);
+      }
+    }
+
+    function statusFor(serviceName, dayRow) {
+      if (serviceName.startsWith("MASSIMO ")) {
+        if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
+        if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
+        if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
+        return false;
       }
 
-      // IMPORTANT: do NOT name this variable "supabase"
-      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      setMsg(bootMsg, "");
+      const upper = serviceName.toUpperCase();
+      const breakfast = SERVICE_ORDER.slice(0,5);
+      const lunch = SERVICE_ORDER.slice(5,9);
+      const dinner = SERVICE_ORDER.slice(9,13);
 
-      // Attach button handlers FIRST (this was the bug before)
-      document.getElementById("btnLogin").addEventListener("click", async () => {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-        if (!email || !password) return setMsg(loginMsg, "Enter email and password.", "err");
+      if (breakfast.includes(upper)) return (dayRow.breakfast || "").toUpperCase() === upper;
+      if (lunch.includes(upper)) return (dayRow.lunch || "").toUpperCase() === upper;
+      if (dinner.includes(upper)) return (dayRow.dinner || "").toUpperCase() === upper;
+      return false;
+    }
 
-        try {
-          setMsg(loginMsg, "Signing in…");
-          const { error } = await sb.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          setMsg(loginMsg, "", "");
-          show(appView);
-        } catch (e) {
-          setMsg(loginMsg, e.message || String(e), "err");
-        }
-      });
+    function renderStatusGrid() {
+      bodyRows.innerHTML = "";
 
-      document.getElementById("btnForgot").addEventListener("click", async () => {
-        const email = document.getElementById("email").value.trim();
-        if (!email) return setMsg(loginMsg, "Enter your email first, then click Forgot password.", "err");
+      for (const serviceName of SERVICE_ORDER) {
+        const tr = document.createElement("tr");
 
-        try {
-          setMsg(loginMsg, "Sending reset email…");
-          const { error } = await sb.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + window.location.pathname
-          });
-          if (error) throw error;
-          setMsg(loginMsg, "Reset email sent. Click the link in the email to set a new password.", "ok");
-        } catch (e) {
-          setMsg(loginMsg, e.message || String(e), "err");
-        }
-      });
+        const tdLabel = document.createElement("td");
+        tdLabel.textContent = serviceName;
+        tr.appendChild(tdLabel);
 
-      document.getElementById("btnSetPass").addEventListener("click", async () => {
-        const p1 = document.getElementById("newPass").value;
-        const p2 = document.getElementById("newPass2").value;
+        for (const dayRow of dashboardDays) {
+          const isOn = statusFor(serviceName, dayRow);
+          const td = document.createElement("td");
+          td.className = "statusCell " + (isOn ? "green" : "red");
+          td.textContent = isOn ? "ON" : "OFF";
 
-        if (!p1 || p1.length < 6) return setMsg(recoveryMsg, "Password must be at least 6 characters.", "err");
-        if (p1 !== p2) return setMsg(recoveryMsg, "Passwords do not match.", "err");
+          if (canEdit()) {
+            td.classList.add("clickable");
+            td.addEventListener("click", async () => {
+              try {
+                setMsg(appMsg, "");
 
-        try {
-          setMsg(recoveryMsg, "Updating password…");
+                if (serviceName.startsWith("MASSIMO ")) {
+                  await toggleMassimo(dayRow.day, serviceName, isOn);
+                  if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = !isOn;
+                  if (serviceName === "MASSIMO LUNCH") dayRow.massimo_lunch = !isOn;
+                  if (serviceName === "MASSIMO DINNER") dayRow.massimo_dinner = !isOn;
+                } else {
+                  await setPickOne(dayRow.day, serviceName);
+                  const group = serviceByName.get(serviceName)?.group_name;
+                  if (group === "breakfast") dayRow.breakfast = serviceName;
+                  if (group === "lunch") dayRow.lunch = serviceName;
+                  if (group === "dinner") dayRow.dinner = serviceName;
+                }
 
-          // Must have a recovery session active
-          const { data: sessData } = await sb.auth.getSession();
-          if (!sessData?.session) {
-            setMsg(recoveryMsg, "No reset session found. Send a new reset email and open the link again.", "err");
-            return;
+                renderStatusGrid();
+                setMsg(appMsg, "Saved.", "ok");
+              } catch (e) {
+                setMsg(appMsg, e.message || String(e), "err");
+              }
+            });
           }
 
-          const { error } = await sb.auth.updateUser({ password: p1 });
-          if (error) throw error;
-
-          setMsg(recoveryMsg, "Password updated. Please sign in with the new password.", "ok");
-          await sb.auth.signOut();
-          show(loginView);
-        } catch (e) {
-          setMsg(recoveryMsg, e.message || String(e), "err");
+          tr.appendChild(td);
         }
-      });
 
-      document.getElementById("btnCancelRecovery").addEventListener("click", async () => {
-        await sb.auth.signOut();
-        cleanUrlAll();
-        show(loginView);
-      });
-
-      document.getElementById("btnLogout").addEventListener("click", async () => {
-        await sb.auth.signOut();
-        show(loginView);
-      });
-
-      // Now decide what view to show based on URL/session
-      // Handle hash-style recovery links
-      const hp = parseHashParams();
-      if (hp.error) {
-        setMsg(bootMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
-        cleanUrlAll();
-        show(loginView);
-        return;
+        bodyRows.appendChild(tr);
       }
-
-      if (hp.type === "recovery" && hp.access_token && hp.refresh_token) {
-        const { error } = await sb.auth.setSession({
-          access_token: hp.access_token,
-          refresh_token: hp.refresh_token
-        });
-        if (error) {
-          setMsg(bootMsg, "Reset link error: " + error.message, "err");
-          cleanUrlAll();
-          show(loginView);
-          return;
-        }
-        cleanUrlAll();
-        show(recoveryView);
-        return;
-      }
-
-      // Handle PKCE-style recovery links (?code=...&type=recovery)
-      const sp = new URLSearchParams(window.location.search);
-      const code = sp.get("code");
-      const type = sp.get("type");
-      if (type === "recovery" && code) {
-        const { error } = await sb.auth.exchangeCodeForSession(code);
-        if (error) {
-          setMsg(bootMsg, "Reset link error: " + error.message, "err");
-          cleanUrlAll();
-          show(loginView);
-          return;
-        }
-        cleanUrlAll();
-        show(recoveryView);
-        return;
-      }
-
-      // Normal session
-      const { data } = await sb.auth.getSession();
-      if (data?.session?.user) show(appView);
-      else show(loginView);
     }
 
-    init().catch(err => setMsg(bootMsg, "Startup error: " + (err?.message || String(err)), "err"));
+    async function setPickOne(date, serviceName) {
+      const item = serviceByName.get(serviceName);
+      if (!item) throw new Error("Service item not found: " + serviceName);
+
+      const group = item.group_name;
+      if (!["breakfast","lunch","dinner"].includes(group)) return;
+
+      const { error } = await sb
+        .from("daily_service_selection")
+        .upsert({ date, group_name: group, selected_service_item_id: item.id }, { onConflict: "date,group_name" });
+
+      if (error) throw error;
+    }
+
+    async function toggleMassimo(date, serviceName, isOn) {
+      const item = serviceByName.get(serviceName);
+      if (!item) throw new Error("Service item not found: " + serviceName);
+
+      const { error } = await sb
+        .from("daily_massimo_status")
+        .upsert({ date, service_item_id: item.id, is_active: !isOn }, { onConflict: "date,service_item_id" });
+
+      if (error) throw error;
+    }
+
+    async function openOccEdit(date, occ, notes) {
+      const occStr = (occ === null || occ === undefined) ? "" : String(occ);
+      const newOcc = prompt(`Occupancy % for ${date} (0-100). Leave blank to clear.`, occStr);
+      if (newOcc === null) return;
+
+      const occNum = newOcc.trim() === "" ? null : Number(newOcc);
+      if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)) {
+        alert("Occupancy must be 0 to 100 (or blank).");
+        return;
+      }
+
+      const newNotes = prompt(`Notes for ${date} (optional)`, notes || "");
+      if (newNotes === null) return;
+
+      const { error } = await sb
+        .from("daily_forecast")
+        .upsert({ date, occupancy_percent: occNum, notes: (newNotes || "").trim() || null }, { onConflict: "date" });
+
+      if (error) throw error;
+
+      const row = dashboardDays.find(x => x.day === date);
+      if (row) {
+        row.occupancy_percent = occNum;
+        row.notes = (newNotes || "").trim() || null;
+      }
+      renderOccCards();
+    }
+
+    async function refreshAll() {
+      try {
+        setMsg(appMsg, "Loading…");
+        logBox.style.display = "none";
+        await loadServiceItems();
+        await fetchDashboard(startDateEl.value);
+        buildHeader();
+        renderOccCards();
+        renderStatusGrid();
+        setMsg(appMsg, "");
+      } catch (e) {
+        setMsg(appMsg, e.message || String(e), "err");
+      }
+    }
+
+    async function loadLogForSelectedDate() {
+      if (!isAdmin()) {
+        setMsg(appMsg, "Only Admin can view the log.", "err");
+        return;
+      }
+      try {
+        setMsg(appMsg, "Loading log…");
+        const d = startDateEl.value;
+
+        const { data, error } = await sb
+          .from("change_log")
+          .select("changed_at, table_name, record_date, group_name, service_item_id, field, old_value, new_value, action, changed_by")
+          .eq("record_date", d)
+          .order("changed_at", { ascending: false })
+          .limit(80);
+
+        if (error) throw error;
+
+        logBox.style.display = "block";
+        if (!data || data.length === 0) {
+          logList.textContent = "No changes logged for this date.";
+        } else {
+          logList.innerHTML = data.map(x => {
+            const t = new Date(x.changed_at).toLocaleString();
+            const g = x.group_name ? ` (${x.group_name})` : "";
+            const f = x.field ? ` ${x.field}` : "";
+            const ov = (x.old_value ?? "");
+            const nv = (x.new_value ?? "");
+            return `<div style="margin:6px 0;">
+              <b>${t}</b> – <span class="hint">${x.table_name}${g}${f} [${x.action}]</span><br/>
+              <span class="hint">Old:</span> ${escapeHtml(ov)} <span class="hint">→ New:</span> ${escapeHtml(nv)}
+            </div>`;
+          }).join("");
+        }
+
+        setMsg(appMsg, "");
+      } catch (e) {
+        setMsg(appMsg, e.message || String(e), "err");
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+
+    async function showLogin() {
+      appView.style.display = "none";
+      loginView.style.display = "block";
+      setMsg(loginMsg, "");
+    }
+
+    async function showApp() {
+      loginView.style.display = "none";
+      appView.style.display = "block";
+      rolePill.textContent = `Role: ${myRole}`;
+      userPill.textContent = `User: ${currentUser.email}`;
+      editHint.textContent = canEdit()
+        ? "Editors/Admin: click occupancy card to edit. Click a grid cell to change status."
+        : "View only";
+
+      const t = new Date();
+      startDateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+
+      await refreshAll();
+    }
+
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      if (!email || !password) return setMsg(loginMsg, "Enter email and password.", "err");
+
+      try {
+        setMsg(loginMsg, "Signing in…");
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        currentUser = data.user;
+        await loadRole();
+        await showApp();
+      } catch (e) {
+        setMsg(loginMsg, e.message || String(e), "err");
+      }
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", async () => {
+      await sb.auth.signOut();
+      currentUser = null;
+      myRole = "viewer";
+      await showLogin();
+    });
+
+    document.getElementById("btnRefresh").addEventListener("click", refreshAll);
+    startDateEl.addEventListener("change", refreshAll);
+    document.getElementById("btnLoadLog").addEventListener("click", loadLogForSelectedDate);
+
+    // Boot
+    (async () => {
+      const { data } = await sb.auth.getSession();
+      if (data?.session?.user) {
+        currentUser = data.session.user;
+        await loadRole();
+        await showApp();
+      } else {
+        await showLogin();
+      }
+    })();
   </script>
 </body>
 </html>
