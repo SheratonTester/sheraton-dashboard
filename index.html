@@ -17,7 +17,7 @@
     h1{font-size:18px;margin:0}
     .pill{font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    input,button{background:#0f1622;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+    input,button,textarea{background:#0f1622;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
     input[type="date"]{padding:9px 12px}
     button{cursor:pointer}
     button:hover{border-color:#345070}
@@ -47,17 +47,9 @@
     .msg{margin-top:10px;font-size:13px;color:var(--muted)}
     .err{color:#ff8a8a}
     .oktxt{color:#98f5b2}
-
-    .loginBox{max-width:440px;margin:30px auto}
+    .loginBox{max-width:460px;margin:30px auto}
     .loginBox h2{margin:0 0 10px;font-size:18px}
     .loginBox label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-
-    /* simple modal */
-    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
-    .modal{width:100%;max-width:520px}
-    textarea{width:100%;min-height:90px;resize:vertical}
-    .modalTitle{display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .x{background:transparent;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
   </style>
 </head>
 <body>
@@ -76,9 +68,29 @@
 
       <div class="row" style="margin-top:12px;">
         <button id="btnLogin" class="btn-primary">Sign in</button>
+        <button id="btnForgot" class="btn-danger">Forgot password</button>
       </div>
 
       <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <!-- RECOVERY -->
+    <div id="recoveryView" class="loginBox card" style="display:none;">
+      <h2>Set new password</h2>
+      <div class="hint">You opened a password reset link. Set the new password below.</div>
+
+      <label>New password</label>
+      <input id="newPass" type="password" placeholder="New password" />
+
+      <label>Confirm new password</label>
+      <input id="newPass2" type="password" placeholder="Confirm new password" />
+
+      <div class="row" style="margin-top:12px;">
+        <button id="btnSetPass" class="btn-primary">Update password</button>
+        <button id="btnCancelRecovery" class="btn-danger">Cancel</button>
+      </div>
+
+      <div id="recoveryMsg" class="msg"></div>
     </div>
 
     <!-- APP -->
@@ -128,21 +140,22 @@
     </div>
   </div>
 
-  <!-- Local Supabase library (NO CDN) -->
+  <!-- Local Supabase library (must exist in repo root) -->
   <script src="./supabase.js"></script>
 
   <script>
-    // Your Supabase
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
 
-    // IMPORTANT: some supabase.js bundles already define a global "supabase"
-    // so we DO NOT name our client "supabase".
+    // Do NOT name this variable "supabase"
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const loginView = document.getElementById("loginView");
+    const recoveryView = document.getElementById("recoveryView");
     const appView = document.getElementById("appView");
+
     const loginMsg = document.getElementById("loginMsg");
+    const recoveryMsg = document.getElementById("recoveryMsg");
     const appMsg = document.getElementById("appMsg");
 
     const rolePill = document.getElementById("rolePill");
@@ -157,50 +170,53 @@
     const logList = document.getElementById("logList");
 
     const SERVICE_ORDER = [
-      "BREAKFAST ALA CARTE",
-      "BREAKFAST BUFFET REDUCED",
-      "BREAKFAST FULL BUFFET",
-      "BRUNCH",
-      "SPECIAL BREAKFAST- CLOSED",
-
-      "LUNCH ALA CARTE",
-      "LUNCH BUFFET",
-      "HOLIDAY LUNCH BUFFET BRUNCH",
-      "SPECIAL LUNCH- CLOSED",
-
-      "DINNER ALA CARTE",
-      "DINNER BUFFET",
-      "DINNER HOLIDAY /SPECIAL BUFFET",
-      "DINNER CLOSED",
-
-      "MASSIMO BREAKFAST",
-      "MASSIMO LUNCH",
-      "MASSIMO DINNER"
+      "BREAKFAST ALA CARTE","BREAKFAST BUFFET REDUCED","BREAKFAST FULL BUFFET","BRUNCH","SPECIAL BREAKFAST- CLOSED",
+      "LUNCH ALA CARTE","LUNCH BUFFET","HOLIDAY LUNCH BUFFET BRUNCH","SPECIAL LUNCH- CLOSED",
+      "DINNER ALA CARTE","DINNER BUFFET","DINNER HOLIDAY /SPECIAL BUFFET","DINNER CLOSED",
+      "MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"
     ];
 
     let currentUser = null;
     let myRole = "viewer";
     let dashboardDays = [];
-    let serviceByName = new Map(); // name -> row
+    let serviceByName = new Map();
 
     function setMsg(el, text, type="") {
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : "");
       el.textContent = text || "";
     }
 
-    function canEdit() {
-      return myRole === "editor" || myRole === "admin";
+    function show(view) {
+      loginView.style.display = "none";
+      recoveryView.style.display = "none";
+      appView.style.display = "none";
+      view.style.display = "block";
     }
 
-    function isAdmin() {
-      return myRole === "admin";
+    function cleanUrlAll() {
+      const clean = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, clean);
     }
+
+    function parseHashParams() {
+      const h = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+      const p = new URLSearchParams(h);
+      return {
+        type: p.get("type"),
+        access_token: p.get("access_token"),
+        refresh_token: p.get("refresh_token"),
+        error: p.get("error"),
+        error_description: p.get("error_description")
+      };
+    }
+
+    function canEdit(){ return myRole === "editor" || myRole === "admin"; }
+    function isAdmin(){ return myRole === "admin"; }
 
     function fmtDay(d) {
       const dt = new Date(d + "T00:00:00");
       return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
     }
-
     function isToday(d) {
       const t = new Date(); t.setHours(0,0,0,0);
       const dt = new Date(d + "T00:00:00");
@@ -208,31 +224,19 @@
     }
 
     async function loadRole() {
-      const { data, error } = await sb
-        .from("profiles")
-        .select("role")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
+      const { data, error } = await sb.from("profiles").select("role").eq("user_id", currentUser.id).maybeSingle();
       if (error) throw error;
       myRole = data?.role || "viewer";
     }
 
     async function loadServiceItems() {
-      const { data, error } = await sb
-        .from("service_items")
-        .select("id,name,group_name,sort_order")
-        .order("sort_order", { ascending: true });
-
+      const { data, error } = await sb.from("service_items").select("id,name,group_name,sort_order").order("sort_order", { ascending: true });
       if (error) throw error;
       serviceByName = new Map((data || []).map(x => [x.name, x]));
     }
 
     async function fetchDashboard(startDate) {
-      const { data, error } = await sb.rpc("get_dashboard", {
-        p_start_date: startDate,
-        p_days: 14
-      });
+      const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: 14 });
       if (error) throw error;
       dashboardDays = data || [];
     }
@@ -246,9 +250,32 @@
       }
     }
 
+    async function openOccEdit(date, occ, notes) {
+      const occStr = (occ === null || occ === undefined) ? "" : String(occ);
+      const newOcc = prompt(`Occupancy % for ${date} (0-100). Leave blank to clear.`, occStr);
+      if (newOcc === null) return;
+
+      const occNum = newOcc.trim() === "" ? null : Number(newOcc);
+      if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)) {
+        alert("Occupancy must be 0 to 100 (or blank).");
+        return;
+      }
+
+      const newNotes = prompt(`Notes for ${date} (optional)`, notes || "");
+      if (newNotes === null) return;
+
+      const { error } = await sb.from("daily_forecast")
+        .upsert({ date, occupancy_percent: occNum, notes: (newNotes || "").trim() || null }, { onConflict: "date" });
+
+      if (error) throw error;
+
+      const row = dashboardDays.find(x => x.day === date);
+      if (row) { row.occupancy_percent = occNum; row.notes = (newNotes || "").trim() || null; }
+      renderOccCards();
+    }
+
     function renderOccCards() {
       occCards.innerHTML = "";
-
       for (const day of dashboardDays) {
         const card = document.createElement("div");
         card.className = "daycard" + (isToday(day.day) ? " today" : "");
@@ -259,24 +286,19 @@
 
         const occ = document.createElement("div");
         occ.className = "occ";
-        occ.textContent = (day.occupancy_percent === null || day.occupancy_percent === undefined)
-          ? "—"
-          : `${Number(day.occupancy_percent).toFixed(1)}%`;
+        occ.textContent = (day.occupancy_percent === null || day.occupancy_percent === undefined) ? "—" : `${Number(day.occupancy_percent).toFixed(1)}%`;
 
         const notes = document.createElement("div");
         notes.className = "notes";
         notes.textContent = day.notes || "";
 
-        card.appendChild(title);
-        card.appendChild(occ);
-        card.appendChild(notes);
+        card.appendChild(title); card.appendChild(occ); card.appendChild(notes);
 
         if (canEdit()) {
           card.classList.add("clickable");
           card.title = "Click to edit occupancy + notes";
           card.addEventListener("click", () => openOccEdit(day.day, day.occupancy_percent, day.notes));
         }
-
         occCards.appendChild(card);
       }
     }
@@ -288,7 +310,6 @@
         if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
         return false;
       }
-
       const upper = serviceName.toUpperCase();
       const breakfast = SERVICE_ORDER.slice(0,5);
       const lunch = SERVICE_ORDER.slice(5,9);
@@ -300,9 +321,31 @@
       return false;
     }
 
+    async function setPickOne(date, serviceName) {
+      const item = serviceByName.get(serviceName);
+      if (!item) throw new Error("Service item not found: " + serviceName);
+
+      const group = item.group_name;
+      if (!["breakfast","lunch","dinner"].includes(group)) return;
+
+      const { error } = await sb.from("daily_service_selection")
+        .upsert({ date, group_name: group, selected_service_item_id: item.id }, { onConflict: "date,group_name" });
+
+      if (error) throw error;
+    }
+
+    async function toggleMassimo(date, serviceName, isOn) {
+      const item = serviceByName.get(serviceName);
+      if (!item) throw new Error("Service item not found: " + serviceName);
+
+      const { error } = await sb.from("daily_massimo_status")
+        .upsert({ date, service_item_id: item.id, is_active: !isOn }, { onConflict: "date,service_item_id" });
+
+      if (error) throw error;
+    }
+
     function renderStatusGrid() {
       bodyRows.innerHTML = "";
-
       for (const serviceName of SERVICE_ORDER) {
         const tr = document.createElement("tr");
 
@@ -321,7 +364,6 @@
             td.addEventListener("click", async () => {
               try {
                 setMsg(appMsg, "");
-
                 if (serviceName.startsWith("MASSIMO ")) {
                   await toggleMassimo(dayRow.day, serviceName, isOn);
                   if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = !isOn;
@@ -334,7 +376,6 @@
                   if (group === "lunch") dayRow.lunch = serviceName;
                   if (group === "dinner") dayRow.dinner = serviceName;
                 }
-
                 renderStatusGrid();
                 setMsg(appMsg, "Saved.", "ok");
               } catch (e) {
@@ -345,62 +386,8 @@
 
           tr.appendChild(td);
         }
-
         bodyRows.appendChild(tr);
       }
-    }
-
-    async function setPickOne(date, serviceName) {
-      const item = serviceByName.get(serviceName);
-      if (!item) throw new Error("Service item not found: " + serviceName);
-
-      const group = item.group_name;
-      if (!["breakfast","lunch","dinner"].includes(group)) return;
-
-      const { error } = await sb
-        .from("daily_service_selection")
-        .upsert({ date, group_name: group, selected_service_item_id: item.id }, { onConflict: "date,group_name" });
-
-      if (error) throw error;
-    }
-
-    async function toggleMassimo(date, serviceName, isOn) {
-      const item = serviceByName.get(serviceName);
-      if (!item) throw new Error("Service item not found: " + serviceName);
-
-      const { error } = await sb
-        .from("daily_massimo_status")
-        .upsert({ date, service_item_id: item.id, is_active: !isOn }, { onConflict: "date,service_item_id" });
-
-      if (error) throw error;
-    }
-
-    async function openOccEdit(date, occ, notes) {
-      const occStr = (occ === null || occ === undefined) ? "" : String(occ);
-      const newOcc = prompt(`Occupancy % for ${date} (0-100). Leave blank to clear.`, occStr);
-      if (newOcc === null) return;
-
-      const occNum = newOcc.trim() === "" ? null : Number(newOcc);
-      if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)) {
-        alert("Occupancy must be 0 to 100 (or blank).");
-        return;
-      }
-
-      const newNotes = prompt(`Notes for ${date} (optional)`, notes || "");
-      if (newNotes === null) return;
-
-      const { error } = await sb
-        .from("daily_forecast")
-        .upsert({ date, occupancy_percent: occNum, notes: (newNotes || "").trim() || null }, { onConflict: "date" });
-
-      if (error) throw error;
-
-      const row = dashboardDays.find(x => x.day === date);
-      if (row) {
-        row.occupancy_percent = occNum;
-        row.notes = (newNotes || "").trim() || null;
-      }
-      renderOccCards();
     }
 
     async function refreshAll() {
@@ -418,18 +405,21 @@
       }
     }
 
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+
     async function loadLogForSelectedDate() {
-      if (!isAdmin()) {
-        setMsg(appMsg, "Only Admin can view the log.", "err");
-        return;
-      }
+      if (!isAdmin()) { setMsg(appMsg, "Only Admin can view the log.", "err"); return; }
+
       try {
         setMsg(appMsg, "Loading log…");
         const d = startDateEl.value;
 
-        const { data, error } = await sb
-          .from("change_log")
-          .select("changed_at, table_name, record_date, group_name, service_item_id, field, old_value, new_value, action, changed_by")
+        const { data, error } = await sb.from("change_log")
+          .select("changed_at, table_name, record_date, group_name, service_item_id, field, old_value, new_value, action")
           .eq("record_date", d)
           .order("changed_at", { ascending: false })
           .limit(80);
@@ -452,28 +442,14 @@
             </div>`;
           }).join("");
         }
-
         setMsg(appMsg, "");
       } catch (e) {
         setMsg(appMsg, e.message || String(e), "err");
       }
     }
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
-    }
-
-    async function showLogin() {
-      appView.style.display = "none";
-      loginView.style.display = "block";
-      setMsg(loginMsg, "");
-    }
-
     async function showApp() {
-      loginView.style.display = "none";
-      appView.style.display = "block";
+      show(appView);
       rolePill.textContent = `Role: ${myRole}`;
       userPill.textContent = `User: ${currentUser.email}`;
       editHint.textContent = canEdit()
@@ -482,10 +458,53 @@
 
       const t = new Date();
       startDateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
-
       await refreshAll();
     }
 
+    // ----- AUTH: forgot password + recovery handling -----
+    async function handleRecoveryFromUrl() {
+      const hp = parseHashParams();
+
+      if (hp.error) {
+        setMsg(loginMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
+        cleanUrlAll();
+        show(loginView);
+        return true;
+      }
+
+      // Hash token style
+      if (hp.type === "recovery" && hp.access_token && hp.refresh_token) {
+        const { error } = await sb.auth.setSession({ access_token: hp.access_token, refresh_token: hp.refresh_token });
+        cleanUrlAll();
+        if (error) {
+          setMsg(recoveryMsg, "Reset link error: " + error.message, "err");
+          show(loginView);
+        } else {
+          show(recoveryView);
+        }
+        return true;
+      }
+
+      // PKCE style (?code=...&type=recovery)
+      const sp = new URLSearchParams(window.location.search);
+      const code = sp.get("code");
+      const type = sp.get("type");
+      if (type === "recovery" && code) {
+        const { error } = await sb.auth.exchangeCodeForSession(code);
+        cleanUrlAll();
+        if (error) {
+          setMsg(recoveryMsg, "Reset link error: " + error.message, "err");
+          show(loginView);
+        } else {
+          show(recoveryView);
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    // ----- Button handlers -----
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
@@ -504,26 +523,78 @@
       }
     });
 
+    document.getElementById("btnForgot").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      if (!email) return setMsg(loginMsg, "Enter your email first, then click Forgot password.", "err");
+
+      try {
+        setMsg(loginMsg, "Sending reset email…");
+        const redirectTo = window.location.origin + window.location.pathname; // your GitHub pages URL
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) throw error;
+
+        setMsg(loginMsg, "Reset email sent. Click the link, then set your new password.", "ok");
+      } catch (e) {
+        setMsg(loginMsg, e.message || String(e), "err");
+      }
+    });
+
+    document.getElementById("btnSetPass").addEventListener("click", async () => {
+      const p1 = document.getElementById("newPass").value;
+      const p2 = document.getElementById("newPass2").value;
+
+      if (!p1 || p1.length < 6) return setMsg(recoveryMsg, "Password must be at least 6 characters.", "err");
+      if (p1 !== p2) return setMsg(recoveryMsg, "Passwords do not match.", "err");
+
+      try {
+        setMsg(recoveryMsg, "Updating password…");
+        const { data: sessData } = await sb.auth.getSession();
+        if (!sessData?.session) {
+          setMsg(recoveryMsg, "No reset session found. Send a new reset email and open the new link.", "err");
+          return;
+        }
+
+        const { error } = await sb.auth.updateUser({ password: p1 });
+        if (error) throw error;
+
+        setMsg(recoveryMsg, "Password updated. Please sign in with the new password.", "ok");
+        await sb.auth.signOut();
+        show(loginView);
+      } catch (e) {
+        setMsg(recoveryMsg, e.message || String(e), "err");
+      }
+    });
+
+    document.getElementById("btnCancelRecovery").addEventListener("click", async () => {
+      await sb.auth.signOut();
+      cleanUrlAll();
+      show(loginView);
+    });
+
     document.getElementById("btnLogout").addEventListener("click", async () => {
       await sb.auth.signOut();
       currentUser = null;
       myRole = "viewer";
-      await showLogin();
+      show(loginView);
     });
 
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
     startDateEl.addEventListener("change", refreshAll);
     document.getElementById("btnLoadLog").addEventListener("click", loadLogForSelectedDate);
 
-    // Boot
+    // ----- Boot -----
     (async () => {
+      // If this page opened from a reset email link, handle recovery first
+      const didRecovery = await handleRecoveryFromUrl();
+      if (didRecovery) return;
+
       const { data } = await sb.auth.getSession();
       if (data?.session?.user) {
         currentUser = data.session.user;
         await loadRole();
         await showApp();
       } else {
-        await showLogin();
+        show(loginView);
       }
     })();
   </script>
