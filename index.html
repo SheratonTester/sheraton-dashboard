@@ -8,30 +8,41 @@
     :root { --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: var(--text); }
-    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
     .banner { padding:10px 12px; border:1px dashed #3a5d8a; border-radius:12px; color:#bcd3ee; margin-bottom:12px; }
     .card { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 14px; }
-    .loginBox { max-width: 440px; margin: 16px auto; }
-    .loginBox h2 { margin:0 0 10px; font-size: 18px; }
+    .box { max-width: 520px; margin: 16px auto; }
+    h2 { margin:0 0 10px; font-size: 18px; }
     .small { font-size: 12px; color: var(--muted); }
     label { display:block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
-    input, button { background:#0f1622; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; width:100%; }
-    button { cursor:pointer; margin-top: 12px; width:auto; }
+    input, button {
+      background:#0f1622; color:var(--text);
+      border:1px solid var(--line); border-radius:10px;
+      padding:10px 12px; font-size:14px; width:100%;
+    }
+    button { cursor:pointer; margin-top: 12px; width:auto; padding:10px 14px; }
     .btn-primary { background:#173254; border-color:#2a4d78; }
+    .btn-primary:hover { background:#1b3b63; }
+    .btn-danger { background:#3a1720; border-color:#6e2a3a; }
+    .btn-danger:hover { background:#4a1d28; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
     .err { color:#ff8a8a; }
     .ok { color:#98f5b2; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="banner">
-      Local Supabase library mode (loaded from this GitHub repo). If this shows and login works, you’re good.
+      Local Supabase library mode (loaded from this GitHub repo).<br/>
+      <span class="small">If password reset links bring you here, this page will now handle them.</span>
     </div>
 
     <div id="bootMsg" class="msg"></div>
 
-    <div id="loginView" class="loginBox card">
+    <!-- LOGIN -->
+    <div id="loginView" class="box card" style="display:none;">
       <h2>Sign in</h2>
       <div class="small">Sheraton Niagara Falls Dashboard</div>
 
@@ -41,12 +52,51 @@
       <label>Password</label>
       <input id="password" type="password" placeholder="••••••••" />
 
-      <button id="btnLogin" class="btn-primary">Sign in</button>
+      <div class="row">
+        <button id="btnLogin" class="btn-primary">Sign in</button>
+        <button id="btnForgot" class="btn-danger" title="Send reset email">Forgot password</button>
+      </div>
+
       <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <!-- RECOVERY (from reset email link) -->
+    <div id="recoveryView" class="box card" style="display:none;">
+      <h2>Set new password</h2>
+      <div class="small">
+        You opened a Supabase password reset link. Set the new password below.
+      </div>
+
+      <label>New password</label>
+      <input id="newPass" type="password" placeholder="New password" />
+
+      <label>Confirm new password</label>
+      <input id="newPass2" type="password" placeholder="Confirm new password" />
+
+      <div class="row">
+        <button id="btnSetPass" class="btn-primary">Update password</button>
+        <button id="btnCancelRecovery" class="btn-danger">Cancel</button>
+      </div>
+
+      <div id="recoveryMsg" class="msg"></div>
+    </div>
+
+    <!-- APP (placeholder for now) -->
+    <div id="appView" class="box card" style="display:none;">
+      <h2>Logged in</h2>
+      <div class="small">
+        Auth works. Next step is putting the full dashboard back in.
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="btnLogout" class="btn-danger">Logout</button>
+      </div>
+
+      <div id="appMsg" class="msg"></div>
     </div>
   </div>
 
-  <!-- Load Supabase from your own repo (NO CDN) -->
+  <!-- IMPORTANT: you must have supabase.js in repo root -->
   <script src="./supabase.js"></script>
 
   <script>
@@ -54,40 +104,176 @@
     const SUPABASE_ANON_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
 
     const bootMsg = document.getElementById("bootMsg");
+    const loginView = document.getElementById("loginView");
+    const recoveryView = document.getElementById("recoveryView");
+    const appView = document.getElementById("appView");
+
     const loginMsg = document.getElementById("loginMsg");
+    const recoveryMsg = document.getElementById("recoveryMsg");
+    const appMsg = document.getElementById("appMsg");
 
     function setMsg(el, text, type="") {
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "ok" : "");
       el.textContent = text || "";
     }
 
-    if (!window.supabase || !window.supabase.createClient) {
-      setMsg(bootMsg, "Supabase library did not load. Make sure supabase.js is uploaded in the repo root.", "err");
-    } else {
-      setMsg(bootMsg, "");
+    function show(view) {
+      loginView.style.display = "none";
+      recoveryView.style.display = "none";
+      appView.style.display = "none";
+      view.style.display = "block";
     }
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    function cleanUrl() {
+      // remove reset tokens from URL for safety/clean look
+      const clean = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, clean);
+    }
 
-    document.getElementById("btnLogin").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+    function parseHashParams() {
+      const h = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+      const p = new URLSearchParams(h);
+      return {
+        type: p.get("type"),
+        access_token: p.get("access_token"),
+        refresh_token: p.get("refresh_token")
+      };
+    }
 
-      if (!email || !password) {
-        setMsg(loginMsg, "Enter email and password.", "err");
+    async function handleRecoveryLink(supabase) {
+      // Supabase reset links often use hash tokens: #access_token=...&refresh_token=...&type=recovery
+      const hp = parseHashParams();
+
+      if (hp.type === "recovery" && hp.access_token && hp.refresh_token) {
+        setMsg(bootMsg, "");
+        // Set session from tokens so updateUser(password) works
+        const { error } = await supabase.auth.setSession({
+          access_token: hp.access_token,
+          refresh_token: hp.refresh_token
+        });
+
+        if (error) {
+          setMsg(bootMsg, "Reset link error: " + error.message, "err");
+          show(loginView);
+          return true;
+        }
+
+        cleanUrl();
+        show(recoveryView);
+        return true;
+      }
+
+      // Some setups use ?code=... (PKCE). If you ever see that, this handles it.
+      const sp = new URLSearchParams(window.location.search);
+      const code = sp.get("code");
+      const type = sp.get("type");
+      if (type === "recovery" && code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          setMsg(bootMsg, "Reset link error: " + error.message, "err");
+          show(loginView);
+          return true;
+        }
+        cleanUrl();
+        show(recoveryView);
+        return true;
+      }
+
+      return false;
+    }
+
+    async function init() {
+      if (!window.supabase || !window.supabase.createClient) {
+        setMsg(bootMsg, "Supabase library did not load. Make sure supabase.js is in the repo root.", "err");
         return;
       }
 
-      try {
-        setMsg(loginMsg, "Signing in…");
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      setMsg(bootMsg, "");
 
-        setMsg(loginMsg, "Login worked. Next we’ll enable the full dashboard view.", "ok");
-      } catch (e) {
-        setMsg(loginMsg, e.message || String(e), "err");
+      // If this page was opened from a reset link, show recovery UI
+      const didRecovery = await handleRecoveryLink(supabase);
+      if (didRecovery) return;
+
+      // Normal session check
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.user) {
+        show(appView);
+      } else {
+        show(loginView);
       }
-    });
+
+      // LOGIN
+      document.getElementById("btnLogin").addEventListener("click", async () => {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        if (!email || !password) return setMsg(loginMsg, "Enter email and password.", "err");
+
+        try {
+          setMsg(loginMsg, "Signing in…");
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+
+          setMsg(loginMsg, "");
+          show(appView);
+        } catch (e) {
+          setMsg(loginMsg, e.message || String(e), "err");
+        }
+      });
+
+      // FORGOT PASSWORD (sends email)
+      document.getElementById("btnForgot").addEventListener("click", async () => {
+        const email = document.getElementById("email").value.trim();
+        if (!email) return setMsg(loginMsg, "Enter your email first, then click Forgot password.", "err");
+
+        try {
+          setMsg(loginMsg, "Sending reset email…");
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname
+          });
+          if (error) throw error;
+
+          setMsg(loginMsg, "Reset email sent. Click the link in the email to set a new password.", "ok");
+        } catch (e) {
+          setMsg(loginMsg, e.message || String(e), "err");
+        }
+      });
+
+      // SET NEW PASSWORD
+      document.getElementById("btnSetPass").addEventListener("click", async () => {
+        const p1 = document.getElementById("newPass").value;
+        const p2 = document.getElementById("newPass2").value;
+
+        if (!p1 || p1.length < 6) return setMsg(recoveryMsg, "Password must be at least 6 characters.", "err");
+        if (p1 !== p2) return setMsg(recoveryMsg, "Passwords do not match.", "err");
+
+        try {
+          setMsg(recoveryMsg, "Updating password…");
+          const { error } = await supabase.auth.updateUser({ password: p1 });
+          if (error) throw error;
+
+          setMsg(recoveryMsg, "Password updated. Please sign in with the new password.", "ok");
+          await supabase.auth.signOut();
+          show(loginView);
+        } catch (e) {
+          setMsg(recoveryMsg, e.message || String(e), "err");
+        }
+      });
+
+      document.getElementById("btnCancelRecovery").addEventListener("click", async () => {
+        await supabase.auth.signOut();
+        cleanUrl();
+        show(loginView);
+      });
+
+      document.getElementById("btnLogout").addEventListener("click", async () => {
+        await supabase.auth.signOut();
+        show(loginView);
+      });
+    }
+
+    init().catch(err => setMsg(bootMsg, "Startup error: " + (err?.message || String(err)), "err"));
   </script>
 </body>
 </html>
