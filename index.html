@@ -9,6 +9,7 @@
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: var(--text); }
     .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .banner { padding:10px 12px; border:1px dashed #3a5d8a; border-radius:12px; color:#bcd3ee; margin-bottom:12px; }
     .topbar { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
     h1 { font-size: 18px; margin: 0; }
     .pill { font-size: 12px; padding: 6px 10px; border:1px solid var(--line); border-radius: 999px; color: var(--muted); }
@@ -44,14 +45,13 @@
     .clickable { cursor:pointer; }
     .clickable:hover { outline: 2px solid rgba(155,176,200,.25); outline-offset: -2px; }
 
-    .loginBox { max-width: 440px; margin: 40px auto; }
+    .loginBox { max-width: 440px; margin: 16px auto; }
     .loginBox h2 { margin:0 0 10px; font-size: 18px; }
     .loginBox label { display:block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
     .msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
     .err { color: #ff8a8a; }
     .ok { color: #98f5b2; }
     .small { font-size: 12px; color: var(--muted); }
-    .banner { padding:10px 12px; border:1px dashed #3a5d8a; border-radius:12px; color:#bcd3ee; margin-bottom:12px; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; }
   </style>
 </head>
@@ -59,9 +59,15 @@
   <div class="wrap">
     <div class="banner">
       If you can read this, your <code>index.html</code> is loading correctly.
+      <div class="small" style="margin-top:6px;">
+        If login doesn’t appear, your browser is blocking the Supabase library. This page will tell you.
+      </div>
     </div>
 
-    <div id="loginView" class="loginBox card" style="display:none;">
+    <div id="bootMsg" class="msg"></div>
+
+    <!-- LOGIN shows by default -->
+    <div id="loginView" class="loginBox card">
       <h2>Sign in</h2>
       <div class="small">Sheraton Niagara Falls Dashboard</div>
 
@@ -78,6 +84,7 @@
       <div id="loginMsg" class="msg"></div>
     </div>
 
+    <!-- APP hidden until login -->
     <div id="appView" style="display:none;">
       <div class="topbar">
         <div class="row">
@@ -117,16 +124,47 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Load Supabase with fallback -->
   <script>
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    async function loadSupabaseLib() {
+      // Try jsDelivr first, then unpkg
+      try {
+        await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
+        return true;
+      } catch (_) {
+        try {
+          await loadScript("https://unpkg.com/@supabase/supabase-js@2");
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+    }
+  </script>
+
+  <script>
+    // ======= CONFIG (yours) =======
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ==============================
 
+    const bootMsg = document.getElementById("bootMsg");
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
     const loginMsg = document.getElementById("loginMsg");
     const appMsg = document.getElementById("appMsg");
+
     const rolePill = document.getElementById("rolePill");
     const userPill = document.getElementById("userPill");
     const startDateEl = document.getElementById("startDate");
@@ -142,6 +180,7 @@
       "MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"
     ];
 
+    let supabase = null;
     let currentUser = null;
     let currentRole = "viewer";
     let dashboardDays = [];
@@ -376,7 +415,6 @@
     async function showLogin() {
       appView.style.display = "none";
       loginView.style.display = "block";
-      setMsg(loginMsg, "");
     }
 
     document.getElementById("btnLogin").addEventListener("click", async () => {
@@ -406,22 +444,35 @@
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
     startDateEl.addEventListener("change", refreshAll);
 
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data?.session?.user) {
-          currentUser = data.session.user;
-          await loadRole();
-          await showApp();
-        } else {
-          await showLogin();
-        }
-      } catch (e) {
-        // If JS fails, show something readable
-        loginView.style.display = "block";
-        setMsg(loginMsg, "Page loaded, but JavaScript failed. Open browser console for details.", "err");
+    async function init() {
+      setMsg(bootMsg, "Loading Supabase…");
+      const ok = await loadSupabaseLib();
+      if (!ok || !window.supabase) {
+        setMsg(bootMsg,
+          "Supabase library is blocked on this network/browser. Try a different network, disable ad-block for this site, or allow cdn.jsdelivr.net / unpkg.com.",
+          "err"
+        );
+        return; // keep login visible but it won't work without the library
       }
-    })();
+
+      // Create client AFTER library loads
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      setMsg(bootMsg, "");
+
+      // Boot session
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.user) {
+        currentUser = data.session.user;
+        await loadRole();
+        await showApp();
+      } else {
+        await showLogin();
+      }
+    }
+
+    init().catch(err => {
+      setMsg(bootMsg, "Startup error: " + (err?.message || String(err)), "err");
+    });
   </script>
 </body>
 </html>
