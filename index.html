@@ -5,68 +5,32 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sheraton Niagara Falls - Dashboard</title>
   <style>
-    :root { --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247; --ok:#1f8f4a; --bad:#b33535; }
+    :root { --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: var(--text); }
     .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
     .banner { padding:10px 12px; border:1px dashed #3a5d8a; border-radius:12px; color:#bcd3ee; margin-bottom:12px; }
-    .topbar { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-    h1 { font-size: 18px; margin: 0; }
-    .pill { font-size: 12px; padding: 6px 10px; border:1px solid var(--line); border-radius: 999px; color: var(--muted); }
-    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    input, button { background:#0f1622; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; }
-    input[type="date"] { padding: 9px 12px; }
-    button { cursor:pointer; }
-    button:hover { border-color:#345070; }
-    .btn-primary { background:#173254; border-color:#2a4d78; }
-    .btn-primary:hover { background:#1b3b63; }
-    .btn-danger { background:#3a1720; border-color:#6e2a3a; }
-    .btn-danger:hover { background:#4a1d28; }
-
     .card { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 14px; }
-    .grid14 { display:grid; grid-template-columns: repeat(14, minmax(120px, 1fr)); gap:10px; overflow:auto; padding-bottom: 6px; }
-    .daycard { background:#0f1622; border:1px solid var(--line); border-radius: 14px; padding: 10px; min-width: 120px; }
-    .daycard.today { outline: 2px solid #2a4d78; }
-    .daytitle { font-size: 12px; color: var(--muted); display:flex; justify-content:space-between; gap:10px; }
-    .occ { font-size: 22px; margin-top: 4px; font-weight: 650; }
-    .notes { font-size: 12px; color: var(--muted); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .sectionTitle { margin: 14px 0 10px; font-size: 13px; color: var(--muted); display:flex; align-items:center; gap:10px; }
-    .hint { font-size: 12px; color: var(--muted); }
-    .tableWrap { overflow:auto; border-radius:14px; border:1px solid var(--line); }
-    table { border-collapse: collapse; width: 100%; min-width: 1200px; background: #0f1622; }
-    th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding: 10px; text-align:center; }
-    th:first-child, td:first-child { text-align:left; position: sticky; left:0; background:#0f1622; z-index: 2; }
-    th { font-size: 12px; color: var(--muted); position: sticky; top:0; background:#0f1622; z-index: 3; }
-    tr:last-child td { border-bottom: none; }
-    .statusCell { font-weight: 650; user-select:none; }
-    .green { background: rgba(31,143,74,.22); }
-    .red { background: rgba(179,53,53,.22); }
-    .clickable { cursor:pointer; }
-    .clickable:hover { outline: 2px solid rgba(155,176,200,.25); outline-offset: -2px; }
-
     .loginBox { max-width: 440px; margin: 16px auto; }
     .loginBox h2 { margin:0 0 10px; font-size: 18px; }
-    .loginBox label { display:block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
-    .msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
-    .err { color: #ff8a8a; }
-    .ok { color: #98f5b2; }
     .small { font-size: 12px; color: var(--muted); }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; }
+    label { display:block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+    input, button { background:#0f1622; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; width:100%; }
+    button { cursor:pointer; margin-top: 12px; width:auto; }
+    .btn-primary { background:#173254; border-color:#2a4d78; }
+    .msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
+    .err { color:#ff8a8a; }
+    .ok { color:#98f5b2; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="banner">
-      If you can read this, your <code>index.html</code> is loading correctly.
-      <div class="small" style="margin-top:6px;">
-        If login doesn’t appear, your browser is blocking the Supabase library. This page will tell you.
-      </div>
+      Local Supabase library mode (loaded from this GitHub repo). If this shows and login works, you’re good.
     </div>
 
     <div id="bootMsg" class="msg"></div>
 
-    <!-- LOGIN shows by default -->
     <div id="loginView" class="loginBox card">
       <h2>Sign in</h2>
       <div class="small">Sheraton Niagara Falls Dashboard</div>
@@ -77,401 +41,52 @@
       <label>Password</label>
       <input id="password" type="password" placeholder="••••••••" />
 
-      <div class="row" style="margin-top:12px;">
-        <button id="btnLogin" class="btn-primary">Sign in</button>
-      </div>
-
+      <button id="btnLogin" class="btn-primary">Sign in</button>
       <div id="loginMsg" class="msg"></div>
-    </div>
-
-    <!-- APP hidden until login -->
-    <div id="appView" style="display:none;">
-      <div class="topbar">
-        <div class="row">
-          <h1>Sheraton Niagara Falls – Dashboard</h1>
-          <span id="rolePill" class="pill">Role: …</span>
-          <span id="userPill" class="pill">User: …</span>
-        </div>
-
-        <div class="row">
-          <input id="startDate" type="date" />
-          <button id="btnRefresh">Refresh</button>
-          <button id="btnLogout" class="btn-danger">Logout</button>
-        </div>
-      </div>
-
-      <div class="sectionTitle">
-        14-Day Occupancy Forecast
-        <span id="editHint" class="hint"></span>
-      </div>
-      <div class="card">
-        <div id="occCards" class="grid14"></div>
-      </div>
-
-      <div class="sectionTitle">Restaurant Status (Green = Active)</div>
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr id="headRow">
-              <th>Service</th>
-            </tr>
-          </thead>
-          <tbody id="bodyRows"></tbody>
-        </table>
-      </div>
-
-      <div id="appMsg" class="msg"></div>
     </div>
   </div>
 
-  <!-- Load Supabase with fallback -->
-  <script>
-    function loadScript(src) {
-      return new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = src;
-        s.async = true;
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-    }
-
-    async function loadSupabaseLib() {
-      // Try jsDelivr first, then unpkg
-      try {
-        await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
-        return true;
-      } catch (_) {
-        try {
-          await loadScript("https://unpkg.com/@supabase/supabase-js@2");
-          return true;
-        } catch (_) {
-          return false;
-        }
-      }
-    }
-  </script>
+  <!-- Load Supabase from your own repo (NO CDN) -->
+  <script src="./supabase.js"></script>
 
   <script>
-    // ======= CONFIG (yours) =======
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-    // ==============================
 
     const bootMsg = document.getElementById("bootMsg");
-    const loginView = document.getElementById("loginView");
-    const appView = document.getElementById("appView");
     const loginMsg = document.getElementById("loginMsg");
-    const appMsg = document.getElementById("appMsg");
-
-    const rolePill = document.getElementById("rolePill");
-    const userPill = document.getElementById("userPill");
-    const startDateEl = document.getElementById("startDate");
-    const occCards = document.getElementById("occCards");
-    const headRow = document.getElementById("headRow");
-    const bodyRows = document.getElementById("bodyRows");
-    const editHint = document.getElementById("editHint");
-
-    const SERVICE_ORDER = [
-      "BREAKFAST ALA CARTE","BREAKFAST BUFFET REDUCED","BREAKFAST FULL BUFFET","BRUNCH","SPECIAL BREAKFAST- CLOSED",
-      "LUNCH ALA CARTE","LUNCH BUFFET","HOLIDAY LUNCH BUFFET BRUNCH","SPECIAL LUNCH- CLOSED",
-      "DINNER ALA CARTE","DINNER BUFFET","DINNER HOLIDAY /SPECIAL BUFFET","DINNER CLOSED",
-      "MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"
-    ];
-
-    let supabase = null;
-    let currentUser = null;
-    let currentRole = "viewer";
-    let dashboardDays = [];
-    let serviceByName = new Map();
 
     function setMsg(el, text, type="") {
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "ok" : "");
       el.textContent = text || "";
     }
-    function canEdit() { return currentRole === "editor" || currentRole === "admin"; }
-    function fmtDay(d) {
-      const dt = new Date(d + "T00:00:00");
-      return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
-    }
-    function isToday(d) {
-      const t = new Date(); t.setHours(0,0,0,0);
-      const dt = new Date(d + "T00:00:00");
-      return dt.getTime() === t.getTime();
+
+    if (!window.supabase || !window.supabase.createClient) {
+      setMsg(bootMsg, "Supabase library did not load. Make sure supabase.js is uploaded in the repo root.", "err");
+    } else {
+      setMsg(bootMsg, "");
     }
 
-    async function loadRole() {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-      if (error) throw error;
-      currentRole = data?.role || "viewer";
-    }
-
-    async function loadServiceItems() {
-      const { data, error } = await supabase
-        .from("service_items")
-        .select("id,name,group_name,sort_order")
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      serviceByName = new Map((data || []).map(x => [x.name, x]));
-    }
-
-    async function fetchDashboard(startDate) {
-      const { data, error } = await supabase.rpc("get_dashboard", { p_start_date: startDate, p_days: 14 });
-      if (error) throw error;
-      dashboardDays = data || [];
-    }
-
-    function buildHeader() {
-      while (headRow.children.length > 1) headRow.removeChild(headRow.lastChild);
-      for (const day of dashboardDays) {
-        const th = document.createElement("th");
-        th.textContent = fmtDay(day.day);
-        headRow.appendChild(th);
-      }
-    }
-
-    function renderOccCards() {
-      occCards.innerHTML = "";
-      for (const day of dashboardDays) {
-        const card = document.createElement("div");
-        card.className = "daycard" + (isToday(day.day) ? " today" : "");
-
-        const title = document.createElement("div");
-        title.className = "daytitle";
-        title.innerHTML = `<span>${fmtDay(day.day)}</span><span>${day.day}</span>`;
-
-        const occ = document.createElement("div");
-        occ.className = "occ";
-        const val = (day.occupancy_percent === null || day.occupancy_percent === undefined)
-          ? "—"
-          : `${Number(day.occupancy_percent).toFixed(1)}%`;
-        occ.textContent = val;
-
-        const notes = document.createElement("div");
-        notes.className = "notes";
-        notes.textContent = day.notes || "";
-
-        card.appendChild(title);
-        card.appendChild(occ);
-        card.appendChild(notes);
-
-        if (canEdit()) {
-          card.classList.add("clickable");
-          card.title = "Click to edit occupancy + notes";
-          card.addEventListener("click", () => openOccEdit(day.day, day.occupancy_percent, day.notes));
-        }
-        occCards.appendChild(card);
-      }
-    }
-
-    function statusForRowDay(serviceName, dayRow) {
-      if (serviceName.startsWith("MASSIMO ")) {
-        if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
-        if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
-        if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
-        return false;
-      }
-      const upper = serviceName.toUpperCase();
-      const breakfast = SERVICE_ORDER.slice(0,5);
-      const lunch = SERVICE_ORDER.slice(5,9);
-      const dinner = SERVICE_ORDER.slice(9,13);
-
-      if (breakfast.includes(upper)) return (dayRow.breakfast || "").toUpperCase() === upper;
-      if (lunch.includes(upper)) return (dayRow.lunch || "").toUpperCase() === upper;
-      if (dinner.includes(upper)) return (dayRow.dinner || "").toUpperCase() === upper;
-      return false;
-    }
-
-    function groupForService(serviceName) {
-      const item = serviceByName.get(serviceName);
-      return item ? item.group_name : null;
-    }
-
-    async function setPickOneSelection(date, serviceName) {
-      const item = serviceByName.get(serviceName);
-      if (!item) throw new Error("Service item not found: " + serviceName);
-      const group = item.group_name;
-      if (!["breakfast","lunch","dinner"].includes(group)) return;
-
-      const { error } = await supabase
-        .from("daily_service_selection")
-        .upsert({ date, group_name: group, selected_service_item_id: item.id }, { onConflict: "date,group_name" });
-      if (error) throw error;
-    }
-
-    async function toggleMassimo(date, serviceName, currentValue) {
-      const item = serviceByName.get(serviceName);
-      if (!item) throw new Error("Service item not found: " + serviceName);
-      const nextVal = !currentValue;
-
-      const { error } = await supabase
-        .from("daily_massimo_status")
-        .upsert({ date, service_item_id: item.id, is_active: nextVal }, { onConflict: "date,service_item_id" });
-      if (error) throw error;
-      return nextVal;
-    }
-
-    function renderStatusGrid() {
-      bodyRows.innerHTML = "";
-      for (const serviceName of SERVICE_ORDER) {
-        const tr = document.createElement("tr");
-        const tdLabel = document.createElement("td");
-        tdLabel.textContent = serviceName;
-        tr.appendChild(tdLabel);
-
-        for (const dayRow of dashboardDays) {
-          const isOn = statusForRowDay(serviceName, dayRow);
-          const td = document.createElement("td");
-          td.className = "statusCell " + (isOn ? "green" : "red");
-          td.textContent = isOn ? "ON" : "OFF";
-
-          if (canEdit()) {
-            td.classList.add("clickable");
-            td.addEventListener("click", async () => {
-              try {
-                setMsg(appMsg, "");
-                if (serviceName.startsWith("MASSIMO ")) {
-                  const newVal = await toggleMassimo(dayRow.day, serviceName, isOn);
-                  if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = newVal;
-                  if (serviceName === "MASSIMO LUNCH") dayRow.massimo_lunch = newVal;
-                  if (serviceName === "MASSIMO DINNER") dayRow.massimo_dinner = newVal;
-                } else {
-                  await setPickOneSelection(dayRow.day, serviceName);
-                  const group = groupForService(serviceName);
-                  if (group === "breakfast") dayRow.breakfast = serviceName;
-                  if (group === "lunch") dayRow.lunch = serviceName;
-                  if (group === "dinner") dayRow.dinner = serviceName;
-                }
-                renderStatusGrid();
-                setMsg(appMsg, "Saved.", "ok");
-              } catch (e) {
-                setMsg(appMsg, e.message || String(e), "err");
-              }
-            });
-          }
-
-          tr.appendChild(td);
-        }
-        bodyRows.appendChild(tr);
-      }
-    }
-
-    async function openOccEdit(date, occ, notes) {
-      const occStr = (occ === null || occ === undefined) ? "" : String(occ);
-      const newOcc = prompt(`Occupancy % for ${date} (0-100)`, occStr);
-      if (newOcc === null) return;
-
-      const occNum = newOcc.trim() === "" ? null : Number(newOcc);
-      if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)) {
-        alert("Occupancy must be a number from 0 to 100 (or blank).");
-        return;
-      }
-
-      const newNotes = prompt(`Notes for ${date} (optional)`, notes || "");
-      if (newNotes === null) return;
-
-      const { error } = await supabase
-        .from("daily_forecast")
-        .upsert({ date, occupancy_percent: occNum, notes: (newNotes || "").trim() || null }, { onConflict: "date" });
-      if (error) throw error;
-
-      const row = dashboardDays.find(x => x.day === date);
-      if (row) { row.occupancy_percent = occNum; row.notes = (newNotes || "").trim() || null; }
-      renderOccCards();
-      setMsg(appMsg, "Saved.", "ok");
-    }
-
-    async function refreshAll() {
-      try {
-        setMsg(appMsg, "Loading…");
-        await loadServiceItems();
-        await fetchDashboard(startDateEl.value);
-        buildHeader();
-        renderOccCards();
-        renderStatusGrid();
-        setMsg(appMsg, "");
-      } catch (e) {
-        setMsg(appMsg, e.message || String(e), "err");
-      }
-    }
-
-    async function showApp() {
-      loginView.style.display = "none";
-      appView.style.display = "block";
-      rolePill.textContent = `Role: ${currentRole}`;
-      userPill.textContent = `User: ${currentUser.email}`;
-      editHint.textContent = canEdit() ? "Click occupancy cards and grid cells to edit." : "View only";
-
-      const t = new Date();
-      startDateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
-      await refreshAll();
-    }
-
-    async function showLogin() {
-      appView.style.display = "none";
-      loginView.style.display = "block";
-    }
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
-      if (!email || !password) return setMsg(loginMsg, "Enter email and password.", "err");
+
+      if (!email || !password) {
+        setMsg(loginMsg, "Enter email and password.", "err");
+        return;
+      }
 
       try {
         setMsg(loginMsg, "Signing in…");
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        currentUser = data.user;
-        await loadRole();
-        await showApp();
+
+        setMsg(loginMsg, "Login worked. Next we’ll enable the full dashboard view.", "ok");
       } catch (e) {
         setMsg(loginMsg, e.message || String(e), "err");
       }
-    });
-
-    document.getElementById("btnLogout").addEventListener("click", async () => {
-      await supabase.auth.signOut();
-      currentUser = null;
-      currentRole = "viewer";
-      await showLogin();
-    });
-
-    document.getElementById("btnRefresh").addEventListener("click", refreshAll);
-    startDateEl.addEventListener("change", refreshAll);
-
-    async function init() {
-      setMsg(bootMsg, "Loading Supabase…");
-      const ok = await loadSupabaseLib();
-      if (!ok || !window.supabase) {
-        setMsg(bootMsg,
-          "Supabase library is blocked on this network/browser. Try a different network, disable ad-block for this site, or allow cdn.jsdelivr.net / unpkg.com.",
-          "err"
-        );
-        return; // keep login visible but it won't work without the library
-      }
-
-      // Create client AFTER library loads
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      setMsg(bootMsg, "");
-
-      // Boot session
-      const { data } = await supabase.auth.getSession();
-      if (data?.session?.user) {
-        currentUser = data.session.user;
-        await loadRole();
-        await showApp();
-      } else {
-        await showLogin();
-      }
-    }
-
-    init().catch(err => {
-      setMsg(bootMsg, "Startup error: " + (err?.message || String(err)), "err");
     });
   </script>
 </body>
