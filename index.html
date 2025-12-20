@@ -35,8 +35,8 @@
 <body>
   <div class="wrap">
     <div class="banner">
-      Password reset should work on this page now.
-      <div class="small">If you click a reset link, you should see “Set new password”.</div>
+      Auth + Password Reset (working version)
+      <div class="small">If you click a reset link, you should see “Set new password” and the button should work.</div>
     </div>
 
     <div id="bootMsg" class="msg"></div>
@@ -79,10 +79,10 @@
       <div id="recoveryMsg" class="msg"></div>
     </div>
 
-    <!-- APP (placeholder for now) -->
+    <!-- APP (placeholder) -->
     <div id="appView" class="box card" style="display:none;">
-      <h2>Logged in</h2>
-      <div class="small">Auth is working. Next we re-add the full dashboard.</div>
+      <h2>Logged in ✅</h2>
+      <div class="small">Next step: we put the full 14-day dashboard back in (with your restaurant grid).</div>
 
       <div class="row" style="margin-top:12px;">
         <button id="btnLogout" class="btn-danger">Logout</button>
@@ -100,12 +100,14 @@
     const SUPABASE_ANON_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
 
     const bootMsg = document.getElementById("bootMsg");
+
     const loginView = document.getElementById("loginView");
     const recoveryView = document.getElementById("recoveryView");
     const appView = document.getElementById("appView");
 
     const loginMsg = document.getElementById("loginMsg");
     const recoveryMsg = document.getElementById("recoveryMsg");
+    const appMsg = document.getElementById("appMsg");
 
     function setMsg(el, text, type="") {
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "ok" : "");
@@ -119,7 +121,7 @@
       view.style.display = "block";
     }
 
-    function cleanUrl() {
+    function cleanUrlAll() {
       const clean = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, clean);
     }
@@ -130,48 +132,14 @@
       return {
         type: p.get("type"),
         access_token: p.get("access_token"),
-        refresh_token: p.get("refresh_token")
+        refresh_token: p.get("refresh_token"),
+        error: p.get("error"),
+        error_description: p.get("error_description")
       };
     }
 
-    async function handleRecoveryLink(sb) {
-      // Old style: #access_token=...&refresh_token=...&type=recovery
-      const hp = parseHashParams();
-      if (hp.type === "recovery" && hp.access_token && hp.refresh_token) {
-        const { error } = await sb.auth.setSession({
-          access_token: hp.access_token,
-          refresh_token: hp.refresh_token
-        });
-        if (error) {
-          setMsg(bootMsg, "Reset link error: " + error.message, "err");
-          show(loginView);
-          return true;
-        }
-        cleanUrl();
-        show(recoveryView);
-        return true;
-      }
-
-      // PKCE style: ?code=...&type=recovery
-      const sp = new URLSearchParams(window.location.search);
-      const code = sp.get("code");
-      const type = sp.get("type");
-      if (type === "recovery" && code) {
-        const { error } = await sb.auth.exchangeCodeForSession(code);
-        if (error) {
-          setMsg(bootMsg, "Reset link error: " + error.message, "err");
-          show(loginView);
-          return true;
-        }
-        cleanUrl();
-        show(recoveryView);
-        return true;
-      }
-
-      return false;
-    }
-
     async function init() {
+      // Basic library check
       if (!window.supabase || !window.supabase.createClient) {
         setMsg(bootMsg, "Supabase library did not load. Make sure supabase.js is in the repo root.", "err");
         return;
@@ -181,16 +149,7 @@
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       setMsg(bootMsg, "");
 
-      // If opened from reset link
-      const didRecovery = await handleRecoveryLink(sb);
-      if (didRecovery) return;
-
-      // Normal session check
-      const { data } = await sb.auth.getSession();
-      if (data?.session?.user) show(appView);
-      else show(loginView);
-
-      // LOGIN
+      // Attach button handlers FIRST (this was the bug before)
       document.getElementById("btnLogin").addEventListener("click", async () => {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value;
@@ -207,7 +166,6 @@
         }
       });
 
-      // FORGOT PASSWORD
       document.getElementById("btnForgot").addEventListener("click", async () => {
         const email = document.getElementById("email").value.trim();
         if (!email) return setMsg(loginMsg, "Enter your email first, then click Forgot password.", "err");
@@ -224,7 +182,6 @@
         }
       });
 
-      // SET NEW PASSWORD
       document.getElementById("btnSetPass").addEventListener("click", async () => {
         const p1 = document.getElementById("newPass").value;
         const p2 = document.getElementById("newPass2").value;
@@ -234,6 +191,14 @@
 
         try {
           setMsg(recoveryMsg, "Updating password…");
+
+          // Must have a recovery session active
+          const { data: sessData } = await sb.auth.getSession();
+          if (!sessData?.session) {
+            setMsg(recoveryMsg, "No reset session found. Send a new reset email and open the link again.", "err");
+            return;
+          }
+
           const { error } = await sb.auth.updateUser({ password: p1 });
           if (error) throw error;
 
@@ -247,7 +212,7 @@
 
       document.getElementById("btnCancelRecovery").addEventListener("click", async () => {
         await sb.auth.signOut();
-        cleanUrl();
+        cleanUrlAll();
         show(loginView);
       });
 
@@ -255,6 +220,54 @@
         await sb.auth.signOut();
         show(loginView);
       });
+
+      // Now decide what view to show based on URL/session
+      // Handle hash-style recovery links
+      const hp = parseHashParams();
+      if (hp.error) {
+        setMsg(bootMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
+        cleanUrlAll();
+        show(loginView);
+        return;
+      }
+
+      if (hp.type === "recovery" && hp.access_token && hp.refresh_token) {
+        const { error } = await sb.auth.setSession({
+          access_token: hp.access_token,
+          refresh_token: hp.refresh_token
+        });
+        if (error) {
+          setMsg(bootMsg, "Reset link error: " + error.message, "err");
+          cleanUrlAll();
+          show(loginView);
+          return;
+        }
+        cleanUrlAll();
+        show(recoveryView);
+        return;
+      }
+
+      // Handle PKCE-style recovery links (?code=...&type=recovery)
+      const sp = new URLSearchParams(window.location.search);
+      const code = sp.get("code");
+      const type = sp.get("type");
+      if (type === "recovery" && code) {
+        const { error } = await sb.auth.exchangeCodeForSession(code);
+        if (error) {
+          setMsg(bootMsg, "Reset link error: " + error.message, "err");
+          cleanUrlAll();
+          show(loginView);
+          return;
+        }
+        cleanUrlAll();
+        show(recoveryView);
+        return;
+      }
+
+      // Normal session
+      const { data } = await sb.auth.getSession();
+      if (data?.session?.user) show(appView);
+      else show(loginView);
     }
 
     init().catch(err => setMsg(bootMsg, "Startup error: " + (err?.message || String(err)), "err"));
