@@ -6,59 +6,253 @@
   <title>Sheraton Niagara Falls – Dashboard</title>
   <style>
     :root{
-      --bg:#0b0f14; --card:#121925; --muted:#9bb0c8; --text:#e8f0fb; --line:#223247;
-      --ok: rgba(31,143,74,.22); --bad: rgba(179,53,53,.22);
-      --btn:#173254; --btnb:#2a4d78; --danger:#3a1720; --dangerb:#6e2a3a;
+      --bg:#f6f8fc;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --shadow: 0 10px 24px rgba(15,23,42,.08);
+
+      --brand:#2563eb;
+      --brand2:#1d4ed8;
+
+      --okbg: rgba(22, 163, 74, .12);
+      --okbd: rgba(22, 163, 74, .25);
+      --badbg: rgba(239, 68, 68, .10);
+      --badbd: rgba(239, 68, 68, .22);
+
+      --warnbg: rgba(245, 158, 11, .12);
+      --warnbd: rgba(245, 158, 11, .25);
     }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
-    .wrap{max-width:1400px;margin:0 auto;padding:16px}
-    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: linear-gradient(180deg, #f6f8fc 0%, #eef2ff 100%);
+      color:var(--text);
+    }
+    .wrap{max-width:1480px;margin:0 auto;padding:16px}
+
+    .topbar{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .titleRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     h1{font-size:18px;margin:0}
-    .pill{font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+    .pill{
+      font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(6px);
+    }
+
+    .tabs{
+      display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    }
+    .tabBtn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(6px);
+      padding:9px 12px;
+      border-radius:999px;
+      font-size:13px;
+      cursor:pointer;
+      transition: all .15s ease;
+    }
+    .tabBtn:hover{border-color:#cbd5e1}
+    .tabBtn.active{
+      background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+      color:white;
+      border-color: rgba(29,78,216,.6);
+      box-shadow: 0 10px 18px rgba(37,99,235,.20);
+    }
+
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    input,button,textarea{background:#0f1622;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+    input,button,select,textarea{
+      background:#fff;color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:14px;
+      outline:none;
+    }
     input[type="date"]{padding:9px 12px}
-    button{cursor:pointer}
-    button:hover{border-color:#345070}
-    .btn-primary{background:var(--btn);border-color:var(--btnb)}
-    .btn-primary:hover{background:#1b3b63}
-    .btn-danger{background:var(--danger);border-color:var(--dangerb)}
-    .btn-danger:hover{background:#4a1d28}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-    .grid14{display:grid;grid-template-columns:repeat(14,minmax(120px,1fr));gap:10px;overflow:auto;padding-bottom:6px}
-    .daycard{background:#0f1622;border:1px solid var(--line);border-radius:14px;padding:10px;min-width:120px}
-    .daycard.today{outline:2px solid #2a4d78}
-    .daytitle{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
-    .occ{font-size:22px;margin-top:4px;font-weight:650}
-    .notes{font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .sectionTitle{margin:14px 0 10px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    textarea{width:100%;min-height:90px;resize:vertical}
+    button{cursor:pointer;transition: all .15s ease}
+    button:hover{border-color:#cbd5e1}
+    .btnPrimary{
+      background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+      border-color: rgba(29,78,216,.55);
+      color:white;
+      box-shadow: 0 10px 18px rgba(37,99,235,.18);
+    }
+    .btnPrimary:hover{filter: brightness(1.03)}
+    .btnGhost{
+      background: rgba(255,255,255,.8);
+    }
+    .btnDanger{
+      background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+      border-color: rgba(220,38,38,.5);
+      color:white;
+      box-shadow: 0 10px 18px rgba(239,68,68,.18);
+    }
+    .btnDanger:hover{filter: brightness(1.03)}
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: var(--shadow);
+    }
+
+    .sectionTitle{
+      margin:14px 0 10px;
+      font-size:13px;
+      color:var(--muted);
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    }
     .hint{font-size:12px;color:var(--muted)}
-    .tableWrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}
-    table{border-collapse:collapse;width:100%;min-width:1200px;background:#0f1622}
-    th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:10px;text-align:center}
-    th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#0f1622;z-index:2}
-    th{font-size:12px;color:var(--muted);position:sticky;top:0;background:#0f1622;z-index:3}
-    .statusCell{font-weight:650;user-select:none}
-    .green{background:var(--ok)}
-    .red{background:var(--bad)}
-    .clickable{cursor:pointer}
-    .clickable:hover{outline:2px solid rgba(155,176,200,.25);outline-offset:-2px}
     .msg{margin-top:10px;font-size:13px;color:var(--muted)}
-    .err{color:#ff8a8a}
-    .oktxt{color:#98f5b2}
-    .loginBox{max-width:460px;margin:30px auto}
-    .loginBox h2{margin:0 0 10px;font-size:18px}
+    .err{color:#b91c1c}
+    .oktxt{color:#166534}
+
+    /* 14-day cards */
+    .grid14{
+      display:grid;
+      grid-template-columns:repeat(14, minmax(140px,1fr));
+      gap:10px;
+      overflow:auto;
+      padding-bottom:6px;
+    }
+    .daycard{
+      background: #ffffff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      min-width:140px;
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .daycard:hover{border-color:#cbd5e1; box-shadow: 0 12px 22px rgba(15,23,42,.08)}
+    .daycard.today{
+      border-color: rgba(37,99,235,.45);
+      box-shadow: 0 14px 28px rgba(37,99,235,.16);
+    }
+    .daytitle{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+    .occ{font-size:22px;margin-top:4px;font-weight:750}
+    .notes{font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .clickable{cursor:pointer}
+    .clickable:active{transform: scale(.995)}
+
+    /* status table */
+    .tableWrap{
+      overflow:auto;
+      border-radius:16px;
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      background:#fff;
+    }
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:1280px}
+    th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:10px;text-align:center; background:#fff}
+    th:first-child,td:first-child{
+      text-align:left;
+      position:sticky; left:0;
+      z-index:2;
+      background:#fff;
+    }
+    thead th{
+      position:sticky; top:0;
+      z-index:3;
+      font-size:12px;
+      color:var(--muted);
+      background: #f8fafc;
+    }
+
+    .groupRow td{
+      position:sticky;
+      left:0;
+      z-index:4;
+      background: linear-gradient(180deg, rgba(37,99,235,.08) 0%, rgba(29,78,216,.06) 100%);
+      color:#1e3a8a;
+      font-weight:800;
+      letter-spacing:.2px;
+      border-right:1px solid var(--line);
+      text-transform: uppercase;
+      font-size:12px;
+    }
+    .groupRow td:not(:first-child){ position:static; z-index:1; }
+
+    .statusCell{font-weight:800; user-select:none}
+    .green{background: var(--okbg); border-left: 4px solid rgba(22,163,74,.45)}
+    .red{background: var(--badbg); border-left: 4px solid rgba(239,68,68,.35)}
+    .statusCell.clickable:hover{
+      outline: 2px solid rgba(37,99,235,.22);
+      outline-offset: -2px;
+    }
+    .serviceName{
+      display:flex;gap:8px;align-items:center;justify-content:space-between;
+      font-weight:700;
+    }
+    .badge{
+      font-size:11px;color:var(--muted);
+      padding:3px 8px;border-radius:999px;border:1px solid var(--line);
+      background: rgba(248,250,252,.9);
+    }
+
+    /* login */
+    .loginBox{max-width:520px;margin:40px auto}
+    .loginBox h2{margin:0 0 8px;font-size:18px}
     .loginBox label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    .loginHint{margin-top:6px}
+
+    /* modal */
+    .modalBack{
+      position:fixed; inset:0;
+      background: rgba(15,23,42,.45);
+      display:none; align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:100%; max-width:620px;
+      background:#fff;
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:18px;
+      box-shadow: 0 24px 60px rgba(15,23,42,.22);
+      overflow:hidden;
+    }
+    .modalHeader{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 14px;
+      border-bottom:1px solid var(--line);
+      background: #f8fafc;
+    }
+    .modalHeader b{font-size:14px}
+    .modalBody{padding:14px}
+    .modalFooter{
+      padding:14px;
+      display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;
+      border-top:1px solid var(--line);
+      background: #f8fafc;
+    }
+    .xBtn{border-radius:12px; padding:8px 10px}
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width:720px){
+      .twoCol{grid-template-columns:1fr}
+      .grid14{grid-template-columns:repeat(14, minmax(170px,1fr))}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
 
-    <!-- LOGIN -->
+    <!-- LOGIN VIEW -->
     <div id="loginView" class="loginBox card" style="display:none;">
-      <h2>Sign in</h2>
-      <div class="hint">Sheraton Niagara Falls Dashboard</div>
+      <h2>Sheraton Dashboard</h2>
+      <div class="hint loginHint">Sign in to view / update occupancy and restaurant status.</div>
 
       <label>Email</label>
       <input id="email" type="email" placeholder="name@niagarafallshotels.com" />
@@ -67,17 +261,17 @@
       <input id="password" type="password" placeholder="••••••••" />
 
       <div class="row" style="margin-top:12px;">
-        <button id="btnLogin" class="btn-primary">Sign in</button>
-        <button id="btnForgot" class="btn-danger">Forgot password</button>
+        <button id="btnLogin" class="btnPrimary">Sign in</button>
+        <button id="btnForgot" class="btnGhost">Forgot password</button>
       </div>
 
       <div id="loginMsg" class="msg"></div>
     </div>
 
-    <!-- RECOVERY -->
+    <!-- RECOVERY VIEW -->
     <div id="recoveryView" class="loginBox card" style="display:none;">
       <h2>Set new password</h2>
-      <div class="hint">You opened a password reset link. Set the new password below.</div>
+      <div class="hint">This page opened from a reset email link.</div>
 
       <label>New password</label>
       <input id="newPass" type="password" placeholder="New password" />
@@ -86,119 +280,316 @@
       <input id="newPass2" type="password" placeholder="Confirm new password" />
 
       <div class="row" style="margin-top:12px;">
-        <button id="btnSetPass" class="btn-primary">Update password</button>
-        <button id="btnCancelRecovery" class="btn-danger">Cancel</button>
+        <button id="btnSetPass" class="btnPrimary">Update password</button>
+        <button id="btnCancelRecovery" class="btnGhost">Cancel</button>
       </div>
 
       <div id="recoveryMsg" class="msg"></div>
     </div>
 
-    <!-- APP -->
+    <!-- APP VIEW -->
     <div id="appView" style="display:none;">
       <div class="topbar">
-        <div class="row">
-          <h1>Sheraton Niagara Falls – Dashboard</h1>
+        <div class="titleRow">
+          <h1>Sheraton Niagara Falls – Ops Dashboard</h1>
           <span id="rolePill" class="pill">Role: …</span>
           <span id="userPill" class="pill">User: …</span>
         </div>
 
-        <div class="row">
-          <input id="startDate" type="date" />
-          <button id="btnRefresh">Refresh</button>
-          <button id="btnLoadLog" class="btn-primary">View log for selected date</button>
-          <button id="btnLogout" class="btn-danger">Logout</button>
+        <div class="tabs">
+          <button id="tabDashboard" class="tabBtn active">Dashboard</button>
+          <button id="tabUsers" class="tabBtn" style="display:none;">Users</button>
+          <button id="tabLogs" class="tabBtn" style="display:none;">Logs</button>
+          <button id="btnLogout" class="tabBtn btnDanger">Logout</button>
         </div>
       </div>
 
-      <div class="sectionTitle">
-        14-Day Occupancy Forecast
-        <span id="editHint" class="hint"></span>
+      <!-- DASHBOARD PANEL -->
+      <div id="panelDashboard">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <div class="row">
+              <label style="margin:0;color:var(--muted);font-size:12px;">Start date</label>
+              <input id="startDate" type="date" />
+              <button id="btnToday" class="btnGhost">Today</button>
+              <button id="btnRefresh" class="btnPrimary">Refresh</button>
+            </div>
+            <div class="hint" id="editHint"></div>
+          </div>
+        </div>
+
+        <div class="sectionTitle">14-Day Occupancy Forecast</div>
+        <div class="card">
+          <div id="occCards" class="grid14"></div>
+          <div class="hint" style="margin-top:10px;">Tip: click a day to edit occupancy and notes (editor/admin).</div>
+        </div>
+
+        <div class="sectionTitle">Restaurant Status</div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr id="headRow">
+                <th>Service</th>
+              </tr>
+            </thead>
+            <tbody id="bodyRows"></tbody>
+          </table>
+        </div>
+
+        <div id="appMsg" class="msg"></div>
       </div>
 
-      <div class="card">
-        <div id="occCards" class="grid14"></div>
+      <!-- USERS PANEL (ADMIN) -->
+      <div id="panelUsers" style="display:none;">
+        <div class="sectionTitle">Admin – Users & Roles</div>
+
+        <div class="card">
+          <div class="hint" style="margin-bottom:10px;">
+            Add users in Supabase Auth first (Authentication → Users). Then add/update role here using their UID.
+          </div>
+
+          <div class="twoCol">
+            <div>
+              <label style="margin:0;color:var(--muted);font-size:12px;">User UID</label>
+              <input id="newUserId" placeholder="e.g. d4e58f83-..." />
+            </div>
+            <div>
+              <label style="margin:0;color:var(--muted);font-size:12px;">Role</label>
+              <select id="newUserRole">
+                <option value="viewer">viewer</option>
+                <option value="editor">editor</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <button id="btnUpsertUser" class="btnPrimary">Save role</button>
+            <button id="btnReloadUsers" class="btnGhost">Reload list</button>
+          </div>
+
+          <div id="usersMsg" class="msg"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div class="sectionTitle" style="margin-top:0;">Current profiles</div>
+          <div class="tableWrap" style="box-shadow:none;">
+            <table style="min-width:780px;">
+              <thead>
+                <tr>
+                  <th>User UID</th>
+                  <th style="width:180px;">Role</th>
+                  <th style="width:140px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <div class="sectionTitle">Restaurant Status (Green = Active)</div>
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr id="headRow">
-              <th>Service</th>
-            </tr>
-          </thead>
-          <tbody id="bodyRows"></tbody>
-        </table>
+      <!-- LOGS PANEL (ADMIN) -->
+      <div id="panelLogs" style="display:none;">
+        <div class="sectionTitle">Admin – Change Logs</div>
+
+        <div class="card">
+          <div class="row">
+            <label style="margin:0;color:var(--muted);font-size:12px;">Date</label>
+            <input id="logDate" type="date" />
+            <button id="btnLoadLog" class="btnPrimary">Load logs</button>
+          </div>
+          <div id="logsMsg" class="msg"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div class="sectionTitle" style="margin-top:0;">Log entries</div>
+          <div id="logList" class="hint"></div>
+        </div>
       </div>
 
-      <div id="appMsg" class="msg"></div>
+    </div>
+  </div>
 
-      <div id="logBox" class="card" style="margin-top:14px; display:none;">
-        <div class="sectionTitle" style="margin-top:0;">Change Log (Admin only)</div>
-        <div id="logList" class="hint"></div>
+  <!-- MODAL: Occupancy edit -->
+  <div id="occModalBack" class="modalBack">
+    <div class="modal">
+      <div class="modalHeader">
+        <b id="occModalTitle">Edit</b>
+        <button id="btnOccClose" class="btnGhost xBtn">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="twoCol">
+          <div>
+            <label style="margin:0;color:var(--muted);font-size:12px;">Occupancy % (0–100)</label>
+            <input id="occInput" type="number" min="0" max="100" step="0.1" placeholder="e.g. 78.5" />
+          </div>
+          <div>
+            <label style="margin:0;color:var(--muted);font-size:12px;">Notes</label>
+            <input id="occNotesShort" placeholder="Optional short note" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label style="margin:0;color:var(--muted);font-size:12px;">Long notes (optional)</label>
+          <textarea id="occNotesLong" placeholder="Optional…"></textarea>
+          <div class="hint">We store notes as one field. If you fill both, long notes wins.</div>
+        </div>
+
+        <div id="occModalMsg" class="msg"></div>
+      </div>
+      <div class="modalFooter">
+        <button id="btnOccClear" class="btnGhost">Clear</button>
+        <button id="btnOccSave" class="btnPrimary">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- Local Supabase library (must exist in repo root) -->
+  <!-- Local Supabase library -->
   <script src="./supabase.js"></script>
 
   <script>
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
 
-    // Do NOT name this variable "supabase"
+    // do NOT name this variable "supabase"
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // Views
     const loginView = document.getElementById("loginView");
     const recoveryView = document.getElementById("recoveryView");
     const appView = document.getElementById("appView");
 
-    const loginMsg = document.getElementById("loginMsg");
-    const recoveryMsg = document.getElementById("recoveryMsg");
-    const appMsg = document.getElementById("appMsg");
+    // Tabs / panels
+    const tabDashboard = document.getElementById("tabDashboard");
+    const tabUsers = document.getElementById("tabUsers");
+    const tabLogs = document.getElementById("tabLogs");
 
+    const panelDashboard = document.getElementById("panelDashboard");
+    const panelUsers = document.getElementById("panelUsers");
+    const panelLogs = document.getElementById("panelLogs");
+
+    // Header pills
     const rolePill = document.getElementById("rolePill");
     const userPill = document.getElementById("userPill");
+    const editHint = document.getElementById("editHint");
+
+    // Dashboard
     const startDateEl = document.getElementById("startDate");
     const occCards = document.getElementById("occCards");
     const headRow = document.getElementById("headRow");
     const bodyRows = document.getElementById("bodyRows");
-    const editHint = document.getElementById("editHint");
+    const appMsg = document.getElementById("appMsg");
 
-    const logBox = document.getElementById("logBox");
+    // Auth messages
+    const loginMsg = document.getElementById("loginMsg");
+    const recoveryMsg = document.getElementById("recoveryMsg");
+
+    // Users
+    const usersMsg = document.getElementById("usersMsg");
+    const usersTable = document.getElementById("usersTable");
+    const newUserId = document.getElementById("newUserId");
+    const newUserRole = document.getElementById("newUserRole");
+
+    // Logs
+    const logsMsg = document.getElementById("logsMsg");
+    const logDate = document.getElementById("logDate");
     const logList = document.getElementById("logList");
 
-    const SERVICE_ORDER = [
-      "BREAKFAST ALA CARTE","BREAKFAST BUFFET REDUCED","BREAKFAST FULL BUFFET","BRUNCH","SPECIAL BREAKFAST- CLOSED",
-      "LUNCH ALA CARTE","LUNCH BUFFET","HOLIDAY LUNCH BUFFET BRUNCH","SPECIAL LUNCH- CLOSED",
-      "DINNER ALA CARTE","DINNER BUFFET","DINNER HOLIDAY /SPECIAL BUFFET","DINNER CLOSED",
-      "MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"
-    ];
+    // Modal
+    const occModalBack = document.getElementById("occModalBack");
+    const occModalTitle = document.getElementById("occModalTitle");
+    const occModalMsg = document.getElementById("occModalMsg");
+    const occInput = document.getElementById("occInput");
+    const occNotesShort = document.getElementById("occNotesShort");
+    const occNotesLong = document.getElementById("occNotesLong");
 
+    // Data
     let currentUser = null;
     let myRole = "viewer";
     let dashboardDays = [];
     let serviceByName = new Map();
+    let occEditDate = null;
+
+    const GROUPS = [
+      {
+        title: "Breakfast",
+        items: [
+          "BREAKFAST ALA CARTE",
+          "BREAKFAST BUFFET REDUCED",
+          "BREAKFAST FULL BUFFET",
+          "BRUNCH",
+          "SPECIAL BREAKFAST- CLOSED"
+        ]
+      },
+      {
+        title: "Lunch",
+        items: [
+          "LUNCH ALA CARTE",
+          "LUNCH BUFFET",
+          "HOLIDAY LUNCH BUFFET BRUNCH",
+          "SPECIAL LUNCH- CLOSED"
+        ]
+      },
+      {
+        title: "Dinner",
+        items: [
+          "DINNER ALA CARTE",
+          "DINNER BUFFET",
+          "DINNER HOLIDAY /SPECIAL BUFFET",
+          "DINNER CLOSED"
+        ]
+      },
+      {
+        title: "Massimo",
+        items: [
+          "MASSIMO BREAKFAST",
+          "MASSIMO LUNCH",
+          "MASSIMO DINNER"
+        ]
+      }
+    ];
 
     function setMsg(el, text, type="") {
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : "");
       el.textContent = text || "";
     }
 
-    function show(view) {
+    function show(view){
       loginView.style.display = "none";
       recoveryView.style.display = "none";
       appView.style.display = "none";
       view.style.display = "block";
     }
 
-    function cleanUrlAll() {
+    function canEdit(){ return myRole === "editor" || myRole === "admin"; }
+    function isAdmin(){ return myRole === "admin"; }
+
+    function switchTab(which){
+      // active button
+      for (const b of [tabDashboard, tabUsers, tabLogs]) b.classList.remove("active");
+      // panels off
+      panelDashboard.style.display = "none";
+      panelUsers.style.display = "none";
+      panelLogs.style.display = "none";
+
+      if (which === "dashboard"){
+        tabDashboard.classList.add("active");
+        panelDashboard.style.display = "block";
+      } else if (which === "users"){
+        tabUsers.classList.add("active");
+        panelUsers.style.display = "block";
+      } else if (which === "logs"){
+        tabLogs.classList.add("active");
+        panelLogs.style.display = "block";
+      }
+    }
+
+    function cleanUrlAll(){
       const clean = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, clean);
     }
 
-    function parseHashParams() {
+    function parseHashParams(){
       const h = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
       const p = new URLSearchParams(h);
       return {
@@ -210,73 +601,113 @@
       };
     }
 
-    function canEdit(){ return myRole === "editor" || myRole === "admin"; }
-    function isAdmin(){ return myRole === "admin"; }
-
-    function fmtDay(d) {
+    function fmtDay(d){
       const dt = new Date(d + "T00:00:00");
       return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
     }
-    function isToday(d) {
+    function isToday(d){
       const t = new Date(); t.setHours(0,0,0,0);
       const dt = new Date(d + "T00:00:00");
       return dt.getTime() === t.getTime();
     }
 
-    async function loadRole() {
-      const { data, error } = await sb.from("profiles").select("role").eq("user_id", currentUser.id).maybeSingle();
+    async function loadRole(){
+      const { data, error } = await sb
+        .from("profiles")
+        .select("role")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
       if (error) throw error;
       myRole = data?.role || "viewer";
     }
 
-    async function loadServiceItems() {
-      const { data, error } = await sb.from("service_items").select("id,name,group_name,sort_order").order("sort_order", { ascending: true });
+    async function loadServiceItems(){
+      const { data, error } = await sb
+        .from("service_items")
+        .select("id,name,group_name,sort_order")
+        .order("sort_order", { ascending: true });
       if (error) throw error;
       serviceByName = new Map((data || []).map(x => [x.name, x]));
     }
 
-    async function fetchDashboard(startDate) {
+    async function fetchDashboard(startDate){
       const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: 14 });
       if (error) throw error;
       dashboardDays = data || [];
     }
 
-    function buildHeader() {
+    function buildHeader(){
       while (headRow.children.length > 1) headRow.removeChild(headRow.lastChild);
-      for (const day of dashboardDays) {
+      for (const day of dashboardDays){
         const th = document.createElement("th");
         th.textContent = fmtDay(day.day);
         headRow.appendChild(th);
       }
     }
 
-    async function openOccEdit(date, occ, notes) {
-      const occStr = (occ === null || occ === undefined) ? "" : String(occ);
-      const newOcc = prompt(`Occupancy % for ${date} (0-100). Leave blank to clear.`, occStr);
-      if (newOcc === null) return;
+    function openOccModal(date, occ, notes){
+      occEditDate = date;
+      occModalTitle.textContent = `Edit occupancy – ${date}`;
+      setMsg(occModalMsg, "");
 
-      const occNum = newOcc.trim() === "" ? null : Number(newOcc);
-      if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)) {
-        alert("Occupancy must be 0 to 100 (or blank).");
-        return;
-      }
+      occInput.value = (occ === null || occ === undefined) ? "" : String(occ);
+      occNotesShort.value = notes || "";
+      occNotesLong.value = "";
 
-      const newNotes = prompt(`Notes for ${date} (optional)`, notes || "");
-      if (newNotes === null) return;
-
-      const { error } = await sb.from("daily_forecast")
-        .upsert({ date, occupancy_percent: occNum, notes: (newNotes || "").trim() || null }, { onConflict: "date" });
-
-      if (error) throw error;
-
-      const row = dashboardDays.find(x => x.day === date);
-      if (row) { row.occupancy_percent = occNum; row.notes = (newNotes || "").trim() || null; }
-      renderOccCards();
+      occModalBack.style.display = "flex";
     }
 
-    function renderOccCards() {
+    function closeOccModal(){
+      occModalBack.style.display = "none";
+      occEditDate = null;
+    }
+
+    async function saveOccModal(){
+      try{
+        if (!occEditDate) return;
+
+        const occRaw = String(occInput.value || "").trim();
+        const occNum = occRaw === "" ? null : Number(occRaw);
+        if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)){
+          setMsg(occModalMsg, "Occupancy must be 0 to 100 (or blank).", "err");
+          return;
+        }
+
+        const longNotes = String(occNotesLong.value || "").trim();
+        const shortNotes = String(occNotesShort.value || "").trim();
+        const notes = (longNotes || shortNotes) || null;
+
+        setMsg(occModalMsg, "Saving…");
+
+        const { error } = await sb
+          .from("daily_forecast")
+          .upsert({ date: occEditDate, occupancy_percent: occNum, notes }, { onConflict: "date" });
+
+        if (error) throw error;
+
+        const row = dashboardDays.find(x => x.day === occEditDate);
+        if (row){
+          row.occupancy_percent = occNum;
+          row.notes = notes;
+        }
+        renderOccCards();
+        setMsg(occModalMsg, "Saved.", "ok");
+        setTimeout(closeOccModal, 350);
+      } catch(e){
+        setMsg(occModalMsg, e?.message || String(e), "err");
+      }
+    }
+
+    async function clearOccModal(){
+      occInput.value = "";
+      occNotesShort.value = "";
+      occNotesLong.value = "";
+      await saveOccModal();
+    }
+
+    function renderOccCards(){
       occCards.innerHTML = "";
-      for (const day of dashboardDays) {
+      for (const day of dashboardDays){
         const card = document.createElement("div");
         card.className = "daycard" + (isToday(day.day) ? " today" : "");
 
@@ -286,197 +717,301 @@
 
         const occ = document.createElement("div");
         occ.className = "occ";
-        occ.textContent = (day.occupancy_percent === null || day.occupancy_percent === undefined) ? "—" : `${Number(day.occupancy_percent).toFixed(1)}%`;
+        occ.textContent = (day.occupancy_percent === null || day.occupancy_percent === undefined)
+          ? "—"
+          : `${Number(day.occupancy_percent).toFixed(1)}%`;
 
         const notes = document.createElement("div");
         notes.className = "notes";
         notes.textContent = day.notes || "";
 
-        card.appendChild(title); card.appendChild(occ); card.appendChild(notes);
+        card.appendChild(title);
+        card.appendChild(occ);
+        card.appendChild(notes);
 
-        if (canEdit()) {
+        if (canEdit()){
           card.classList.add("clickable");
           card.title = "Click to edit occupancy + notes";
-          card.addEventListener("click", () => openOccEdit(day.day, day.occupancy_percent, day.notes));
+          card.addEventListener("click", () => openOccModal(day.day, day.occupancy_percent, day.notes));
         }
+
         occCards.appendChild(card);
       }
     }
 
-    function statusFor(serviceName, dayRow) {
-      if (serviceName.startsWith("MASSIMO ")) {
+    function statusFor(serviceName, dayRow){
+      if (serviceName.startsWith("MASSIMO ")){
         if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
         if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
         if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
         return false;
       }
-      const upper = serviceName.toUpperCase();
-      const breakfast = SERVICE_ORDER.slice(0,5);
-      const lunch = SERVICE_ORDER.slice(5,9);
-      const dinner = SERVICE_ORDER.slice(9,13);
 
-      if (breakfast.includes(upper)) return (dayRow.breakfast || "").toUpperCase() === upper;
-      if (lunch.includes(upper)) return (dayRow.lunch || "").toUpperCase() === upper;
-      if (dinner.includes(upper)) return (dayRow.dinner || "").toUpperCase() === upper;
+      const upper = serviceName.toUpperCase();
+      const group = serviceByName.get(serviceName)?.group_name; // breakfast/lunch/dinner
+      if (group === "breakfast") return (dayRow.breakfast || "").toUpperCase() === upper;
+      if (group === "lunch") return (dayRow.lunch || "").toUpperCase() === upper;
+      if (group === "dinner") return (dayRow.dinner || "").toUpperCase() === upper;
       return false;
     }
 
-    async function setPickOne(date, serviceName) {
+    async function setPickOne(date, serviceName){
       const item = serviceByName.get(serviceName);
       if (!item) throw new Error("Service item not found: " + serviceName);
 
       const group = item.group_name;
       if (!["breakfast","lunch","dinner"].includes(group)) return;
 
-      const { error } = await sb.from("daily_service_selection")
+      const { error } = await sb
+        .from("daily_service_selection")
         .upsert({ date, group_name: group, selected_service_item_id: item.id }, { onConflict: "date,group_name" });
 
       if (error) throw error;
     }
 
-    async function toggleMassimo(date, serviceName, isOn) {
+    async function toggleMassimo(date, serviceName, isOn){
       const item = serviceByName.get(serviceName);
       if (!item) throw new Error("Service item not found: " + serviceName);
 
-      const { error } = await sb.from("daily_massimo_status")
+      const { error } = await sb
+        .from("daily_massimo_status")
         .upsert({ date, service_item_id: item.id, is_active: !isOn }, { onConflict: "date,service_item_id" });
 
       if (error) throw error;
     }
 
-    function renderStatusGrid() {
+    function renderStatusGrid(){
       bodyRows.innerHTML = "";
-      for (const serviceName of SERVICE_ORDER) {
-        const tr = document.createElement("tr");
+      const colspan = 1 + (dashboardDays?.length || 14);
 
-        const tdLabel = document.createElement("td");
-        tdLabel.textContent = serviceName;
-        tr.appendChild(tdLabel);
+      for (const group of GROUPS){
+        // group title row
+        const trg = document.createElement("tr");
+        trg.className = "groupRow";
+        const tdg = document.createElement("td");
+        tdg.colSpan = colspan;
+        tdg.textContent = group.title;
+        trg.appendChild(tdg);
+        bodyRows.appendChild(trg);
 
-        for (const dayRow of dashboardDays) {
-          const isOn = statusFor(serviceName, dayRow);
-          const td = document.createElement("td");
-          td.className = "statusCell " + (isOn ? "green" : "red");
-          td.textContent = isOn ? "ON" : "OFF";
+        for (const serviceName of group.items){
+          const tr = document.createElement("tr");
 
-          if (canEdit()) {
-            td.classList.add("clickable");
-            td.addEventListener("click", async () => {
-              try {
-                setMsg(appMsg, "");
-                if (serviceName.startsWith("MASSIMO ")) {
-                  await toggleMassimo(dayRow.day, serviceName, isOn);
-                  if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = !isOn;
-                  if (serviceName === "MASSIMO LUNCH") dayRow.massimo_lunch = !isOn;
-                  if (serviceName === "MASSIMO DINNER") dayRow.massimo_dinner = !isOn;
-                } else {
-                  await setPickOne(dayRow.day, serviceName);
-                  const group = serviceByName.get(serviceName)?.group_name;
-                  if (group === "breakfast") dayRow.breakfast = serviceName;
-                  if (group === "lunch") dayRow.lunch = serviceName;
-                  if (group === "dinner") dayRow.dinner = serviceName;
+          const tdLabel = document.createElement("td");
+          tdLabel.innerHTML = `<div class="serviceName"><span>${serviceName}</span><span class="badge">${group.title}</span></div>`;
+          tr.appendChild(tdLabel);
+
+          for (const dayRow of dashboardDays){
+            const isOn = statusFor(serviceName, dayRow);
+
+            const td = document.createElement("td");
+            td.className = "statusCell " + (isOn ? "green" : "red");
+            td.textContent = isOn ? "ON" : "OFF";
+
+            if (canEdit()){
+              td.classList.add("clickable");
+              td.addEventListener("click", async () => {
+                try{
+                  setMsg(appMsg, "");
+                  if (serviceName.startsWith("MASSIMO ")){
+                    await toggleMassimo(dayRow.day, serviceName, isOn);
+                    if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = !isOn;
+                    if (serviceName === "MASSIMO LUNCH") dayRow.massimo_lunch = !isOn;
+                    if (serviceName === "MASSIMO DINNER") dayRow.massimo_dinner = !isOn;
+                  } else {
+                    await setPickOne(dayRow.day, serviceName);
+                    const gname = serviceByName.get(serviceName)?.group_name;
+                    if (gname === "breakfast") dayRow.breakfast = serviceName;
+                    if (gname === "lunch") dayRow.lunch = serviceName;
+                    if (gname === "dinner") dayRow.dinner = serviceName;
+                  }
+
+                  renderStatusGrid();
+                  setMsg(appMsg, "Saved.", "ok");
+                } catch(e){
+                  setMsg(appMsg, e?.message || String(e), "err");
                 }
-                renderStatusGrid();
-                setMsg(appMsg, "Saved.", "ok");
-              } catch (e) {
-                setMsg(appMsg, e.message || String(e), "err");
-              }
-            });
+              });
+            }
+
+            tr.appendChild(td);
           }
 
-          tr.appendChild(td);
+          bodyRows.appendChild(tr);
         }
-        bodyRows.appendChild(tr);
       }
     }
 
-    async function refreshAll() {
-      try {
+    async function refreshAll(){
+      try{
         setMsg(appMsg, "Loading…");
-        logBox.style.display = "none";
         await loadServiceItems();
         await fetchDashboard(startDateEl.value);
         buildHeader();
         renderOccCards();
         renderStatusGrid();
         setMsg(appMsg, "");
-      } catch (e) {
-        setMsg(appMsg, e.message || String(e), "err");
+      } catch(e){
+        setMsg(appMsg, e?.message || String(e), "err");
       }
     }
 
-    function escapeHtml(s) {
+    // ---- USERS (Admin) ----
+    function roleSelectHtml(current){
+      return `
+        <select data-role>
+          <option value="viewer" ${current==="viewer"?"selected":""}>viewer</option>
+          <option value="editor" ${current==="editor"?"selected":""}>editor</option>
+          <option value="admin"  ${current==="admin" ?"selected":""}>admin</option>
+        </select>
+      `;
+    }
+
+    async function loadUsers(){
+      try{
+        setMsg(usersMsg, "Loading…");
+        usersTable.innerHTML = "";
+
+        const { data, error } = await sb
+          .from("profiles")
+          .select("user_id, role")
+          .order("role", { ascending: false })
+          .limit(200);
+
+        if (error) throw error;
+
+        for (const p of (data || [])){
+          const tr = document.createElement("tr");
+
+          const tdId = document.createElement("td");
+          tdId.textContent = p.user_id;
+
+          const tdRole = document.createElement("td");
+          tdRole.innerHTML = roleSelectHtml(p.role || "viewer");
+
+          const tdAct = document.createElement("td");
+          const btn = document.createElement("button");
+          btn.className = "btnPrimary";
+          btn.textContent = "Save";
+          btn.addEventListener("click", async () => {
+            try{
+              const newRole = tdRole.querySelector("select[data-role]").value;
+              const { error: uerr } = await sb
+                .from("profiles")
+                .upsert({ user_id: p.user_id, role: newRole }, { onConflict: "user_id" });
+
+              if (uerr) throw uerr;
+              setMsg(usersMsg, "Saved.", "ok");
+              setTimeout(() => setMsg(usersMsg, ""), 900);
+            } catch(e){
+              setMsg(usersMsg, e?.message || String(e), "err");
+            }
+          });
+
+          tdAct.appendChild(btn);
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdRole);
+          tr.appendChild(tdAct);
+
+          usersTable.appendChild(tr);
+        }
+
+        setMsg(usersMsg, "");
+      } catch(e){
+        setMsg(usersMsg, e?.message || String(e), "err");
+      }
+    }
+
+    async function upsertUserRole(){
+      try{
+        setMsg(usersMsg, "");
+        const uid = String(newUserId.value || "").trim();
+        const role = String(newUserRole.value || "viewer").trim();
+
+        if (!uid) { setMsg(usersMsg, "Enter a user UID.", "err"); return; }
+        if (!["viewer","editor","admin"].includes(role)) { setMsg(usersMsg, "Invalid role.", "err"); return; }
+
+        setMsg(usersMsg, "Saving…");
+
+        const { error } = await sb
+          .from("profiles")
+          .upsert({ user_id: uid, role }, { onConflict: "user_id" });
+
+        if (error) throw error;
+
+        setMsg(usersMsg, "Saved.", "ok");
+        newUserId.value = "";
+        await loadUsers();
+      } catch(e){
+        setMsg(usersMsg, e?.message || String(e), "err");
+      }
+    }
+
+    // ---- LOGS (Admin) ----
+    function escapeHtml(s){
       return String(s).replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
       }[m]));
     }
 
-    async function loadLogForSelectedDate() {
-      if (!isAdmin()) { setMsg(appMsg, "Only Admin can view the log.", "err"); return; }
+    async function loadLogs(){
+      try{
+        setMsg(logsMsg, "");
+        const d = logDate.value;
+        if (!d){ setMsg(logsMsg, "Pick a date.", "err"); return; }
 
-      try {
-        setMsg(appMsg, "Loading log…");
-        const d = startDateEl.value;
-
-        const { data, error } = await sb.from("change_log")
-          .select("changed_at, table_name, record_date, group_name, service_item_id, field, old_value, new_value, action")
+        setMsg(logsMsg, "Loading…");
+        const { data, error } = await sb
+          .from("change_log")
+          .select("changed_at, table_name, record_date, group_name, field, old_value, new_value, action")
           .eq("record_date", d)
           .order("changed_at", { ascending: false })
-          .limit(80);
+          .limit(120);
 
         if (error) throw error;
 
-        logBox.style.display = "block";
-        if (!data || data.length === 0) {
-          logList.textContent = "No changes logged for this date.";
+        if (!data || data.length === 0){
+          logList.innerHTML = `<div>No changes logged for ${d}.</div>`;
         } else {
           logList.innerHTML = data.map(x => {
             const t = new Date(x.changed_at).toLocaleString();
-            const g = x.group_name ? ` (${x.group_name})` : "";
-            const f = x.field ? ` ${x.field}` : "";
-            const ov = (x.old_value ?? "");
-            const nv = (x.new_value ?? "");
-            return `<div style="margin:6px 0;">
-              <b>${t}</b> – <span class="hint">${x.table_name}${g}${f} [${x.action}]</span><br/>
-              <span class="hint">Old:</span> ${escapeHtml(ov)} <span class="hint">→ New:</span> ${escapeHtml(nv)}
-            </div>`;
+            const g = x.group_name ? ` <span class="badge">${escapeHtml(x.group_name)}</span>` : "";
+            const f = x.field ? ` <span class="badge">${escapeHtml(x.field)}</span>` : "";
+            const ov = escapeHtml(x.old_value ?? "");
+            const nv = escapeHtml(x.new_value ?? "");
+            return `
+              <div style="padding:10px 0;border-bottom:1px solid var(--line);">
+                <div><b>${t}</b> <span class="hint">(${escapeHtml(x.action)})</span></div>
+                <div class="hint">${escapeHtml(x.table_name)}${g}${f}</div>
+                <div class="hint">Old: <span style="color:#b91c1c">${ov || "—"}</span> → New: <span style="color:#166534">${nv || "—"}</span></div>
+              </div>
+            `;
           }).join("");
         }
-        setMsg(appMsg, "");
-      } catch (e) {
-        setMsg(appMsg, e.message || String(e), "err");
+
+        setMsg(logsMsg, "");
+      } catch(e){
+        setMsg(logsMsg, e?.message || String(e), "err");
       }
     }
 
-    async function showApp() {
-      show(appView);
-      rolePill.textContent = `Role: ${myRole}`;
-      userPill.textContent = `User: ${currentUser.email}`;
-      editHint.textContent = canEdit()
-        ? "Editors/Admin: click occupancy card to edit. Click a grid cell to change status."
-        : "View only";
-
-      const t = new Date();
-      startDateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
-      await refreshAll();
-    }
-
-    // ----- AUTH: forgot password + recovery handling -----
-    async function handleRecoveryFromUrl() {
+    // ---- Auth: forgot password + recovery ----
+    async function handleRecoveryFromUrl(){
       const hp = parseHashParams();
 
-      if (hp.error) {
+      if (hp.error){
         setMsg(loginMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
         cleanUrlAll();
         show(loginView);
         return true;
       }
 
-      // Hash token style
-      if (hp.type === "recovery" && hp.access_token && hp.refresh_token) {
+      // Hash token style (#access_token=...&type=recovery)
+      if (hp.type === "recovery" && hp.access_token && hp.refresh_token){
         const { error } = await sb.auth.setSession({ access_token: hp.access_token, refresh_token: hp.refresh_token });
         cleanUrlAll();
-        if (error) {
+        if (error){
           setMsg(recoveryMsg, "Reset link error: " + error.message, "err");
           show(loginView);
         } else {
@@ -489,10 +1024,10 @@
       const sp = new URLSearchParams(window.location.search);
       const code = sp.get("code");
       const type = sp.get("type");
-      if (type === "recovery" && code) {
+      if (type === "recovery" && code){
         const { error } = await sb.auth.exchangeCodeForSession(code);
         cleanUrlAll();
-        if (error) {
+        if (error){
           setMsg(recoveryMsg, "Reset link error: " + error.message, "err");
           show(loginView);
         } else {
@@ -504,38 +1039,73 @@
       return false;
     }
 
-    // ----- Button handlers -----
+    async function showApp(){
+      show(appView);
+      rolePill.textContent = `Role: ${myRole}`;
+      userPill.textContent = `User: ${currentUser.email}`;
+
+      // admin tabs
+      tabUsers.style.display = isAdmin() ? "inline-block" : "none";
+      tabLogs.style.display = isAdmin() ? "inline-block" : "none";
+
+      editHint.textContent = canEdit()
+        ? "Editor/Admin: click a day to edit occupancy. Click status to change."
+        : "View only";
+
+      // dates
+      const t = new Date();
+      const todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+      startDateEl.value = todayStr;
+      logDate.value = todayStr;
+
+      switchTab("dashboard");
+      await refreshAll();
+
+      if (isAdmin()){
+        await loadUsers();
+      }
+    }
+
+    // Buttons: auth
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
       if (!email || !password) return setMsg(loginMsg, "Enter email and password.", "err");
 
-      try {
+      try{
         setMsg(loginMsg, "Signing in…");
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
         currentUser = data.user;
-        await loadRole();
+
+        const { data: roleData, error: roleErr } = await sb
+          .from("profiles")
+          .select("role")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+        if (roleErr) throw roleErr;
+
+        myRole = roleData?.role || "viewer";
+        setMsg(loginMsg, "");
         await showApp();
-      } catch (e) {
-        setMsg(loginMsg, e.message || String(e), "err");
+      } catch(e){
+        setMsg(loginMsg, e?.message || String(e), "err");
       }
     });
 
     document.getElementById("btnForgot").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
-      if (!email) return setMsg(loginMsg, "Enter your email first, then click Forgot password.", "err");
+      if (!email) return setMsg(loginMsg, "Enter your email first.", "err");
 
-      try {
+      try{
         setMsg(loginMsg, "Sending reset email…");
-        const redirectTo = window.location.origin + window.location.pathname; // your GitHub pages URL
+        const redirectTo = window.location.origin + window.location.pathname;
         const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
         if (error) throw error;
-
-        setMsg(loginMsg, "Reset email sent. Click the link, then set your new password.", "ok");
-      } catch (e) {
-        setMsg(loginMsg, e.message || String(e), "err");
+        setMsg(loginMsg, "Reset email sent. Open the link, then set your new password.", "ok");
+      } catch(e){
+        setMsg(loginMsg, e?.message || String(e), "err");
       }
     });
 
@@ -546,10 +1116,10 @@
       if (!p1 || p1.length < 6) return setMsg(recoveryMsg, "Password must be at least 6 characters.", "err");
       if (p1 !== p2) return setMsg(recoveryMsg, "Passwords do not match.", "err");
 
-      try {
-        setMsg(recoveryMsg, "Updating password…");
+      try{
+        setMsg(recoveryMsg, "Updating…");
         const { data: sessData } = await sb.auth.getSession();
-        if (!sessData?.session) {
+        if (!sessData?.session){
           setMsg(recoveryMsg, "No reset session found. Send a new reset email and open the new link.", "err");
           return;
         }
@@ -557,11 +1127,11 @@
         const { error } = await sb.auth.updateUser({ password: p1 });
         if (error) throw error;
 
-        setMsg(recoveryMsg, "Password updated. Please sign in with the new password.", "ok");
+        setMsg(recoveryMsg, "Password updated. Sign in with the new password.", "ok");
         await sb.auth.signOut();
         show(loginView);
-      } catch (e) {
-        setMsg(recoveryMsg, e.message || String(e), "err");
+      } catch(e){
+        setMsg(recoveryMsg, e?.message || String(e), "err");
       }
     });
 
@@ -578,18 +1148,46 @@
       show(loginView);
     });
 
+    // Buttons: tabs
+    tabDashboard.addEventListener("click", () => switchTab("dashboard"));
+    tabUsers.addEventListener("click", async () => {
+      switchTab("users");
+      if (isAdmin()) await loadUsers();
+    });
+    tabLogs.addEventListener("click", () => switchTab("logs"));
+
+    // Buttons: dashboard
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
     startDateEl.addEventListener("change", refreshAll);
-    document.getElementById("btnLoadLog").addEventListener("click", loadLogForSelectedDate);
+    document.getElementById("btnToday").addEventListener("click", () => {
+      const t = new Date();
+      startDateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+      refreshAll();
+    });
 
-    // ----- Boot -----
+    // Buttons: users
+    document.getElementById("btnUpsertUser").addEventListener("click", upsertUserRole);
+    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
+
+    // Buttons: logs
+    document.getElementById("btnLoadLog").addEventListener("click", loadLogs);
+
+    // Modal events
+    document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
+    document.getElementById("btnOccSave").addEventListener("click", saveOccModal);
+    document.getElementById("btnOccClear").addEventListener("click", clearOccModal);
+    occModalBack.addEventListener("click", (e) => {
+      if (e.target === occModalBack) closeOccModal();
+    });
+
+    // Boot
     (async () => {
-      // If this page opened from a reset email link, handle recovery first
+      // handle password recovery links first
       const didRecovery = await handleRecoveryFromUrl();
       if (didRecovery) return;
 
       const { data } = await sb.auth.getSession();
-      if (data?.session?.user) {
+      if (data?.session?.user){
         currentUser = data.session.user;
         await loadRole();
         await showApp();
