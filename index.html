@@ -16,11 +16,9 @@
       --brand:#2563eb;
       --brand2:#1d4ed8;
 
-      /* HIGH CONTRAST STATUS COLORS */
+      /* HIGH CONTRAST STATUS */
       --on:#166534;   /* dark green */
       --off:#991b1b;  /* dark red */
-      --on2:#14532d;
-      --off2:#7f1d1d;
 
       --rowHead:#f8fafc;
     }
@@ -42,16 +40,14 @@
     h1{font-size:18px;margin:0}
     .pill{
       font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);
-      background: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.9);
       backdrop-filter: blur(6px);
     }
 
-    .tabs{
-      display:flex;gap:8px;align-items:center;flex-wrap:wrap;
-    }
+    .tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .tabBtn{
       border:1px solid var(--line);
-      background: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.9);
       backdrop-filter: blur(6px);
       padding:9px 12px;
       border-radius:999px;
@@ -87,7 +83,7 @@
       box-shadow: 0 10px 18px rgba(37,99,235,.18);
     }
     .btnPrimary:hover{filter: brightness(1.03)}
-    .btnGhost{background: rgba(255,255,255,.9)}
+    .btnGhost{background: rgba(255,255,255,.95)}
     .btnDanger{
       background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
       border-color: rgba(220,38,38,.5);
@@ -114,11 +110,16 @@
     .msg{margin-top:10px;font-size:13px;color:var(--muted)}
     .err{color:#b91c1c}
     .oktxt{color:#166534}
+    .badge{
+      font-size:11px;color:var(--muted);
+      padding:3px 8px;border-radius:999px;border:1px solid var(--line);
+      background: rgba(248,250,252,.95);
+    }
 
-    /* 14-day cards */
-    .grid14{
+    /* 7-day cards */
+    .gridDays{
       display:grid;
-      grid-template-columns:repeat(14, minmax(140px,1fr));
+      grid-template-columns:repeat(7, minmax(180px,1fr));
       gap:10px;
       overflow:auto;
       padding-bottom:6px;
@@ -128,7 +129,7 @@
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
-      min-width:140px;
+      min-width:180px;
       transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
     }
     .daycard:hover{border-color:#cbd5e1; box-shadow: 0 12px 22px rgba(15,23,42,.08)}
@@ -139,6 +140,7 @@
     .daytitle{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
     .occ{font-size:22px;margin-top:4px;font-weight:750}
     .notes{font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lastupd{font-size:11px;color:var(--muted);margin-top:8px}
     .clickable{cursor:pointer}
     .clickable:active{transform: scale(.995)}
 
@@ -150,7 +152,7 @@
       box-shadow: var(--shadow);
       background:#fff;
     }
-    table{border-collapse:separate;border-spacing:0;width:100%;min-width:1280px}
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:980px}
     th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:10px;text-align:center; background:#fff}
     th:first-child,td:first-child{
       text-align:left;
@@ -183,11 +185,6 @@
     .serviceName{
       display:flex;gap:10px;align-items:center;justify-content:space-between;
       font-weight:750;
-    }
-    .badge{
-      font-size:11px;color:var(--muted);
-      padding:3px 8px;border-radius:999px;border:1px solid var(--line);
-      background: rgba(248,250,252,.95);
     }
 
     /* STATUS CELLS: COLOR ONLY */
@@ -256,9 +253,9 @@
       grid-template-columns: 1fr 1fr;
       gap:10px;
     }
-    @media (max-width:720px){
+    @media (max-width:860px){
       .twoCol{grid-template-columns:1fr}
-      .grid14{grid-template-columns:repeat(14, minmax(170px,1fr))}
+      .gridDays{grid-template-columns:repeat(7, minmax(210px,1fr))}
     }
   </style>
 </head>
@@ -332,12 +329,28 @@
             </div>
             <div class="hint" id="editHint"></div>
           </div>
+
+          <div id="copyRow" class="row" style="margin-top:12px; display:none;">
+            <span class="badge">Copy Day</span>
+            <label style="margin:0;color:var(--muted);font-size:12px;">From</label>
+            <input id="copyFrom" type="date" />
+            <label style="margin:0;color:var(--muted);font-size:12px;">To</label>
+            <input id="copyTo" type="date" />
+            <select id="copyOcc">
+              <option value="true">Copy occupancy + notes</option>
+              <option value="false">Copy status only</option>
+            </select>
+            <button id="btnCopyDay" class="btnPrimary">Copy</button>
+            <button id="btnCopyYesterday" class="btnGhost">Yesterday → First Day</button>
+          </div>
         </div>
 
-        <div class="sectionTitle">14-Day Occupancy Forecast</div>
+        <div class="sectionTitle">7-Day Occupancy Forecast</div>
         <div class="card">
-          <div id="occCards" class="grid14"></div>
-          <div class="hint" style="margin-top:10px;">Tip: click a day to edit occupancy and notes (editor/admin).</div>
+          <div id="occCards" class="gridDays"></div>
+          <div class="hint" style="margin-top:10px;">
+            Click a day card to edit occupancy/notes (editor/admin). Status is color only (green active, red inactive).
+          </div>
         </div>
 
         <div class="sectionTitle">
@@ -366,7 +379,7 @@
         <div class="card">
           <div class="hint" style="margin-bottom:10px;">
             Step 1: Add them in Supabase Auth (Authentication → Users).<br/>
-            Step 2: Add them here using Email + Name.
+            Step 2: Add them here using Email + Name (no UID shown).
           </div>
 
           <div class="twoCol">
@@ -479,6 +492,8 @@
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const DAYS = 7;
+
     // Views
     const loginView = document.getElementById("loginView");
     const recoveryView = document.getElementById("recoveryView");
@@ -504,6 +519,12 @@
     const headRow = document.getElementById("headRow");
     const bodyRows = document.getElementById("bodyRows");
     const appMsg = document.getElementById("appMsg");
+
+    // Copy UI
+    const copyRow = document.getElementById("copyRow");
+    const copyFrom = document.getElementById("copyFrom");
+    const copyTo = document.getElementById("copyTo");
+    const copyOcc = document.getElementById("copyOcc");
 
     // Auth messages
     const loginMsg = document.getElementById("loginMsg");
@@ -534,6 +555,7 @@
     let myRole = "viewer";
     let myName = "";
     let dashboardDays = [];
+    let lastUpdateMap = new Map(); // date -> {at, by}
     let serviceByName = new Map();
     let occEditDate = null;
 
@@ -568,14 +590,12 @@
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : "");
       el.textContent = text || "";
     }
-
     function show(view){
       loginView.style.display = "none";
       recoveryView.style.display = "none";
       appView.style.display = "none";
       view.style.display = "block";
     }
-
     function canEdit(){ return myRole === "editor" || myRole === "admin"; }
     function isAdmin(){ return myRole === "admin"; }
 
@@ -601,7 +621,6 @@
       const clean = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, clean);
     }
-
     function parseHashParams(){
       const h = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
       const p = new URLSearchParams(h);
@@ -614,6 +633,10 @@
       };
     }
 
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function toDateStr(d){
+      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+    }
     function fmtDay(d){
       const dt = new Date(d + "T00:00:00");
       return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
@@ -622,6 +645,11 @@
       const t = new Date(); t.setHours(0,0,0,0);
       const dt = new Date(d + "T00:00:00");
       return dt.getTime() === t.getTime();
+    }
+    function fmtTime(ts){
+      try{
+        return new Date(ts).toLocaleString(undefined, { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+      } catch { return ""; }
     }
 
     async function loadMyProfile(){
@@ -632,7 +660,6 @@
         .maybeSingle();
 
       if (error) throw error;
-
       myRole = data?.role || "viewer";
       myName = data?.full_name || "";
     }
@@ -647,9 +674,22 @@
     }
 
     async function fetchDashboard(startDate){
-      const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: 14 });
+      const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: DAYS });
       if (error) throw error;
       dashboardDays = data || [];
+    }
+
+    async function fetchLastUpdates(startDate){
+      lastUpdateMap = new Map();
+      const { data, error } = await sb.rpc("get_last_updates", { p_start_date: startDate, p_days: DAYS });
+      if (error) throw error;
+
+      for (const row of (data || [])){
+        lastUpdateMap.set(row.day, {
+          at: row.last_changed_at,
+          by: row.last_changed_by
+        });
+      }
     }
 
     function buildHeader(){
@@ -665,11 +705,9 @@
       occEditDate = date;
       occModalTitle.textContent = `Edit occupancy – ${date}`;
       setMsg(occModalMsg, "");
-
       occInput.value = (occ === null || occ === undefined) ? "" : String(occ);
       occNotesShort.value = notes || "";
       occNotesLong.value = "";
-
       occModalBack.style.display = "flex";
     }
     function closeOccModal(){
@@ -707,7 +745,7 @@
         }
         renderOccCards();
         setMsg(occModalMsg, "Saved.", "ok");
-        setTimeout(closeOccModal, 300);
+        setTimeout(closeOccModal, 280);
       } catch(e){
         setMsg(occModalMsg, e?.message || String(e), "err");
       }
@@ -723,6 +761,11 @@
     function renderOccCards(){
       occCards.innerHTML = "";
       for (const day of dashboardDays){
+        const upd = lastUpdateMap.get(day.day);
+        const updLine = (upd?.at && upd?.by)
+          ? `Last update: ${upd.by} • ${fmtTime(upd.at)}`
+          : "Last update: —";
+
         const card = document.createElement("div");
         card.className = "daycard" + (isToday(day.day) ? " today" : "");
 
@@ -740,15 +783,21 @@
         notes.className = "notes";
         notes.textContent = day.notes || "";
 
+        const last = document.createElement("div");
+        last.className = "lastupd";
+        last.textContent = updLine;
+
         card.appendChild(title);
         card.appendChild(occ);
         card.appendChild(notes);
+        card.appendChild(last);
 
         if (canEdit()){
           card.classList.add("clickable");
           card.title = "Click to edit occupancy + notes";
           card.addEventListener("click", () => openOccModal(day.day, day.occupancy_percent, day.notes));
         }
+
         occCards.appendChild(card);
       }
     }
@@ -795,7 +844,7 @@
 
     function renderStatusGrid(){
       bodyRows.innerHTML = "";
-      const colspan = 1 + (dashboardDays?.length || 14);
+      const colspan = 1 + (dashboardDays?.length || DAYS);
 
       for (const group of GROUPS){
         const trg = document.createElement("tr");
@@ -840,7 +889,10 @@
                     if (gname === "lunch") dayRow.lunch = serviceName;
                     if (gname === "dinner") dayRow.dinner = serviceName;
                   }
+
+                  await fetchLastUpdates(startDateEl.value);
                   renderStatusGrid();
+                  renderOccCards();
                   setMsg(appMsg, "Saved.", "ok");
                 } catch(e){
                   setMsg(appMsg, e?.message || String(e), "err");
@@ -856,14 +908,47 @@
       }
     }
 
+    async function doCopyDay(fromDate, toDate, copyOccBool){
+      setMsg(appMsg, "");
+      if (!fromDate || !toDate){
+        setMsg(appMsg, "Pick both From and To dates.", "err");
+        return;
+      }
+      try{
+        setMsg(appMsg, "Copying…");
+        const { error } = await sb.rpc("copy_day", {
+          p_from_date: fromDate,
+          p_to_date: toDate,
+          p_copy_occupancy: copyOccBool
+        });
+        if (error) throw error;
+
+        await refreshAll();
+        setMsg(appMsg, "Copied.", "ok");
+      } catch(e){
+        setMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
     async function refreshAll(){
       try{
         setMsg(appMsg, "Loading…");
         await loadServiceItems();
         await fetchDashboard(startDateEl.value);
+        await fetchLastUpdates(startDateEl.value);
+
         buildHeader();
         renderOccCards();
         renderStatusGrid();
+
+        // Set copy defaults
+        copyTo.value = dashboardDays?.[0]?.day || startDateEl.value;
+
+        // default copyFrom: yesterday
+        const d = new Date((dashboardDays?.[0]?.day || startDateEl.value) + "T00:00:00");
+        d.setDate(d.getDate() - 1);
+        copyFrom.value = toDateStr(d);
+
         setMsg(appMsg, "");
       } catch(e){
         setMsg(appMsg, e?.message || String(e), "err");
@@ -871,6 +956,9 @@
     }
 
     // ---- USERS (Admin) ----
+    function escAttr(s){
+      return String(s ?? "").replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
     function roleSelectHtml(current){
       return `
         <select data-role>
@@ -891,13 +979,12 @@
 
         for (const p of (data || [])){
           const tr = document.createElement("tr");
-          tr.dataset.uid = p.user_id;
 
           const tdName = document.createElement("td");
-          tdName.innerHTML = `<input data-name value="${(p.full_name || "").replaceAll('"','&quot;')}" placeholder="Name" />`;
+          tdName.innerHTML = `<input data-name value="${escAttr(p.full_name)}" placeholder="Name" />`;
 
           const tdEmail = document.createElement("td");
-          tdEmail.innerHTML = `<input data-email value="${(p.email || "").replaceAll('"','&quot;')}" placeholder="Email" />`;
+          tdEmail.innerHTML = `<input data-email value="${escAttr(p.email)}" placeholder="Email" />`;
 
           const tdRole = document.createElement("td");
           tdRole.innerHTML = roleSelectHtml(p.role || "viewer");
@@ -955,7 +1042,6 @@
         if (!["viewer","editor","admin"].includes(role)){ setMsg(usersMsg, "Invalid role.", "err"); return; }
 
         setMsg(usersMsg, "Saving…");
-
         const { error } = await sb.rpc("admin_upsert_profile_by_email", {
           p_email: email,
           p_full_name: name,
@@ -978,7 +1064,6 @@
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
       }[m]));
     }
-
     async function loadLogs(){
       try{
         setMsg(logsMsg, "");
@@ -991,7 +1076,7 @@
           .select("changed_at, table_name, record_date, group_name, field, old_value, new_value, action")
           .eq("record_date", d)
           .order("changed_at", { ascending: false })
-          .limit(120);
+          .limit(160);
 
         if (error) throw error;
 
@@ -1074,13 +1159,20 @@
       tabLogs.style.display = isAdmin() ? "inline-block" : "none";
 
       editHint.textContent = canEdit()
-        ? "Editor/Admin: click a day to edit occupancy. Click a status cell to change."
+        ? "Editor/Admin: click day cards to edit occupancy. Click status cells to change."
         : "View only";
 
+      copyRow.style.display = canEdit() ? "flex" : "none";
+
       const t = new Date();
-      const todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+      const todayStr = toDateStr(t);
       startDateEl.value = todayStr;
       logDate.value = todayStr;
+
+      // copy defaults
+      copyTo.value = todayStr;
+      const y = new Date(t); y.setDate(y.getDate()-1);
+      copyFrom.value = toDateStr(y);
 
       switchTab("dashboard");
       await refreshAll();
@@ -1163,25 +1255,36 @@
       show(loginView);
     });
 
-    // Buttons: tabs
+    // Tabs
     tabDashboard.addEventListener("click", () => switchTab("dashboard"));
     tabUsers.addEventListener("click", async () => { switchTab("users"); if (isAdmin()) await loadUsers(); });
     tabLogs.addEventListener("click", () => switchTab("logs"));
 
-    // Buttons: dashboard
+    // Dashboard controls
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
     startDateEl.addEventListener("change", refreshAll);
     document.getElementById("btnToday").addEventListener("click", () => {
       const t = new Date();
-      startDateEl.value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+      startDateEl.value = toDateStr(t);
       refreshAll();
     });
 
-    // Buttons: users
+    // Copy controls
+    document.getElementById("btnCopyDay").addEventListener("click", async () => {
+      await doCopyDay(copyFrom.value, copyTo.value, copyOcc.value === "true");
+    });
+    document.getElementById("btnCopyYesterday").addEventListener("click", async () => {
+      const firstDay = dashboardDays?.[0]?.day || startDateEl.value;
+      const d = new Date(firstDay + "T00:00:00");
+      d.setDate(d.getDate()-1);
+      await doCopyDay(toDateStr(d), firstDay, copyOcc.value === "true");
+    });
+
+    // Users controls
     document.getElementById("btnUpsertUser").addEventListener("click", upsertUserRole);
     document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
 
-    // Buttons: logs
+    // Logs controls
     document.getElementById("btnLoadLog").addEventListener("click", loadLogs);
 
     // Modal
