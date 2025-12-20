@@ -13,14 +13,13 @@
       --line:#e2e8f0;
       --shadow: 0 10px 24px rgba(15,23,42,.08);
 
-      --brand:#2563eb;
-      --brand2:#1d4ed8;
-
       /* HIGH CONTRAST STATUS */
       --on:#166534;   /* dark green */
       --off:#991b1b;  /* dark red */
 
       --rowHead:#f8fafc;
+      --brand:#2563eb;
+      --brand2:#1d4ed8;
     }
 
     *{box-sizing:border-box}
@@ -54,10 +53,12 @@
       font-size:13px;
       cursor:pointer;
       transition: all .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .tabBtn:hover{border-color:#cbd5e1}
     .tabBtn.active{
-      background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+      background: linear-gradient(180deg, var(--brand) 0%, var(--brand2) 100%);
       color:white;
       border-color: rgba(29,78,216,.6);
       box-shadow: 0 10px 18px rgba(37,99,235,.20);
@@ -77,7 +78,7 @@
     button{cursor:pointer;transition: all .15s ease}
     button:hover{border-color:#cbd5e1}
     .btnPrimary{
-      background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+      background: linear-gradient(180deg, var(--brand) 0%, var(--brand2) 100%);
       border-color: rgba(29,78,216,.55);
       color:white;
       box-shadow: 0 10px 18px rgba(37,99,235,.18);
@@ -116,7 +117,7 @@
       background: rgba(248,250,252,.95);
     }
 
-    /* 7-day cards */
+    /* 7-day cards: desktop grid */
     .gridDays{
       display:grid;
       grid-template-columns:repeat(7, minmax(180px,1fr));
@@ -125,7 +126,7 @@
       padding-bottom:6px;
     }
     .daycard{
-      background: #ffffff;
+      background:#fff;
       border:1px solid var(--line);
       border-radius:16px;
       padding:12px;
@@ -153,12 +154,19 @@
       background:#fff;
     }
     table{border-collapse:separate;border-spacing:0;width:100%;min-width:980px}
-    th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:10px;text-align:center; background:#fff}
+    th,td{
+      border-bottom:1px solid var(--line);
+      border-right:1px solid var(--line);
+      padding:10px;
+      text-align:center;
+      background:#fff;
+    }
     th:first-child,td:first-child{
       text-align:left;
       position:sticky; left:0;
       z-index:2;
       background:#fff;
+      min-width:260px;
     }
     thead th{
       position:sticky; top:0;
@@ -167,7 +175,6 @@
       color:var(--muted);
       background: var(--rowHead);
     }
-
     .groupRow td{
       position:sticky;
       left:0;
@@ -193,6 +200,7 @@
       padding:0;
       height:44px;
       min-width:54px;
+      -webkit-tap-highlight-color: transparent;
     }
     .statusFill{
       width:100%;
@@ -214,9 +222,6 @@
 
     /* login */
     .loginBox{max-width:520px;margin:40px auto}
-    .loginBox h2{margin:0 0 8px;font-size:18px}
-    .loginBox label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-    .loginHint{margin-top:6px}
 
     /* modal */
     .modalBack{
@@ -253,9 +258,59 @@
       grid-template-columns: 1fr 1fr;
       gap:10px;
     }
-    @media (max-width:860px){
+
+    /* =========================
+       MOBILE FRIENDLY CHANGES
+       ========================= */
+    @media (max-width: 860px){
       .twoCol{grid-template-columns:1fr}
-      .gridDays{grid-template-columns:repeat(7, minmax(210px,1fr))}
+      .wrap{padding:12px}
+      h1{font-size:16px}
+
+      /* Tabs become easy to hit */
+      .tabs{width:100%}
+      .tabBtn{flex:1; justify-content:center; text-align:center}
+
+      /* Make day cards swipe nicely */
+      .gridDays{
+        display:grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(240px, 1fr);
+        grid-template-columns: unset;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom:10px;
+      }
+      .daycard{
+        min-width:240px;
+        scroll-snap-align: start;
+      }
+
+      /* Make table easier to scroll */
+      table{min-width:900px}
+      th:first-child, td:first-child{min-width:220px}
+      th,td{padding:8px}
+
+      /* Bigger touch targets for status */
+      .statusCell{min-width:60px}
+      .statusFill{height:48px}
+    }
+
+    @media (max-width: 520px){
+      .wrap{padding:10px}
+      .titleRow{width:100%}
+      .pill{width:fit-content}
+
+      /* Controls stack nicely */
+      input,select,button{width:100%}
+      .row{gap:8px}
+
+      /* Table more compact and still scrollable */
+      table{min-width:860px}
+      th:first-child, td:first-child{min-width:200px}
+      .statusCell{min-width:58px}
+      .statusFill{height:52px;border-radius:12px}
     }
   </style>
 </head>
@@ -264,13 +319,13 @@
 
     <!-- LOGIN VIEW -->
     <div id="loginView" class="loginBox card" style="display:none;">
-      <h2>Sheraton Dashboard</h2>
-      <div class="hint loginHint">Sign in to view / update occupancy and restaurant status.</div>
+      <h2 style="margin:0 0 8px;font-size:18px;">Sheraton Dashboard</h2>
+      <div class="hint">Sign in to view / update occupancy and restaurant status.</div>
 
-      <label>Email</label>
+      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Email</label>
       <input id="email" type="email" placeholder="name@niagarafallshotels.com" />
 
-      <label>Password</label>
+      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Password</label>
       <input id="password" type="password" placeholder="••••••••" />
 
       <div class="row" style="margin-top:12px;">
@@ -283,13 +338,13 @@
 
     <!-- RECOVERY VIEW -->
     <div id="recoveryView" class="loginBox card" style="display:none;">
-      <h2>Set new password</h2>
+      <h2 style="margin:0 0 8px;font-size:18px;">Set new password</h2>
       <div class="hint">This page opened from a reset email link.</div>
 
-      <label>New password</label>
+      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">New password</label>
       <input id="newPass" type="password" placeholder="New password" />
 
-      <label>Confirm new password</label>
+      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Confirm new password</label>
       <input id="newPass2" type="password" placeholder="Confirm new password" />
 
       <div class="row" style="margin-top:12px;">
@@ -349,7 +404,7 @@
         <div class="card">
           <div id="occCards" class="gridDays"></div>
           <div class="hint" style="margin-top:10px;">
-            Click a day card to edit occupancy/notes (editor/admin). Status is color only (green active, red inactive).
+            Tip: swipe the cards on mobile. Click a card to edit (editor/admin).
           </div>
         </div>
 
@@ -494,12 +549,10 @@
 
     const DAYS = 7;
 
-    // Views
     const loginView = document.getElementById("loginView");
     const recoveryView = document.getElementById("recoveryView");
     const appView = document.getElementById("appView");
 
-    // Tabs / panels
     const tabDashboard = document.getElementById("tabDashboard");
     const tabUsers = document.getElementById("tabUsers");
     const tabLogs = document.getElementById("tabLogs");
@@ -508,41 +561,34 @@
     const panelUsers = document.getElementById("panelUsers");
     const panelLogs = document.getElementById("panelLogs");
 
-    // Header pills
     const rolePill = document.getElementById("rolePill");
     const userPill = document.getElementById("userPill");
     const editHint = document.getElementById("editHint");
 
-    // Dashboard
     const startDateEl = document.getElementById("startDate");
     const occCards = document.getElementById("occCards");
     const headRow = document.getElementById("headRow");
     const bodyRows = document.getElementById("bodyRows");
     const appMsg = document.getElementById("appMsg");
 
-    // Copy UI
     const copyRow = document.getElementById("copyRow");
     const copyFrom = document.getElementById("copyFrom");
     const copyTo = document.getElementById("copyTo");
     const copyOcc = document.getElementById("copyOcc");
 
-    // Auth messages
     const loginMsg = document.getElementById("loginMsg");
     const recoveryMsg = document.getElementById("recoveryMsg");
 
-    // Users
     const usersMsg = document.getElementById("usersMsg");
     const usersTable = document.getElementById("usersTable");
     const newUserEmail = document.getElementById("newUserEmail");
     const newUserName = document.getElementById("newUserName");
     const newUserRole = document.getElementById("newUserRole");
 
-    // Logs
     const logsMsg = document.getElementById("logsMsg");
     const logDate = document.getElementById("logDate");
     const logList = document.getElementById("logList");
 
-    // Modal
     const occModalBack = document.getElementById("occModalBack");
     const occModalTitle = document.getElementById("occModalTitle");
     const occModalMsg = document.getElementById("occModalMsg");
@@ -550,12 +596,11 @@
     const occNotesShort = document.getElementById("occNotesShort");
     const occNotesLong = document.getElementById("occNotesLong");
 
-    // Data
     let currentUser = null;
     let myRole = "viewer";
     let myName = "";
     let dashboardDays = [];
-    let lastUpdateMap = new Map(); // date -> {at, by}
+    let lastUpdateMap = new Map();
     let serviceByName = new Map();
     let occEditDate = null;
 
@@ -634,9 +679,7 @@
     }
 
     function pad2(n){ return String(n).padStart(2,"0"); }
-    function toDateStr(d){
-      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-    }
+    function toDateStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
     function fmtDay(d){
       const dt = new Date(d + "T00:00:00");
       return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
@@ -658,7 +701,6 @@
         .select("role, full_name, email")
         .eq("user_id", currentUser.id)
         .maybeSingle();
-
       if (error) throw error;
       myRole = data?.role || "viewer";
       myName = data?.full_name || "";
@@ -683,12 +725,8 @@
       lastUpdateMap = new Map();
       const { data, error } = await sb.rpc("get_last_updates", { p_start_date: startDate, p_days: DAYS });
       if (error) throw error;
-
       for (const row of (data || [])){
-        lastUpdateMap.set(row.day, {
-          at: row.last_changed_at,
-          by: row.last_changed_by
-        });
+        lastUpdateMap.set(row.day, { at: row.last_changed_at, by: row.last_changed_by });
       }
     }
 
@@ -710,10 +748,7 @@
       occNotesLong.value = "";
       occModalBack.style.display = "flex";
     }
-    function closeOccModal(){
-      occModalBack.style.display = "none";
-      occEditDate = null;
-    }
+    function closeOccModal(){ occModalBack.style.display = "none"; occEditDate = null; }
 
     async function saveOccModal(){
       try{
@@ -739,10 +774,8 @@
         if (error) throw error;
 
         const row = dashboardDays.find(x => x.day === occEditDate);
-        if (row){
-          row.occupancy_percent = occNum;
-          row.notes = notes;
-        }
+        if (row){ row.occupancy_percent = occNum; row.notes = notes; }
+
         renderOccCards();
         setMsg(occModalMsg, "Saved.", "ok");
         setTimeout(closeOccModal, 280);
@@ -797,7 +830,6 @@
           card.title = "Click to edit occupancy + notes";
           card.addEventListener("click", () => openOccModal(day.day, day.occupancy_percent, day.notes));
         }
-
         occCards.appendChild(card);
       }
     }
@@ -941,10 +973,8 @@
         renderOccCards();
         renderStatusGrid();
 
-        // Set copy defaults
+        // Copy defaults
         copyTo.value = dashboardDays?.[0]?.day || startDateEl.value;
-
-        // default copyFrom: yesterday
         const d = new Date((dashboardDays?.[0]?.day || startDateEl.value) + "T00:00:00");
         d.setDate(d.getDate() - 1);
         copyFrom.value = toDateStr(d);
@@ -1098,7 +1128,6 @@
             `;
           }).join("");
         }
-
         setMsg(logsMsg, "");
       } catch(e){
         setMsg(logsMsg, e?.message || String(e), "err");
@@ -1116,7 +1145,6 @@
         return true;
       }
 
-      // Hash token style
       if (hp.type === "recovery" && hp.access_token && hp.refresh_token){
         const { error } = await sb.auth.setSession({ access_token: hp.access_token, refresh_token: hp.refresh_token });
         cleanUrlAll();
@@ -1129,7 +1157,6 @@
         return true;
       }
 
-      // PKCE style
       const sp = new URLSearchParams(window.location.search);
       const code = sp.get("code");
       const type = sp.get("type");
@@ -1152,14 +1179,13 @@
       show(appView);
 
       rolePill.textContent = `Role: ${myRole}`;
-      const displayName = myName ? myName : (currentUser?.email || "");
-      userPill.textContent = `User: ${displayName}`;
+      userPill.textContent = `User: ${myName ? myName : (currentUser?.email || "")}`;
 
       tabUsers.style.display = isAdmin() ? "inline-block" : "none";
       tabLogs.style.display = isAdmin() ? "inline-block" : "none";
 
       editHint.textContent = canEdit()
-        ? "Editor/Admin: click day cards to edit occupancy. Click status cells to change."
+        ? "Editor/Admin: tap day cards to edit. Tap status tiles to change."
         : "View only";
 
       copyRow.style.display = canEdit() ? "flex" : "none";
@@ -1169,7 +1195,6 @@
       startDateEl.value = todayStr;
       logDate.value = todayStr;
 
-      // copy defaults
       copyTo.value = todayStr;
       const y = new Date(t); y.setDate(y.getDate()-1);
       copyFrom.value = toDateStr(y);
@@ -1264,8 +1289,7 @@
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
     startDateEl.addEventListener("change", refreshAll);
     document.getElementById("btnToday").addEventListener("click", () => {
-      const t = new Date();
-      startDateEl.value = toDateStr(t);
+      startDateEl.value = toDateStr(new Date());
       refreshAll();
     });
 
@@ -1280,11 +1304,11 @@
       await doCopyDay(toDateStr(d), firstDay, copyOcc.value === "true");
     });
 
-    // Users controls
+    // Users
     document.getElementById("btnUpsertUser").addEventListener("click", upsertUserRole);
     document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
 
-    // Logs controls
+    // Logs
     document.getElementById("btnLoadLog").addEventListener("click", loadLogs);
 
     // Modal
