@@ -201,21 +201,27 @@
       font-weight:750;
     }
 
-    /* STATUS CELLS: COLOR ONLY */
+    /* STATUS CELLS: COLOR ONLY + STAMP */
     .statusCell{
       user-select:none;
-      padding:0;
-      height:44px;
-      min-width:54px;
+      padding:6px 8px;
+      height:56px;
+      min-width:72px;
       -webkit-tap-highlight-color: transparent;
     }
     .statusFill{
       width:100%;
       height:44px;
-      border-radius:10px;
+      border-radius:12px;
       margin:0 auto;
       border:2px solid rgba(15,23,42,.12);
       transition: transform .08s ease, filter .12s ease, outline .12s ease;
+      position:relative;
+      overflow:hidden;
+      display:flex;
+      align-items:flex-end;
+      justify-content:flex-start;
+      padding:6px 7px;
     }
     .isOn{ background: var(--on); border-color: rgba(20,83,45,.55); }
     .isOff{ background: var(--off); border-color: rgba(127,29,29,.55); }
@@ -226,6 +232,33 @@
       filter: brightness(1.03);
     }
     .statusCell.clickable:active .statusFill{ transform: scale(.98); }
+
+    .stamp{
+      font-size:10px;
+      line-height:1.05;
+      color: rgba(255,255,255,.95);
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
+      max-width:100%;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      pointer-events:none;
+    }
+    .stampName{
+      font-weight:800;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+    .stampTime{
+      font-weight:700;
+      opacity:.95;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
 
     /* login */
     .loginBox{max-width:520px;margin:40px auto}
@@ -294,8 +327,9 @@
       th:first-child, td:first-child{min-width:200px}
       th,td{padding:8px}
 
-      .statusCell{min-width:60px}
-      .statusFill{height:48px}
+      .statusCell{min-width:78px}
+      .statusFill{height:52px}
+      .stamp{font-size:10px}
     }
 
     @media (max-width: 520px){
@@ -317,9 +351,9 @@
       }
       .serviceName .badge{display:none}
 
-      table{min-width:820px}
-      .statusCell{min-width:58px}
-      .statusFill{height:52px;border-radius:12px}
+      table{min-width:860px}
+      .statusCell{min-width:82px}
+      .statusFill{height:54px;border-radius:12px}
     }
   </style>
 </head>
@@ -424,6 +458,7 @@
           Restaurant Status
           <span class="badge" style="border-color: rgba(20,83,45,.35);">Green = Active</span>
           <span class="badge" style="border-color: rgba(127,29,29,.35);">Red = Inactive</span>
+          <span class="badge">Time shown: America/Toronto</span>
         </div>
         <div class="tableWrap">
           <table>
@@ -550,7 +585,7 @@
     </div>
   </div>
 
-  <!-- Local Supabase library (you already placed this in repo root) -->
+  <!-- Local Supabase library (repo root) -->
   <script src="./supabase.js"></script>
 
   <script>
@@ -623,6 +658,12 @@
     let serviceByName = new Map();
     let occEditDate = null;
 
+    // NEW: per-cell meta
+    // pick-one groups: date|group -> { selected_service_item_id, updated_by_name, updated_at }
+    let dssMeta = new Map();
+    // Massimo: date|service_item_id -> { is_active, updated_by_name, updated_at }
+    let dmsMeta = new Map();
+
     const GROUPS = [
       { title: "Breakfast", items: [
         "BREAKFAST ALA CARTE",
@@ -663,7 +704,7 @@
     }
     function isAdmin(){ return myRole === "admin"; }
 
-    // New permission model:
+    // Permission model:
     // - Admin: everything
     // - Editor + Guest Service: occupancy + notes
     // - Editor + F&B: restaurant statuses
@@ -718,12 +759,30 @@
       const dt = new Date(d + "T00:00:00");
       return dt.getTime() === t.getTime();
     }
-    function fmtTime(ts){
+    function fmtTimeLocal(ts){
       try{
         return new Date(ts).toLocaleString(undefined, { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
       } catch { return ""; }
     }
+
+    // ALWAYS TORONTO TIME
+    function fmtToronto(ts) {
+      if (!ts) return "";
+      try{
+        return new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Toronto",
+          year: "numeric", month: "short", day: "2-digit",
+          hour: "2-digit", minute: "2-digit",
+          hour12: true
+        }).format(new Date(ts));
+      } catch {
+        return "";
+      }
+    }
+
     function safeText(v){ return (v === null || v === undefined) ? "" : String(v); }
+    function keyDss(day, group){ return `${day}|${group}`; }
+    function keyDms(day, serviceItemId){ return `${day}|${serviceItemId}`; }
 
     // ===== Data loading =====
     async function loadMyProfile(){
@@ -766,6 +825,55 @@
       if (error) throw error;
       for (const row of (data || [])){
         lastUpdateMap.set(row.day, { at: row.last_changed_at, by: row.last_changed_by });
+      }
+    }
+
+    // NEW: fetch per-cell meta for who/when
+    async function fetchStatusMeta(){
+      dssMeta = new Map();
+      dmsMeta = new Map();
+
+      const days = (dashboardDays || []).map(x => x.day);
+      if (days.length === 0) return;
+
+      // pick-one groups meta
+      const { data: dss, error: e1 } = await sb
+        .from("daily_service_selection")
+        .select("date,group_name,selected_service_item_id,updated_by_name,updated_at")
+        .in("date", days)
+        .in("group_name", ["breakfast","lunch","dinner"]);
+      if (e1) throw e1;
+
+      for (const r of (dss || [])){
+        dssMeta.set(keyDss(r.date, r.group_name), {
+          selected_service_item_id: r.selected_service_item_id,
+          updated_by_name: r.updated_by_name,
+          updated_at: r.updated_at
+        });
+      }
+
+      // Massimo meta (each cell is its own row)
+      const massimoIds = [];
+      for (const n of ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"]){
+        const item = serviceByName.get(n);
+        if (item?.id !== undefined && item?.id !== null) massimoIds.push(item.id);
+      }
+
+      if (massimoIds.length > 0){
+        const { data: dms, error: e2 } = await sb
+          .from("daily_massimo_status")
+          .select("date,service_item_id,is_active,updated_by_name,updated_at")
+          .in("date", days)
+          .in("service_item_id", massimoIds);
+        if (e2) throw e2;
+
+        for (const r of (dms || [])){
+          dmsMeta.set(keyDms(r.date, r.service_item_id), {
+            is_active: !!r.is_active,
+            updated_by_name: r.updated_by_name,
+            updated_at: r.updated_at
+          });
+        }
       }
     }
 
@@ -846,7 +954,7 @@
       for (const day of dashboardDays){
         const upd = lastUpdateMap.get(day.day);
         const updLine = (upd?.at && upd?.by)
-          ? `Last update: ${upd.by} • ${fmtTime(upd.at)}`
+          ? `Last update: ${upd.by} • ${fmtTimeLocal(upd.at)}`
           : "Last update: —";
 
         const card = document.createElement("div");
@@ -886,18 +994,58 @@
       }
     }
 
-    function statusFor(serviceName, dayRow){
-      if (serviceName.startsWith("MASSIMO ")){
-        if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
-        if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
-        if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
-        return false;
+    function statusStampHtml(name, ts){
+      const n = (name || "").trim();
+      const t = fmtToronto(ts);
+      if (!n || !t) return "";
+      return `
+        <div class="stamp">
+          <div class="stampName">${escapeHtml(n)}</div>
+          <div class="stampTime">${escapeHtml(t)}</div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function statusForPickOne(dayRow, serviceName){
+      const item = serviceByName.get(serviceName);
+      if (!item) return false;
+
+      const group = item.group_name;
+      if (!["breakfast","lunch","dinner"].includes(group)) return false;
+
+      const meta = dssMeta.get(keyDss(dayRow.day, group));
+      if (meta?.selected_service_item_id !== null && meta?.selected_service_item_id !== undefined){
+        return String(meta.selected_service_item_id) === String(item.id);
       }
+
+      // fallback to older dashboard data
       const upper = serviceName.toUpperCase();
-      const group = serviceByName.get(serviceName)?.group_name;
       if (group === "breakfast") return (dayRow.breakfast || "").toUpperCase() === upper;
       if (group === "lunch") return (dayRow.lunch || "").toUpperCase() === upper;
       if (group === "dinner") return (dayRow.dinner || "").toUpperCase() === upper;
+      return false;
+    }
+
+    function statusForMassimo(dayRow, serviceName){
+      const item = serviceByName.get(serviceName);
+      if (!item) return false;
+
+      const meta = dmsMeta.get(keyDms(dayRow.day, item.id));
+      if (meta) return !!meta.is_active;
+
+      // fallback to dashboard booleans
+      if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
+      if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
+      if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
       return false;
     }
 
@@ -943,11 +1091,32 @@
           const tr = document.createElement("tr");
 
           const tdLabel = document.createElement("td");
-          tdLabel.innerHTML = `<div class="serviceName"><span>${serviceName}</span><span class="badge">${group.title}</span></div>`;
+          tdLabel.innerHTML = `<div class="serviceName"><span>${escapeHtml(serviceName)}</span><span class="badge">${escapeHtml(group.title)}</span></div>`;
           tr.appendChild(tdLabel);
 
           for (const dayRow of dashboardDays){
-            const isOn = statusFor(serviceName, dayRow);
+            let isOn = false;
+            let stamp = "";
+
+            if (serviceName.startsWith("MASSIMO ")){
+              isOn = statusForMassimo(dayRow, serviceName);
+
+              const item = serviceByName.get(serviceName);
+              const meta = item ? dmsMeta.get(keyDms(dayRow.day, item.id)) : null;
+              if (meta?.updated_by_name && meta?.updated_at){
+                stamp = statusStampHtml(meta.updated_by_name, meta.updated_at);
+              }
+            } else {
+              isOn = statusForPickOne(dayRow, serviceName);
+
+              // For pick-one groups: stamp on the SELECTED (green) box (the one that was chosen)
+              const item = serviceByName.get(serviceName);
+              const gname = item?.group_name;
+              const meta = (gname ? dssMeta.get(keyDss(dayRow.day, gname)) : null);
+              if (isOn && meta?.updated_by_name && meta?.updated_at){
+                stamp = statusStampHtml(meta.updated_by_name, meta.updated_at);
+              }
+            }
 
             const td = document.createElement("td");
             td.className = "statusCell " + (canEditStatus() ? "clickable" : "");
@@ -955,28 +1124,38 @@
 
             const fill = document.createElement("div");
             fill.className = "statusFill " + (isOn ? "isOn" : "isOff");
+            fill.innerHTML = stamp;
             td.appendChild(fill);
 
             if (canEditStatus()){
               td.addEventListener("click", async () => {
                 try{
                   setMsg(appMsg, "");
+
                   if (serviceName.startsWith("MASSIMO ")){
                     await toggleMassimo(dayRow.day, serviceName, isOn);
+
+                    // update local fallback
                     if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = !isOn;
                     if (serviceName === "MASSIMO LUNCH") dayRow.massimo_lunch = !isOn;
                     if (serviceName === "MASSIMO DINNER") dayRow.massimo_dinner = !isOn;
                   } else {
                     await setPickOne(dayRow.day, serviceName);
+
+                    // update local fallback
                     const gname = serviceByName.get(serviceName)?.group_name;
                     if (gname === "breakfast") dayRow.breakfast = serviceName;
                     if (gname === "lunch") dayRow.lunch = serviceName;
                     if (gname === "dinner") dayRow.dinner = serviceName;
                   }
 
+                  // Refresh stamps so the box shows who/when instantly
+                  await fetchStatusMeta();
                   await fetchLastUpdates(startDateEl.value);
+
                   renderStatusGrid();
                   renderOccCards();
+
                   setMsg(appMsg, "Saved.", "ok");
                 } catch(e){
                   setMsg(appMsg, e?.message || String(e), "err");
@@ -1020,6 +1199,7 @@
         await loadServiceItems();
         await fetchDashboard(startDateEl.value);
         await fetchLastUpdates(startDateEl.value);
+        await fetchStatusMeta();
 
         buildHeader();
         renderOccCards();
@@ -1049,11 +1229,11 @@
       for (const r of rows){
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td style="text-align:left;">${safeText(r.full_name)}</td>
-          <td style="text-align:left;">${safeText(r.email)}</td>
-          <td>${safeText(r.role)}</td>
-          <td>${safeText(r.department)}</td>
-          <td>${String(r.is_active)}</td>
+          <td style="text-align:left;">${escapeHtml(safeText(r.full_name))}</td>
+          <td style="text-align:left;">${escapeHtml(safeText(r.email))}</td>
+          <td>${escapeHtml(safeText(r.role))}</td>
+          <td>${escapeHtml(safeText(r.department))}</td>
+          <td>${escapeHtml(String(r.is_active))}</td>
         `;
         usersTable.appendChild(tr);
       }
@@ -1098,9 +1278,6 @@
 
       try{
         setMsg(usersMsg, "Saving…");
-
-        // IMPORTANT: this expects the NEW function signature:
-        // admin_upsert_profile_by_email(p_email,p_full_name,p_role,p_department,p_is_active)
         const { error } = await sb.rpc("admin_upsert_profile_by_email", {
           p_email: email,
           p_full_name: name,
@@ -1168,7 +1345,6 @@
       tabUsers.style.display = isAdmin() ? "inline-block" : "none";
       copyRow.style.display = (canEditOcc() || isAdmin()) ? "flex" : "none";
 
-      // friendly permission hint
       const occOk = canEditOcc();
       const stOk = canEditStatus();
       if (!isAdmin() && (!occOk || !stOk)){
@@ -1201,7 +1377,6 @@
       switchTab("dashboard");
       await refreshAll();
 
-      // FIX: if admin, load users right away so Users tab isn't blank later
       if (isAdmin()){
         await loadUsers();
       }
@@ -1300,7 +1475,6 @@
 
     // Copy controls
     document.getElementById("btnCopyDay").addEventListener("click", async () => {
-      // copy_day is server-side controlled; leave available for admins/editors who can edit occ
       if (!isAdmin() && !canEditOcc()){
         setMsg(appMsg, "You do not have permission to copy days.", "err");
         return;
