@@ -21,6 +21,7 @@
       --rowHead:#f8fafc;
       --brand:#2563eb;
       --brand2:#1d4ed8;
+      --warn:#b45309;
     }
 
     *{box-sizing:border-box}
@@ -112,13 +113,15 @@
     .msg{margin-top:10px;font-size:13px;color:var(--muted)}
     .err{color:#b91c1c}
     .oktxt{color:#166534}
+    .warntxt{color:var(--warn)}
     .badge{
       font-size:11px;color:var(--muted);
       padding:3px 8px;border-radius:999px;border:1px solid var(--line);
       background: rgba(248,250,252,.95);
+      white-space:nowrap;
     }
 
-    /* 7-day cards: desktop grid */
+    /* 7-day cards */
     .gridDays{
       display:grid;
       grid-template-columns:repeat(7, minmax(180px,1fr));
@@ -163,7 +166,7 @@
       background:#fff;
     }
 
-    /* IMPORTANT: keep these z-index values LOW so the modal can sit above */
+    /* keep z-index low so modal always wins */
     th:first-child,td:first-child{
       text-align:left;
       position:sticky; left:0;
@@ -227,14 +230,12 @@
     /* login */
     .loginBox{max-width:520px;margin:40px auto}
 
-    /* modal (FIXED: ALWAYS ON TOP) */
+    /* modal ALWAYS ON TOP */
     .modalBack{
       position:fixed; inset:0;
       background: rgba(15,23,42,.45);
       display:none; align-items:center; justify-content:center;
       padding:16px;
-
-      /* THIS IS THE FIX */
       z-index: 999999;
     }
     .modal{
@@ -268,9 +269,7 @@
       gap:10px;
     }
 
-    /* =========================
-       MOBILE FRIENDLY
-       ========================= */
+    /* MOBILE */
     @media (max-width: 860px){
       .twoCol{grid-template-columns:1fr}
       .wrap{padding:12px}
@@ -279,7 +278,6 @@
       .tabs{width:100%}
       .tabBtn{flex:1; justify-content:center; text-align:center}
 
-      /* day cards: swipe */
       .gridDays{
         display:grid;
         grid-auto-flow: column;
@@ -290,10 +288,7 @@
         -webkit-overflow-scrolling: touch;
         padding-bottom:10px;
       }
-      .daycard{
-        min-width:240px;
-        scroll-snap-align: start;
-      }
+      .daycard{min-width:240px;scroll-snap-align: start}
 
       table{min-width:900px}
       th:first-child, td:first-child{min-width:200px}
@@ -309,24 +304,17 @@
       input,select,button{width:100%}
       .row{gap:8px}
 
-      /* BIG FIX: make Service column narrow so you can see more days */
       th:first-child, td:first-child{
         min-width:140px;
         max-width:140px;
       }
-
-      /* Allow service name to wrap smaller */
-      .serviceName{
-        gap:6px;
-      }
+      .serviceName{gap:6px}
       .serviceName span:first-child{
         display:block;
         white-space:normal;
         font-size:12px;
         line-height:1.15;
       }
-
-      /* Hide the little Breakfast/Lunch badges on tiny screens */
       .serviceName .badge{display:none}
 
       table{min-width:820px}
@@ -383,13 +371,13 @@
         <div class="titleRow">
           <h1>Sheraton Niagara Falls – Ops Dashboard</h1>
           <span id="rolePill" class="pill">Role: …</span>
+          <span id="deptPill" class="pill">Dept: …</span>
           <span id="userPill" class="pill">User: …</span>
         </div>
 
         <div class="tabs">
           <button id="tabDashboard" class="tabBtn active">Dashboard</button>
           <button id="tabUsers" class="tabBtn" style="display:none;">Users</button>
-          <button id="tabLogs" class="tabBtn" style="display:none;">Logs</button>
           <button id="btnLogout" class="tabBtn btnDanger">Logout</button>
         </div>
       </div>
@@ -420,13 +408,15 @@
             <button id="btnCopyDay" class="btnPrimary">Copy</button>
             <button id="btnCopyYesterday" class="btnGhost">Yesterday → First Day</button>
           </div>
+
+          <div id="permHint" class="msg warntxt" style="margin-top:10px; display:none;"></div>
         </div>
 
         <div class="sectionTitle">7-Day Occupancy Forecast</div>
         <div class="card">
           <div id="occCards" class="gridDays"></div>
           <div class="hint" style="margin-top:10px;">
-            Tip: swipe the cards on mobile. Click a card to edit (editor/admin).
+            Mobile: swipe the cards. (If you can edit, tap a card.)
           </div>
         </div>
 
@@ -451,19 +441,26 @@
 
       <!-- USERS PANEL (ADMIN) -->
       <div id="panelUsers" style="display:none;">
-        <div class="sectionTitle">Admin – Users & Roles</div>
+        <div class="sectionTitle">Admin – Users & Permissions</div>
 
         <div class="card">
           <div class="hint" style="margin-bottom:10px;">
-            Step 1: Add them in Supabase Auth (Authentication → Users).<br/>
-            Step 2: Add them here using Email + Name (no UID shown).
+            Add Auth users in Supabase Dashboard (Authentication → Users).<br/>
+            Then manage their Role + Department here. No deleting Auth users from this site.
           </div>
 
           <div class="twoCol">
             <div>
               <label style="margin:0;color:var(--muted);font-size:12px;">Email</label>
-              <input id="newUserEmail" placeholder="e.g. jsmith@niagarafallshotels.com" />
+              <input id="newUserEmail" placeholder="e.g. erice@niagarafallshotels.com" />
             </div>
+            <div>
+              <label style="margin:0;color:var(--muted);font-size:12px;">Name</label>
+              <input id="newUserName" placeholder="e.g. Eric Ediger" />
+            </div>
+          </div>
+
+          <div class="twoCol" style="margin-top:10px;">
             <div>
               <label style="margin:0;color:var(--muted);font-size:12px;">Role</label>
               <select id="newUserRole">
@@ -472,11 +469,21 @@
                 <option value="admin">admin</option>
               </select>
             </div>
+            <div>
+              <label style="margin:0;color:var(--muted);font-size:12px;">Department</label>
+              <select id="newUserDept">
+                <option value="Guest Service">Guest Service</option>
+                <option value="F&B">F&amp;B</option>
+              </select>
+            </div>
           </div>
 
-          <div style="margin-top:10px;">
-            <label style="margin:0;color:var(--muted);font-size:12px;">Name</label>
-            <input id="newUserName" placeholder="e.g. Eric Ediger" />
+          <div class="row" style="margin-top:10px;">
+            <label style="margin:0;color:var(--muted);font-size:12px;">Active</label>
+            <select id="newUserActive" style="width:160px;">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
           </div>
 
           <div class="row" style="margin-top:10px;">
@@ -493,34 +500,16 @@
             <table style="min-width:980px;">
               <thead>
                 <tr>
-                  <th style="width:280px;">Name</th>
+                  <th style="width:260px;">Name</th>
                   <th>Email</th>
-                  <th style="width:180px;">Role</th>
-                  <th style="width:140px;">Action</th>
+                  <th style="width:140px;">Role</th>
+                  <th style="width:160px;">Department</th>
+                  <th style="width:120px;">Active</th>
                 </tr>
               </thead>
               <tbody id="usersTable"></tbody>
             </table>
           </div>
-        </div>
-      </div>
-
-      <!-- LOGS PANEL (ADMIN) -->
-      <div id="panelLogs" style="display:none;">
-        <div class="sectionTitle">Admin – Change Logs</div>
-
-        <div class="card">
-          <div class="row">
-            <label style="margin:0;color:var(--muted);font-size:12px;">Date</label>
-            <input id="logDate" type="date" />
-            <button id="btnLoadLog" class="btnPrimary">Load logs</button>
-          </div>
-          <div id="logsMsg" class="msg"></div>
-        </div>
-
-        <div class="card" style="margin-top:12px;">
-          <div class="sectionTitle" style="margin-top:0;">Log entries</div>
-          <div id="logList" class="hint"></div>
         </div>
       </div>
 
@@ -549,7 +538,7 @@
         <div style="margin-top:10px;">
           <label style="margin:0;color:var(--muted);font-size:12px;">Notes (long)</label>
           <textarea id="occNotesLong" placeholder="Optional…"></textarea>
-          <div class="hint">We store notes as one field. Long notes wins if filled.</div>
+          <div class="hint">We save notes as one field. Long notes wins if filled.</div>
         </div>
 
         <div id="occModalMsg" class="msg"></div>
@@ -561,32 +550,37 @@
     </div>
   </div>
 
-  <!-- Local Supabase library -->
+  <!-- Local Supabase library (you already placed this in repo root) -->
   <script src="./supabase.js"></script>
 
   <script>
+    // ====== SET THESE ======
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
+    // =======================
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const DAYS = 7;
 
+    // Views
     const loginView = document.getElementById("loginView");
     const recoveryView = document.getElementById("recoveryView");
     const appView = document.getElementById("appView");
 
+    // Tabs
     const tabDashboard = document.getElementById("tabDashboard");
     const tabUsers = document.getElementById("tabUsers");
-    const tabLogs = document.getElementById("tabLogs");
-
     const panelDashboard = document.getElementById("panelDashboard");
     const panelUsers = document.getElementById("panelUsers");
-    const panelLogs = document.getElementById("panelLogs");
 
+    // Pills & hints
     const rolePill = document.getElementById("rolePill");
+    const deptPill = document.getElementById("deptPill");
     const userPill = document.getElementById("userPill");
     const editHint = document.getElementById("editHint");
+    const permHint = document.getElementById("permHint");
 
+    // Dashboard
     const startDateEl = document.getElementById("startDate");
     const occCards = document.getElementById("occCards");
     const headRow = document.getElementById("headRow");
@@ -598,19 +592,20 @@
     const copyTo = document.getElementById("copyTo");
     const copyOcc = document.getElementById("copyOcc");
 
+    // Login / recovery msgs
     const loginMsg = document.getElementById("loginMsg");
     const recoveryMsg = document.getElementById("recoveryMsg");
 
+    // Users panel
     const usersMsg = document.getElementById("usersMsg");
     const usersTable = document.getElementById("usersTable");
     const newUserEmail = document.getElementById("newUserEmail");
     const newUserName = document.getElementById("newUserName");
     const newUserRole = document.getElementById("newUserRole");
+    const newUserDept = document.getElementById("newUserDept");
+    const newUserActive = document.getElementById("newUserActive");
 
-    const logsMsg = document.getElementById("logsMsg");
-    const logDate = document.getElementById("logDate");
-    const logList = document.getElementById("logList");
-
+    // Modal
     const occModalBack = document.getElementById("occModalBack");
     const occModalTitle = document.getElementById("occModalTitle");
     const occModalMsg = document.getElementById("occModalMsg");
@@ -618,8 +613,10 @@
     const occNotesShort = document.getElementById("occNotesShort");
     const occNotesLong = document.getElementById("occNotesLong");
 
+    // State
     let currentUser = null;
     let myRole = "viewer";
+    let myDept = "";
     let myName = "";
     let dashboardDays = [];
     let lastUpdateMap = new Map();
@@ -653,8 +650,9 @@
       ]}
     ];
 
+    // ===== Helpers =====
     function setMsg(el, text, type="") {
-      el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : "");
+      el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : type === "warn" ? "warntxt" : "");
       el.textContent = text || "";
     }
     function show(view){
@@ -663,14 +661,26 @@
       appView.style.display = "none";
       view.style.display = "block";
     }
-    function canEdit(){ return myRole === "editor" || myRole === "admin"; }
     function isAdmin(){ return myRole === "admin"; }
 
+    // New permission model:
+    // - Admin: everything
+    // - Editor + Guest Service: occupancy + notes
+    // - Editor + F&B: restaurant statuses
+    function canEditOcc(){
+      if (isAdmin()) return true;
+      return myRole === "editor" && (myDept || "").toLowerCase() === "guest service";
+    }
+    function canEditStatus(){
+      if (isAdmin()) return true;
+      return myRole === "editor" && (myDept || "").toLowerCase() === "f&b";
+    }
+
     function switchTab(which){
-      for (const b of [tabDashboard, tabUsers, tabLogs]) b.classList.remove("active");
+      tabDashboard.classList.remove("active");
+      tabUsers.classList.remove("active");
       panelDashboard.style.display = "none";
       panelUsers.style.display = "none";
-      panelLogs.style.display = "none";
 
       if (which === "dashboard"){
         tabDashboard.classList.add("active");
@@ -678,9 +688,6 @@
       } else if (which === "users"){
         tabUsers.classList.add("active");
         panelUsers.style.display = "block";
-      } else if (which === "logs"){
-        tabLogs.classList.add("active");
-        panelLogs.style.display = "block";
       }
     }
 
@@ -716,16 +723,26 @@
         return new Date(ts).toLocaleString(undefined, { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
       } catch { return ""; }
     }
+    function safeText(v){ return (v === null || v === undefined) ? "" : String(v); }
 
+    // ===== Data loading =====
     async function loadMyProfile(){
       const { data, error } = await sb
         .from("profiles")
-        .select("role, full_name, email")
+        .select("role, full_name, email, department, is_active")
         .eq("user_id", currentUser.id)
         .maybeSingle();
+
       if (error) throw error;
+
       myRole = data?.role || "viewer";
       myName = data?.full_name || "";
+      myDept = data?.department || "";
+      const isActive = (data?.is_active !== false);
+
+      if (!isActive){
+        throw new Error("Your account is disabled. Contact an admin.");
+      }
     }
 
     async function loadServiceItems(){
@@ -752,6 +769,7 @@
       }
     }
 
+    // ===== Render =====
     function buildHeader(){
       while (headRow.children.length > 1) headRow.removeChild(headRow.lastChild);
       for (const day of dashboardDays){
@@ -769,8 +787,6 @@
       occNotesShort.value = notes || "";
       occNotesLong.value = "";
       occModalBack.style.display = "flex";
-
-      // stop background scroll when modal open (feels better on mobile)
       document.body.style.overflow = "hidden";
     }
     function closeOccModal(){
@@ -782,6 +798,10 @@
     async function saveOccModal(){
       try{
         if (!occEditDate) return;
+        if (!canEditOcc()){
+          setMsg(occModalMsg, "You do not have permission to edit occupancy.", "err");
+          return;
+        }
 
         const occRaw = String(occInput.value || "").trim();
         const occNum = occRaw === "" ? null : Number(occRaw);
@@ -805,6 +825,7 @@
         const row = dashboardDays.find(x => x.day === occEditDate);
         if (row){ row.occupancy_percent = occNum; row.notes = notes; }
 
+        await fetchLastUpdates(startDateEl.value);
         renderOccCards();
         setMsg(occModalMsg, "Saved.", "ok");
         setTimeout(closeOccModal, 220);
@@ -854,10 +875,12 @@
         card.appendChild(notes);
         card.appendChild(last);
 
-        if (canEdit()){
+        if (canEditOcc()){
           card.classList.add("clickable");
           card.title = "Click to edit occupancy + notes";
           card.addEventListener("click", () => openOccModal(day.day, day.occupancy_percent, day.notes));
+        } else {
+          card.title = "View only";
         }
         occCards.appendChild(card);
       }
@@ -927,14 +950,14 @@
             const isOn = statusFor(serviceName, dayRow);
 
             const td = document.createElement("td");
-            td.className = "statusCell " + (canEdit() ? "clickable" : "");
+            td.className = "statusCell " + (canEditStatus() ? "clickable" : "");
             td.title = isOn ? "Active" : "Inactive";
 
             const fill = document.createElement("div");
             fill.className = "statusFill " + (isOn ? "isOn" : "isOff");
             td.appendChild(fill);
 
-            if (canEdit()){
+            if (canEditStatus()){
               td.addEventListener("click", async () => {
                 try{
                   setMsg(appMsg, "");
@@ -1013,13 +1036,88 @@
       }
     }
 
-    // ---- Auth: forgot password + recovery ----
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
+    // ===== USERS (ADMIN) =====
+    function renderUsersTable(rows){
+      usersTable.innerHTML = "";
+      if (!rows || rows.length === 0){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="5" class="hint" style="text-align:left;padding:12px;">No users found.</td>`;
+        usersTable.appendChild(tr);
+        return;
+      }
+
+      for (const r of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="text-align:left;">${safeText(r.full_name)}</td>
+          <td style="text-align:left;">${safeText(r.email)}</td>
+          <td>${safeText(r.role)}</td>
+          <td>${safeText(r.department)}</td>
+          <td>${String(r.is_active)}</td>
+        `;
+        usersTable.appendChild(tr);
+      }
     }
 
+    async function loadUsers(){
+      if (!isAdmin()){
+        setMsg(usersMsg, "Not authorized (admin only).", "err");
+        return;
+      }
+      try{
+        setMsg(usersMsg, "Loading users…");
+        const { data, error } = await sb.rpc("admin_list_profiles");
+        if (error) throw error;
+        renderUsersTable(data || []);
+        setMsg(usersMsg, "");
+      } catch(e){
+        setMsg(usersMsg, e?.message || String(e), "err");
+      }
+    }
+
+    async function upsertUser(){
+      if (!isAdmin()){
+        setMsg(usersMsg, "Not authorized (admin only).", "err");
+        return;
+      }
+
+      const email = String(newUserEmail.value || "").trim();
+      const name = String(newUserName.value || "").trim();
+      const role = String(newUserRole.value || "").trim();
+      const dept = String(newUserDept.value || "").trim();
+      const active = (String(newUserActive.value) === "true");
+
+      if (!email){
+        setMsg(usersMsg, "Email is required.", "err");
+        return;
+      }
+      if (!name){
+        setMsg(usersMsg, "Name is required.", "err");
+        return;
+      }
+
+      try{
+        setMsg(usersMsg, "Saving…");
+
+        // IMPORTANT: this expects the NEW function signature:
+        // admin_upsert_profile_by_email(p_email,p_full_name,p_role,p_department,p_is_active)
+        const { error } = await sb.rpc("admin_upsert_profile_by_email", {
+          p_email: email,
+          p_full_name: name,
+          p_role: role,
+          p_department: dept,
+          p_is_active: active
+        });
+        if (error) throw error;
+
+        setMsg(usersMsg, "Saved.", "ok");
+        await loadUsers();
+      } catch(e){
+        setMsg(usersMsg, e?.message || String(e), "err");
+      }
+    }
+
+    // ===== Auth: forgot password + recovery =====
     async function handleRecoveryFromUrl(){
       const hp = parseHashParams();
 
@@ -1064,21 +1162,37 @@
       show(appView);
 
       rolePill.textContent = `Role: ${myRole}`;
+      deptPill.textContent = `Dept: ${myDept || "—"}`;
       userPill.textContent = `User: ${myName ? myName : (currentUser?.email || "")}`;
 
       tabUsers.style.display = isAdmin() ? "inline-block" : "none";
-      tabLogs.style.display = isAdmin() ? "inline-block" : "none";
+      copyRow.style.display = (canEditOcc() || isAdmin()) ? "flex" : "none";
 
-      editHint.textContent = canEdit()
-        ? "Editor/Admin: tap day cards to edit. Tap status tiles to change."
-        : "View only";
+      // friendly permission hint
+      const occOk = canEditOcc();
+      const stOk = canEditStatus();
+      if (!isAdmin() && (!occOk || !stOk)){
+        permHint.style.display = "block";
+        permHint.textContent =
+          `Permissions: ` +
+          `${occOk ? "✅ Occupancy edit" : "❌ Occupancy edit"} • ` +
+          `${stOk ? "✅ Status edit" : "❌ Status edit"} ` +
+          `(Admin can do all.)`;
+      } else {
+        permHint.style.display = "none";
+      }
 
-      copyRow.style.display = canEdit() ? "flex" : "none";
+      editHint.textContent = isAdmin()
+        ? "Admin: edit occupancy + statuses. Users tab available."
+        : (canEditOcc() && !canEditStatus())
+          ? "Guest Service: you can edit occupancy + notes."
+          : (!canEditOcc() && canEditStatus())
+            ? "F&B: you can edit restaurant statuses."
+            : "View only";
 
       const t = new Date();
       const todayStr = toDateStr(t);
       startDateEl.value = todayStr;
-      logDate.value = todayStr;
 
       copyTo.value = todayStr;
       const y = new Date(t); y.setDate(y.getDate()-1);
@@ -1086,9 +1200,14 @@
 
       switchTab("dashboard");
       await refreshAll();
+
+      // FIX: if admin, load users right away so Users tab isn't blank later
+      if (isAdmin()){
+        await loadUsers();
+      }
     }
 
-    // Buttons: auth
+    // ===== Buttons =====
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
@@ -1159,14 +1278,17 @@
       await sb.auth.signOut();
       currentUser = null;
       myRole = "viewer";
+      myDept = "";
       myName = "";
       show(loginView);
     });
 
     // Tabs
     tabDashboard.addEventListener("click", () => switchTab("dashboard"));
-    tabUsers.addEventListener("click", () => switchTab("users"));
-    tabLogs.addEventListener("click", () => switchTab("logs"));
+    tabUsers.addEventListener("click", async () => {
+      switchTab("users");
+      await loadUsers();
+    });
 
     // Dashboard controls
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
@@ -1178,14 +1300,27 @@
 
     // Copy controls
     document.getElementById("btnCopyDay").addEventListener("click", async () => {
+      // copy_day is server-side controlled; leave available for admins/editors who can edit occ
+      if (!isAdmin() && !canEditOcc()){
+        setMsg(appMsg, "You do not have permission to copy days.", "err");
+        return;
+      }
       await doCopyDay(copyFrom.value, copyTo.value, copyOcc.value === "true");
     });
     document.getElementById("btnCopyYesterday").addEventListener("click", async () => {
+      if (!isAdmin() && !canEditOcc()){
+        setMsg(appMsg, "You do not have permission to copy days.", "err");
+        return;
+      }
       const firstDay = dashboardDays?.[0]?.day || startDateEl.value;
       const d = new Date(firstDay + "T00:00:00");
       d.setDate(d.getDate()-1);
       await doCopyDay(toDateStr(d), firstDay, copyOcc.value === "true");
     });
+
+    // Users buttons
+    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
+    document.getElementById("btnUpsertUser").addEventListener("click", upsertUser);
 
     // Modal
     document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
@@ -1200,9 +1335,15 @@
 
       const { data } = await sb.auth.getSession();
       if (data?.session?.user){
-        currentUser = data.session.user;
-        await loadMyProfile();
-        await showApp();
+        try{
+          currentUser = data.session.user;
+          await loadMyProfile();
+          await showApp();
+        } catch(e){
+          await sb.auth.signOut();
+          setMsg(loginMsg, e?.message || String(e), "err");
+          show(loginView);
+        }
       } else {
         show(loginView);
       }
