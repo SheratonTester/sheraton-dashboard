@@ -371,7 +371,7 @@
           <span id="rolePill" class="pill">Role: …</span>
           <span id="deptPill" class="pill">Dept: …</span>
           <span id="userPill" class="pill">User: …</span>
-          <span id="rtPill" class="pill">Realtime: …</span>
+          <span id="rtPill" class="pill">Realtime: off</span>
         </div>
 
         <div class="tabs">
@@ -673,9 +673,6 @@
 
     let occEditDate = null;
     let outletEdit = { date:null, outlet_name:null };
-
-    let realtimeChannel = null;
-    let refreshTimer = null;
 
     const GROUPS = [
       { title: "Breakfast", groupName: "breakfast", items: [
@@ -1414,8 +1411,10 @@
       return false;
     }
 
-    async function refreshLight(){
+    async function refreshAll(){
       try{
+        setMsg(appMsg, "Loading…");
+        await loadServiceItems();
         await fetchDashboard(startDateEl.value);
         await fetchRestaurantMeta();
         await fetchOutletHours();
@@ -1428,54 +1427,10 @@
         renderRestaurantGrid();
         renderOutletTable(lobbyHead, lobbyBody, LOBBY_BAR, () => canEditRestaurantAndLobby());
         renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
-      } catch(e){
-        setMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
 
-    async function refreshAll(){
-      try{
-        setMsg(appMsg, "Loading…");
-        await loadServiceItems();
-        await refreshLight();
         setMsg(appMsg, "");
       } catch(e){
         setMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
-    function scheduleRealtimeRefresh(){
-      if (refreshTimer) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(async () => {
-        // Don’t reload service_items every time, just the live tables.
-        await refreshLight();
-        setMsg(appMsg, "Realtime update.", "ok");
-        setTimeout(() => setMsg(appMsg,""), 800);
-      }, 350);
-    }
-
-    async function setupRealtime(){
-      try{
-        if (realtimeChannel){
-          await sb.removeChannel(realtimeChannel);
-          realtimeChannel = null;
-        }
-
-        realtimeChannel = sb.channel("sheraton-dashboard-live")
-          .on("postgres_changes", { event: "*", schema: "public", table: "daily_forecast" }, scheduleRealtimeRefresh)
-          .on("postgres_changes", { event: "*", schema: "public", table: "daily_service_selection" }, scheduleRealtimeRefresh)
-          .on("postgres_changes", { event: "*", schema: "public", table: "daily_massimo_status" }, scheduleRealtimeRefresh)
-          .on("postgres_changes", { event: "*", schema: "public", table: "daily_outlet_hours" }, scheduleRealtimeRefresh);
-
-        const { error } = await realtimeChannel.subscribe((status) => {
-          rtPill.textContent = "Realtime: " + status;
-        });
-
-        if (error) throw error;
-
-      } catch(e){
-        rtPill.textContent = "Realtime: off";
-        // Still usable without realtime
       }
     }
 
@@ -1512,12 +1467,9 @@
       const cols = dashboardDays.map(d => ({ day: d.day, label: fmtDay(d.day) }));
 
       const rows = [];
-
-      // Occupancy + Notes
       rows.push({ label: "Occupancy %", values: dashboardDays.map(d => (d.occupancy_percent==null ? "—" : Number(d.occupancy_percent).toFixed(1) + "%")) });
       rows.push({ label: "Notes", values: dashboardDays.map(d => (d.notes || "")) });
 
-      // Breakfast/Lunch/Dinner summary (only true, else Closed)
       for (const g of ["breakfast","lunch","dinner"]){
         const label = g[0].toUpperCase() + g.slice(1);
         rows.push({
@@ -1526,7 +1478,6 @@
         });
       }
 
-      // Massimo summary (can be multiple)
       rows.push({
         label: "Massimo",
         values: dashboardDays.map(d => {
@@ -1535,7 +1486,6 @@
         })
       });
 
-      // Lobby bar + outlets
       rows.push({ label: "Lobby Bar", values: dashboardDays.map(d => summaryOutlet(d.day, "LOBBY BAR")) });
       rows.push({ label: "Starbucks", values: dashboardDays.map(d => summaryOutlet(d.day, "STARBUCKS")) });
       rows.push({ label: "Sweet Jesus", values: dashboardDays.map(d => summaryOutlet(d.day, "SWEET JESUS")) });
@@ -1613,6 +1563,7 @@
       rolePill.textContent = `Role: ${myRole}`;
       deptPill.textContent = `Dept: ${myDept || "—"}`;
       userPill.textContent = `User: ${myName ? myName : (currentUser?.email || "")}`;
+      rtPill.textContent = "Realtime: off";
 
       tabUsers.style.display = isAdmin() ? "inline-flex" : "none";
 
@@ -1627,8 +1578,6 @@
 
       switchTab("dashboard");
       await refreshAll();
-      await setupRealtime();
-
       if (isAdmin()) await loadUsers();
     }
 
@@ -1697,10 +1646,6 @@
     });
 
     document.getElementById("btnLogout").addEventListener("click", async () => {
-      if (realtimeChannel){
-        await sb.removeChannel(realtimeChannel);
-        realtimeChannel = null;
-      }
       await sb.auth.signOut();
       currentUser = null;
       myRole = "viewer";
