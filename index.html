@@ -14,7 +14,6 @@
       --line:#e2e8f0;
       --shadow: 0 10px 24px rgba(15,23,42,.08);
 
-      /* HIGH CONTRAST STATUS */
       --on:#166534;   /* dark green */
       --off:#991b1b;  /* dark red */
 
@@ -121,7 +120,6 @@
       white-space:nowrap;
     }
 
-    /* 7-day cards */
     .gridDays{
       display:grid;
       grid-template-columns:repeat(7, minmax(180px,1fr));
@@ -149,7 +147,6 @@
     .clickable{cursor:pointer}
     .clickable:active{transform: scale(.995)}
 
-    /* status table */
     .tableWrap{
       overflow:auto;
       border-radius:16px;
@@ -165,8 +162,6 @@
       text-align:center;
       background:#fff;
     }
-
-    /* keep z-index low so modal always wins */
     th:first-child,td:first-child{
       text-align:left;
       position:sticky; left:0;
@@ -201,17 +196,16 @@
       font-weight:750;
     }
 
-    /* STATUS CELLS: COLOR ONLY + STAMP */
     .statusCell{
       user-select:none;
       padding:6px 8px;
-      height:56px;
-      min-width:72px;
+      height:64px;
+      min-width:92px;
       -webkit-tap-highlight-color: transparent;
     }
     .statusFill{
       width:100%;
-      height:44px;
+      height:56px;
       border-radius:12px;
       margin:0 auto;
       border:2px solid rgba(15,23,42,.12);
@@ -244,14 +238,14 @@
       gap:2px;
       pointer-events:none;
     }
-    .stampName{
+    .stampLine{
       font-weight:800;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
       max-width:100%;
     }
-    .stampTime{
+    .stampLine2{
       font-weight:700;
       opacity:.95;
       white-space:nowrap;
@@ -260,10 +254,8 @@
       max-width:100%;
     }
 
-    /* login */
     .loginBox{max-width:520px;margin:40px auto}
 
-    /* modal ALWAYS ON TOP */
     .modalBack{
       position:fixed; inset:0;
       background: rgba(15,23,42,.45);
@@ -272,7 +264,7 @@
       z-index: 999999;
     }
     .modal{
-      width:100%; max-width:620px;
+      width:100%; max-width:640px;
       background:#fff;
       border:1px solid rgba(226,232,240,.9);
       border-radius:18px;
@@ -302,7 +294,6 @@
       gap:10px;
     }
 
-    /* MOBILE */
     @media (max-width: 860px){
       .twoCol{grid-template-columns:1fr}
       .wrap{padding:12px}
@@ -326,34 +317,8 @@
       table{min-width:900px}
       th:first-child, td:first-child{min-width:200px}
       th,td{padding:8px}
-
-      .statusCell{min-width:78px}
-      .statusFill{height:52px}
-      .stamp{font-size:10px}
-    }
-
-    @media (max-width: 520px){
-      .wrap{padding:10px}
-
-      input,select,button{width:100%}
-      .row{gap:8px}
-
-      th:first-child, td:first-child{
-        min-width:140px;
-        max-width:140px;
-      }
-      .serviceName{gap:6px}
-      .serviceName span:first-child{
-        display:block;
-        white-space:normal;
-        font-size:12px;
-        line-height:1.15;
-      }
-      .serviceName .badge{display:none}
-
-      table{min-width:860px}
-      .statusCell{min-width:82px}
-      .statusFill{height:54px;border-radius:12px}
+      .statusCell{min-width:96px}
+      .statusFill{height:58px}
     }
   </style>
 </head>
@@ -429,20 +394,6 @@
             <div class="hint" id="editHint"></div>
           </div>
 
-          <div id="copyRow" class="row" style="margin-top:12px; display:none;">
-            <span class="badge">Copy Day</span>
-            <label style="margin:0;color:var(--muted);font-size:12px;">From</label>
-            <input id="copyFrom" type="date" />
-            <label style="margin:0;color:var(--muted);font-size:12px;">To</label>
-            <input id="copyTo" type="date" />
-            <select id="copyOcc">
-              <option value="true">Copy occupancy + notes</option>
-              <option value="false">Copy status only</option>
-            </select>
-            <button id="btnCopyDay" class="btnPrimary">Copy</button>
-            <button id="btnCopyYesterday" class="btnGhost">Yesterday → First Day</button>
-          </div>
-
           <div id="permHint" class="msg warntxt" style="margin-top:10px; display:none;"></div>
         </div>
 
@@ -450,7 +401,7 @@
         <div class="card">
           <div id="occCards" class="gridDays"></div>
           <div class="hint" style="margin-top:10px;">
-            Mobile: swipe the cards. (If you can edit, tap a card.)
+            Tap a day card to edit (if you have permission). It will prefill the last saved percent + notes.
           </div>
         </div>
 
@@ -459,6 +410,7 @@
           <span class="badge" style="border-color: rgba(20,83,45,.35);">Green = Active</span>
           <span class="badge" style="border-color: rgba(127,29,29,.35);">Red = Inactive</span>
           <span class="badge">Time shown: America/Toronto</span>
+          <span class="badge">Tip: double-click a green meal item to clear (all red)</span>
         </div>
         <div class="tableWrap">
           <table>
@@ -471,6 +423,30 @@
           </table>
         </div>
 
+        <div class="sectionTitle">Lobby Bar</div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr id="lobbyHead">
+                <th>Lobby Bar</th>
+              </tr>
+            </thead>
+            <tbody id="lobbyBody"></tbody>
+          </table>
+        </div>
+
+        <div class="sectionTitle">Outlets</div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr id="outletsHead">
+                <th>Outlet</th>
+              </tr>
+            </thead>
+            <tbody id="outletsBody"></tbody>
+          </table>
+        </div>
+
         <div id="appMsg" class="msg"></div>
       </div>
 
@@ -480,18 +456,18 @@
 
         <div class="card">
           <div class="hint" style="margin-bottom:10px;">
-            Add Auth users in Supabase Dashboard (Authentication → Users).<br/>
-            Then manage their Role + Department here. No deleting Auth users from this site.
+            Add Auth users in Supabase (Authentication → Users). Then set Role/Department here.<br/>
+            Roles now include: viewer, editor, admin, outlets_lead
           </div>
 
           <div class="twoCol">
             <div>
               <label style="margin:0;color:var(--muted);font-size:12px;">Email</label>
-              <input id="newUserEmail" placeholder="e.g. erice@niagarafallshotels.com" />
+              <input id="newUserEmail" placeholder="e.g. outletlead@niagarafallshotels.com" />
             </div>
             <div>
               <label style="margin:0;color:var(--muted);font-size:12px;">Name</label>
-              <input id="newUserName" placeholder="e.g. Eric Ediger" />
+              <input id="newUserName" placeholder="e.g. Outlets Lead" />
             </div>
           </div>
 
@@ -501,6 +477,7 @@
               <select id="newUserRole">
                 <option value="viewer">viewer</option>
                 <option value="editor">editor</option>
+                <option value="outlets_lead">outlets_lead</option>
                 <option value="admin">admin</option>
               </select>
             </div>
@@ -509,6 +486,7 @@
               <select id="newUserDept">
                 <option value="Guest Service">Guest Service</option>
                 <option value="F&B">F&amp;B</option>
+                <option value="Outlets">Outlets</option>
               </select>
             </div>
           </div>
@@ -537,7 +515,7 @@
                 <tr>
                   <th style="width:260px;">Name</th>
                   <th>Email</th>
-                  <th style="width:140px;">Role</th>
+                  <th style="width:160px;">Role</th>
                   <th style="width:160px;">Department</th>
                   <th style="width:120px;">Active</th>
                 </tr>
@@ -565,17 +543,10 @@
             <input id="occInput" type="number" min="0" max="100" step="0.1" placeholder="e.g. 78.5" />
           </div>
           <div>
-            <label style="margin:0;color:var(--muted);font-size:12px;">Notes (short)</label>
-            <input id="occNotesShort" placeholder="Optional" />
+            <label style="margin:0;color:var(--muted);font-size:12px;">Notes</label>
+            <input id="occNotes" placeholder="Optional" />
           </div>
         </div>
-
-        <div style="margin-top:10px;">
-          <label style="margin:0;color:var(--muted);font-size:12px;">Notes (long)</label>
-          <textarea id="occNotesLong" placeholder="Optional…"></textarea>
-          <div class="hint">We save notes as one field. Long notes wins if filled.</div>
-        </div>
-
         <div id="occModalMsg" class="msg"></div>
       </div>
       <div class="modalFooter">
@@ -585,53 +556,84 @@
     </div>
   </div>
 
-  <!-- Local Supabase library (repo root) -->
+  <!-- MODAL: Outlet/Lobby edit -->
+  <div id="outletModalBack" class="modalBack">
+    <div class="modal">
+      <div class="modalHeader">
+        <b id="outletModalTitle">Edit</b>
+        <button id="btnOutletClose" class="btnGhost xBtn">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="twoCol">
+          <div>
+            <label style="margin:0;color:var(--muted);font-size:12px;">Status</label>
+            <select id="outletIsOpen">
+              <option value="false">Closed</option>
+              <option value="true">Open</option>
+            </select>
+          </div>
+          <div>
+            <label style="margin:0;color:var(--muted);font-size:12px;">Open time</label>
+            <input id="outletOpenTime" type="time" />
+          </div>
+        </div>
+
+        <div class="twoCol" style="margin-top:10px;">
+          <div>
+            <label style="margin:0;color:var(--muted);font-size:12px;">Close time</label>
+            <input id="outletCloseTime" type="time" />
+          </div>
+          <div class="hint" style="display:flex;align-items:flex-end;">
+            If Open is selected, both times are required.
+          </div>
+        </div>
+
+        <div id="outletModalMsg" class="msg"></div>
+      </div>
+      <div class="modalFooter">
+        <button id="btnOutletSave" class="btnPrimary">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script src="./supabase.js"></script>
 
   <script>
-    // ====== SET THESE ======
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-    // =======================
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const DAYS = 7;
 
-    // Views
     const loginView = document.getElementById("loginView");
     const recoveryView = document.getElementById("recoveryView");
     const appView = document.getElementById("appView");
 
-    // Tabs
     const tabDashboard = document.getElementById("tabDashboard");
     const tabUsers = document.getElementById("tabUsers");
     const panelDashboard = document.getElementById("panelDashboard");
     const panelUsers = document.getElementById("panelUsers");
 
-    // Pills & hints
     const rolePill = document.getElementById("rolePill");
     const deptPill = document.getElementById("deptPill");
     const userPill = document.getElementById("userPill");
     const editHint = document.getElementById("editHint");
     const permHint = document.getElementById("permHint");
 
-    // Dashboard
     const startDateEl = document.getElementById("startDate");
     const occCards = document.getElementById("occCards");
     const headRow = document.getElementById("headRow");
     const bodyRows = document.getElementById("bodyRows");
     const appMsg = document.getElementById("appMsg");
 
-    const copyRow = document.getElementById("copyRow");
-    const copyFrom = document.getElementById("copyFrom");
-    const copyTo = document.getElementById("copyTo");
-    const copyOcc = document.getElementById("copyOcc");
+    const lobbyHead = document.getElementById("lobbyHead");
+    const lobbyBody = document.getElementById("lobbyBody");
+    const outletsHead = document.getElementById("outletsHead");
+    const outletsBody = document.getElementById("outletsBody");
 
-    // Login / recovery msgs
     const loginMsg = document.getElementById("loginMsg");
     const recoveryMsg = document.getElementById("recoveryMsg");
 
-    // Users panel
     const usersMsg = document.getElementById("usersMsg");
     const usersTable = document.getElementById("usersTable");
     const newUserEmail = document.getElementById("newUserEmail");
@@ -640,29 +642,36 @@
     const newUserDept = document.getElementById("newUserDept");
     const newUserActive = document.getElementById("newUserActive");
 
-    // Modal
     const occModalBack = document.getElementById("occModalBack");
     const occModalTitle = document.getElementById("occModalTitle");
     const occModalMsg = document.getElementById("occModalMsg");
     const occInput = document.getElementById("occInput");
-    const occNotesShort = document.getElementById("occNotesShort");
-    const occNotesLong = document.getElementById("occNotesLong");
+    const occNotes = document.getElementById("occNotes");
 
-    // State
+    const outletModalBack = document.getElementById("outletModalBack");
+    const outletModalTitle = document.getElementById("outletModalTitle");
+    const outletModalMsg = document.getElementById("outletModalMsg");
+    const outletIsOpen = document.getElementById("outletIsOpen");
+    const outletOpenTime = document.getElementById("outletOpenTime");
+    const outletCloseTime = document.getElementById("outletCloseTime");
+
     let currentUser = null;
     let myRole = "viewer";
     let myDept = "";
     let myName = "";
     let dashboardDays = [];
-    let lastUpdateMap = new Map();
     let serviceByName = new Map();
+
+    // per-cell meta for restaurant
+    let dssMeta = new Map(); // date|group -> {selected, last_action, updated_by_name, updated_at}
+    let dmsMeta = new Map(); // date|service_item_id -> {is_active, updated_by_name, updated_at}
+
+    // outlet hours map: date|outlet_name -> row
+    let outletMap = new Map();
+
     let occEditDate = null;
 
-    // NEW: per-cell meta
-    // pick-one groups: date|group -> { selected_service_item_id, updated_by_name, updated_at }
-    let dssMeta = new Map();
-    // Massimo: date|service_item_id -> { is_active, updated_by_name, updated_at }
-    let dmsMeta = new Map();
+    let outletEdit = { date:null, outlet_name:null };
 
     const GROUPS = [
       { title: "Breakfast", items: [
@@ -691,7 +700,9 @@
       ]}
     ];
 
-    // ===== Helpers =====
+    const LOBBY_BAR = ["LOBBY BAR"];
+    const OUTLETS = ["STARBUCKS","SWEET JESUS","FRESHII"];
+
     function setMsg(el, text, type="") {
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : type === "warn" ? "warntxt" : "");
       el.textContent = text || "";
@@ -702,19 +713,19 @@
       appView.style.display = "none";
       view.style.display = "block";
     }
-    function isAdmin(){ return myRole === "admin"; }
 
-    // Permission model:
-    // - Admin: everything
-    // - Editor + Guest Service: occupancy + notes
-    // - Editor + F&B: restaurant statuses
+    function isAdmin(){ return myRole === "admin"; }
     function canEditOcc(){
       if (isAdmin()) return true;
       return myRole === "editor" && (myDept || "").toLowerCase() === "guest service";
     }
-    function canEditStatus(){
+    function canEditRestaurantAndLobby(){
       if (isAdmin()) return true;
       return myRole === "editor" && (myDept || "").toLowerCase() === "f&b";
+    }
+    function canEditOutlets(){
+      if (isAdmin()) return true;
+      return myRole === "outlets_lead";
     }
 
     function switchTab(which){
@@ -726,7 +737,7 @@
       if (which === "dashboard"){
         tabDashboard.classList.add("active");
         panelDashboard.style.display = "block";
-      } else if (which === "users"){
+      } else {
         tabUsers.classList.add("active");
         panelUsers.style.display = "block";
       }
@@ -759,13 +770,7 @@
       const dt = new Date(d + "T00:00:00");
       return dt.getTime() === t.getTime();
     }
-    function fmtTimeLocal(ts){
-      try{
-        return new Date(ts).toLocaleString(undefined, { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
-      } catch { return ""; }
-    }
 
-    // ALWAYS TORONTO TIME
     function fmtToronto(ts) {
       if (!ts) return "";
       try{
@@ -775,16 +780,45 @@
           hour: "2-digit", minute: "2-digit",
           hour12: true
         }).format(new Date(ts));
-      } catch {
-        return "";
-      }
+      } catch { return ""; }
     }
 
-    function safeText(v){ return (v === null || v === undefined) ? "" : String(v); }
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
     function keyDss(day, group){ return `${day}|${group}`; }
     function keyDms(day, serviceItemId){ return `${day}|${serviceItemId}`; }
+    function keyOutlet(day, name){ return `${day}|${name}`; }
 
-    // ===== Data loading =====
+    function fmtTime12(hhmm){
+      if (!hhmm) return "";
+      const [hS,mS] = String(hhmm).split(":");
+      const h = Number(hS);
+      const m = Number(mS);
+      if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
+      const ampm = h >= 12 ? "PM" : "AM";
+      const hr = (h % 12) === 0 ? 12 : (h % 12);
+      return `${hr}:${String(m).padStart(2,"0")} ${ampm}`;
+    }
+
+    function stampHtml(lines){
+      const clean = lines.filter(Boolean);
+      if (clean.length === 0) return "";
+      const l1 = clean[0] ? `<div class="stampLine">${escapeHtml(clean[0])}</div>` : "";
+      const l2 = clean[1] ? `<div class="stampLine2">${escapeHtml(clean[1])}</div>` : "";
+      const l3 = clean[2] ? `<div class="stampLine2">${escapeHtml(clean[2])}</div>` : "";
+      return `<div class="stamp">${l1}${l2}${l3}</div>`;
+    }
+
+    // -----------------------------
+    // Load profile + service items
+    // -----------------------------
     async function loadMyProfile(){
       const { data, error } = await sb
         .from("profiles")
@@ -813,51 +847,43 @@
       serviceByName = new Map((data || []).map(x => [x.name, x]));
     }
 
+    // -----------------------------
+    // Dashboard data (your existing RPC)
+    // -----------------------------
     async function fetchDashboard(startDate){
       const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: DAYS });
       if (error) throw error;
       dashboardDays = data || [];
     }
 
-    async function fetchLastUpdates(startDate){
-      lastUpdateMap = new Map();
-      const { data, error } = await sb.rpc("get_last_updates", { p_start_date: startDate, p_days: DAYS });
-      if (error) throw error;
-      for (const row of (data || [])){
-        lastUpdateMap.set(row.day, { at: row.last_changed_at, by: row.last_changed_by });
-      }
-    }
-
-    // NEW: fetch per-cell meta for who/when
-    async function fetchStatusMeta(){
+    // -----------------------------
+    // Restaurant per-cell stamps
+    // -----------------------------
+    async function fetchRestaurantMeta(){
       dssMeta = new Map();
       dmsMeta = new Map();
 
       const days = (dashboardDays || []).map(x => x.day);
       if (days.length === 0) return;
 
-      // pick-one groups meta
       const { data: dss, error: e1 } = await sb
         .from("daily_service_selection")
-        .select("date,group_name,selected_service_item_id,updated_by_name,updated_at")
+        .select("date,group_name,selected_service_item_id,last_action_service_item_id,updated_by_name,updated_at")
         .in("date", days)
         .in("group_name", ["breakfast","lunch","dinner"]);
       if (e1) throw e1;
 
       for (const r of (dss || [])){
         dssMeta.set(keyDss(r.date, r.group_name), {
-          selected_service_item_id: r.selected_service_item_id,
-          updated_by_name: r.updated_by_name,
-          updated_at: r.updated_at
+          selected: r.selected_service_item_id,
+          last_action: r.last_action_service_item_id,
+          by: r.updated_by_name,
+          at: r.updated_at
         });
       }
 
-      // Massimo meta (each cell is its own row)
-      const massimoIds = [];
-      for (const n of ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"]){
-        const item = serviceByName.get(n);
-        if (item?.id !== undefined && item?.id !== null) massimoIds.push(item.id);
-      }
+      const massimoNames = ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"];
+      const massimoIds = massimoNames.map(n => serviceByName.get(n)?.id).filter(Boolean);
 
       if (massimoIds.length > 0){
         const { data: dms, error: e2 } = await sb
@@ -869,31 +895,62 @@
 
         for (const r of (dms || [])){
           dmsMeta.set(keyDms(r.date, r.service_item_id), {
-            is_active: !!r.is_active,
-            updated_by_name: r.updated_by_name,
-            updated_at: r.updated_at
+            on: !!r.is_active,
+            by: r.updated_by_name,
+            at: r.updated_at
           });
         }
       }
     }
 
-    // ===== Render =====
-    function buildHeader(){
-      while (headRow.children.length > 1) headRow.removeChild(headRow.lastChild);
-      for (const day of dashboardDays){
-        const th = document.createElement("th");
-        th.textContent = fmtDay(day.day);
-        headRow.appendChild(th);
+    // -----------------------------
+    // Lobby/Outlets data
+    // -----------------------------
+    async function fetchOutletHours(){
+      outletMap = new Map();
+      const days = (dashboardDays || []).map(x => x.day);
+      if (days.length === 0) return;
+
+      const names = [...LOBBY_BAR, ...OUTLETS];
+      const { data, error } = await sb
+        .from("daily_outlet_hours")
+        .select("date,outlet_name,is_open,open_time,close_time,updated_by_name,updated_at")
+        .in("date", days)
+        .in("outlet_name", names);
+
+      if (error) throw error;
+
+      for (const r of (data || [])){
+        outletMap.set(keyOutlet(r.date, r.outlet_name), r);
       }
     }
 
-    function openOccModal(date, occ, notes){
-      occEditDate = date;
-      occModalTitle.textContent = `Edit occupancy – ${date}`;
-      setMsg(occModalMsg, "");
-      occInput.value = (occ === null || occ === undefined) ? "" : String(occ);
-      occNotesShort.value = notes || "";
-      occNotesLong.value = "";
+    // -----------------------------
+    // Header building
+    // -----------------------------
+    function buildHeaderRow(rowEl){
+      while (rowEl.children.length > 1) rowEl.removeChild(rowEl.lastChild);
+      for (const day of dashboardDays){
+        const th = document.createElement("th");
+        th.textContent = fmtDay(day.day);
+        rowEl.appendChild(th);
+      }
+    }
+
+    // -----------------------------
+    // Occupancy modal
+    // -----------------------------
+    function openOccModal(day){
+      const row = dashboardDays.find(x => x.day === day);
+      occEditDate = day;
+
+      occModalTitle.textContent = `Edit occupancy – ${day}`;
+      setMsg(occModalMsg,"");
+
+      occInput.value = (row?.occupancy_percent ?? "") === null ? "" : String(row?.occupancy_percent ?? "");
+      // Prefill notes with last saved entry
+      occNotes.value = row?.notes || "";
+
       occModalBack.style.display = "flex";
       document.body.style.overflow = "hidden";
     }
@@ -907,22 +964,20 @@
       try{
         if (!occEditDate) return;
         if (!canEditOcc()){
-          setMsg(occModalMsg, "You do not have permission to edit occupancy.", "err");
+          setMsg(occModalMsg,"You do not have permission to edit occupancy.","err");
           return;
         }
 
         const occRaw = String(occInput.value || "").trim();
         const occNum = occRaw === "" ? null : Number(occRaw);
         if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)){
-          setMsg(occModalMsg, "Occupancy must be 0 to 100 (or blank).", "err");
+          setMsg(occModalMsg,"Occupancy must be 0 to 100 (or blank).","err");
           return;
         }
 
-        const longNotes = String(occNotesLong.value || "").trim();
-        const shortNotes = String(occNotesShort.value || "").trim();
-        const notes = (longNotes || shortNotes) || null;
+        const notes = String(occNotes.value || "").trim() || null;
 
-        setMsg(occModalMsg, "Saving…");
+        setMsg(occModalMsg,"Saving…");
 
         const { error } = await sb
           .from("daily_forecast")
@@ -931,12 +986,14 @@
         if (error) throw error;
 
         const row = dashboardDays.find(x => x.day === occEditDate);
-        if (row){ row.occupancy_percent = occNum; row.notes = notes; }
+        if (row){
+          row.occupancy_percent = occNum;
+          row.notes = notes;
+        }
 
-        await fetchLastUpdates(startDateEl.value);
+        setMsg(occModalMsg,"Saved.","ok");
         renderOccCards();
-        setMsg(occModalMsg, "Saved.", "ok");
-        setTimeout(closeOccModal, 220);
+        setTimeout(closeOccModal, 200);
       } catch(e){
         setMsg(occModalMsg, e?.message || String(e), "err");
       }
@@ -944,19 +1001,13 @@
 
     async function clearOccModal(){
       occInput.value = "";
-      occNotesShort.value = "";
-      occNotesLong.value = "";
+      occNotes.value = "";
       await saveOccModal();
     }
 
     function renderOccCards(){
       occCards.innerHTML = "";
       for (const day of dashboardDays){
-        const upd = lastUpdateMap.get(day.day);
-        const updLine = (upd?.at && upd?.by)
-          ? `Last update: ${upd.by} • ${fmtTimeLocal(upd.at)}`
-          : "Last update: —";
-
         const card = document.createElement("div");
         card.className = "daycard" + (isToday(day.day) ? " today" : "");
 
@@ -974,19 +1025,14 @@
         notes.className = "notes";
         notes.textContent = day.notes || "";
 
-        const last = document.createElement("div");
-        last.className = "lastupd";
-        last.textContent = updLine;
-
         card.appendChild(title);
         card.appendChild(occ);
         card.appendChild(notes);
-        card.appendChild(last);
 
         if (canEditOcc()){
           card.classList.add("clickable");
-          card.title = "Click to edit occupancy + notes";
-          card.addEventListener("click", () => openOccModal(day.day, day.occupancy_percent, day.notes));
+          card.title = "Click to edit (prefilled)";
+          card.addEventListener("click", () => openOccModal(day.day));
         } else {
           card.title = "View only";
         }
@@ -994,40 +1040,21 @@
       }
     }
 
-    function statusStampHtml(name, ts){
-      const n = (name || "").trim();
-      const t = fmtToronto(ts);
-      if (!n || !t) return "";
-      return `
-        <div class="stamp">
-          <div class="stampName">${escapeHtml(n)}</div>
-          <div class="stampTime">${escapeHtml(t)}</div>
-        </div>
-      `;
-    }
-
-    function escapeHtml(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function statusForPickOne(dayRow, serviceName){
+    // -----------------------------
+    // Restaurant behavior
+    // -----------------------------
+    function pickOneIsOn(dayRow, serviceName){
       const item = serviceByName.get(serviceName);
       if (!item) return false;
-
       const group = item.group_name;
       if (!["breakfast","lunch","dinner"].includes(group)) return false;
 
       const meta = dssMeta.get(keyDss(dayRow.day, group));
-      if (meta?.selected_service_item_id !== null && meta?.selected_service_item_id !== undefined){
-        return String(meta.selected_service_item_id) === String(item.id);
+      if (meta?.selected){
+        return String(meta.selected) === String(item.id);
       }
 
-      // fallback to older dashboard data
+      // fallback to dashboard fields
       const upper = serviceName.toUpperCase();
       if (group === "breakfast") return (dayRow.breakfast || "").toUpperCase() === upper;
       if (group === "lunch") return (dayRow.lunch || "").toUpperCase() === upper;
@@ -1035,30 +1062,78 @@
       return false;
     }
 
-    function statusForMassimo(dayRow, serviceName){
+    function pickOneStamp(day, serviceName, isOn){
+      const item = serviceByName.get(serviceName);
+      if (!item) return "";
+
+      const group = item.group_name;
+      const meta = dssMeta.get(keyDss(day, group));
+      if (!meta?.by || !meta?.at) return "";
+
+      // Show stamp on:
+      // - the selected (green) cell
+      // - OR if cleared, show stamp on the last-clicked cell (even though it is now red)
+      const isLastClicked = meta.last_action && (String(meta.last_action) === String(item.id));
+      if (isOn || (!meta.selected && isLastClicked)){
+        return stampHtml([meta.by, fmtToronto(meta.at)]);
+      }
+      return "";
+    }
+
+    function massimoIsOn(dayRow, serviceName){
       const item = serviceByName.get(serviceName);
       if (!item) return false;
 
       const meta = dmsMeta.get(keyDms(dayRow.day, item.id));
-      if (meta) return !!meta.is_active;
+      if (meta) return !!meta.on;
 
-      // fallback to dashboard booleans
+      // fallback
       if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
       if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
       if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
       return false;
     }
 
+    function massimoStamp(day, serviceName){
+      const item = serviceByName.get(serviceName);
+      if (!item) return "";
+      const meta = dmsMeta.get(keyDms(day, item.id));
+      if (!meta?.by || !meta?.at) return "";
+      return stampHtml([meta.by, fmtToronto(meta.at)]);
+    }
+
     async function setPickOne(date, serviceName){
       const item = serviceByName.get(serviceName);
       if (!item) throw new Error("Service item not found: " + serviceName);
-
       const group = item.group_name;
       if (!["breakfast","lunch","dinner"].includes(group)) return;
 
       const { error } = await sb
         .from("daily_service_selection")
-        .upsert({ date, group_name: group, selected_service_item_id: item.id }, { onConflict: "date,group_name" });
+        .upsert({
+          date,
+          group_name: group,
+          selected_service_item_id: item.id,
+          last_action_service_item_id: item.id
+        }, { onConflict: "date,group_name" });
+
+      if (error) throw error;
+    }
+
+    async function clearPickOne(date, serviceName){
+      const item = serviceByName.get(serviceName);
+      if (!item) throw new Error("Service item not found: " + serviceName);
+      const group = item.group_name;
+      if (!["breakfast","lunch","dinner"].includes(group)) return;
+
+      const { error } = await sb
+        .from("daily_service_selection")
+        .upsert({
+          date,
+          group_name: group,
+          selected_service_item_id: null,
+          last_action_service_item_id: item.id
+        }, { onConflict: "date,group_name" });
 
       if (error) throw error;
     }
@@ -1074,7 +1149,7 @@
       if (error) throw error;
     }
 
-    function renderStatusGrid(){
+    function renderRestaurantGrid(){
       bodyRows.innerHTML = "";
       const colspan = 1 + (dashboardDays?.length || DAYS);
 
@@ -1099,27 +1174,15 @@
             let stamp = "";
 
             if (serviceName.startsWith("MASSIMO ")){
-              isOn = statusForMassimo(dayRow, serviceName);
-
-              const item = serviceByName.get(serviceName);
-              const meta = item ? dmsMeta.get(keyDms(dayRow.day, item.id)) : null;
-              if (meta?.updated_by_name && meta?.updated_at){
-                stamp = statusStampHtml(meta.updated_by_name, meta.updated_at);
-              }
+              isOn = massimoIsOn(dayRow, serviceName);
+              stamp = massimoStamp(dayRow.day, serviceName);
             } else {
-              isOn = statusForPickOne(dayRow, serviceName);
-
-              // For pick-one groups: stamp on the SELECTED (green) box (the one that was chosen)
-              const item = serviceByName.get(serviceName);
-              const gname = item?.group_name;
-              const meta = (gname ? dssMeta.get(keyDss(dayRow.day, gname)) : null);
-              if (isOn && meta?.updated_by_name && meta?.updated_at){
-                stamp = statusStampHtml(meta.updated_by_name, meta.updated_at);
-              }
+              isOn = pickOneIsOn(dayRow, serviceName);
+              stamp = pickOneStamp(dayRow.day, serviceName, isOn);
             }
 
             const td = document.createElement("td");
-            td.className = "statusCell " + (canEditStatus() ? "clickable" : "");
+            td.className = "statusCell " + (canEditRestaurantAndLobby() ? "clickable" : "");
             td.title = isOn ? "Active" : "Inactive";
 
             const fill = document.createElement("div");
@@ -1127,40 +1190,39 @@
             fill.innerHTML = stamp;
             td.appendChild(fill);
 
-            if (canEditStatus()){
+            if (canEditRestaurantAndLobby()){
               td.addEventListener("click", async () => {
                 try{
                   setMsg(appMsg, "");
-
                   if (serviceName.startsWith("MASSIMO ")){
                     await toggleMassimo(dayRow.day, serviceName, isOn);
-
-                    // update local fallback
-                    if (serviceName === "MASSIMO BREAKFAST") dayRow.massimo_breakfast = !isOn;
-                    if (serviceName === "MASSIMO LUNCH") dayRow.massimo_lunch = !isOn;
-                    if (serviceName === "MASSIMO DINNER") dayRow.massimo_dinner = !isOn;
                   } else {
                     await setPickOne(dayRow.day, serviceName);
-
-                    // update local fallback
-                    const gname = serviceByName.get(serviceName)?.group_name;
-                    if (gname === "breakfast") dayRow.breakfast = serviceName;
-                    if (gname === "lunch") dayRow.lunch = serviceName;
-                    if (gname === "dinner") dayRow.dinner = serviceName;
                   }
 
-                  // Refresh stamps so the box shows who/when instantly
-                  await fetchStatusMeta();
-                  await fetchLastUpdates(startDateEl.value);
-
-                  renderStatusGrid();
-                  renderOccCards();
-
+                  await fetchRestaurantMeta();
+                  renderRestaurantGrid();
                   setMsg(appMsg, "Saved.", "ok");
                 } catch(e){
                   setMsg(appMsg, e?.message || String(e), "err");
                 }
               });
+
+              // Double-click a GREEN pick-one → clear it (all red)
+              if (!serviceName.startsWith("MASSIMO ")){
+                td.addEventListener("dblclick", async () => {
+                  try{
+                    if (!isOn) return; // only if green
+                    setMsg(appMsg, "");
+                    await clearPickOne(dayRow.day, serviceName);
+                    await fetchRestaurantMeta();
+                    renderRestaurantGrid();
+                    setMsg(appMsg, "Cleared.", "ok");
+                  } catch(e){
+                    setMsg(appMsg, e?.message || String(e), "err");
+                  }
+                });
+              }
             }
 
             tr.appendChild(td);
@@ -1171,52 +1233,145 @@
       }
     }
 
-    async function doCopyDay(fromDate, toDate, copyOccBool){
-      setMsg(appMsg, "");
-      if (!fromDate || !toDate){
-        setMsg(appMsg, "Pick both From and To dates.", "err");
-        return;
+    // -----------------------------
+    // Lobby + Outlets rendering
+    // -----------------------------
+    function outletCellStamp(row){
+      const who = row?.updated_by_name || "";
+      const when = fmtToronto(row?.updated_at);
+      const openLine = row?.is_open
+        ? `OPEN ${fmtTime12(row?.open_time)}–${fmtTime12(row?.close_time)}`
+        : "CLOSED";
+      const whoLine = who ? who : "";
+      const whenLine = when ? when : "";
+      return stampHtml([openLine, whoLine, whenLine]);
+    }
+
+    function renderOutletTable(headerEl, bodyEl, names, canEditFn){
+      bodyEl.innerHTML = "";
+
+      // header dates
+      buildHeaderRow(headerEl);
+
+      for (const name of names){
+        const tr = document.createElement("tr");
+        const tdLabel = document.createElement("td");
+        tdLabel.innerHTML = `<div class="serviceName"><span>${escapeHtml(name)}</span><span class="badge">${canEditFn() ? "Editable" : "View only"}</span></div>`;
+        tr.appendChild(tdLabel);
+
+        for (const dayRow of dashboardDays){
+          const k = keyOutlet(dayRow.day, name);
+          const row = outletMap.get(k);
+          const isOn = !!row?.is_open;
+
+          const td = document.createElement("td");
+          td.className = "statusCell " + (canEditFn() ? "clickable" : "");
+          td.title = isOn ? "Open" : "Closed";
+
+          const fill = document.createElement("div");
+          fill.className = "statusFill " + (isOn ? "isOn" : "isOff");
+          fill.innerHTML = outletCellStamp(row);
+          td.appendChild(fill);
+
+          if (canEditFn()){
+            td.addEventListener("click", () => openOutletModal(dayRow.day, name));
+          }
+
+          tr.appendChild(td);
+        }
+
+        bodyEl.appendChild(tr);
       }
+    }
+
+    function openOutletModal(date, outletName){
+      outletEdit = { date, outlet_name: outletName };
+
+      const row = outletMap.get(keyOutlet(date, outletName));
+      const isOpen = !!row?.is_open;
+
+      outletModalTitle.textContent = `Edit – ${outletName} (${date})`;
+      setMsg(outletModalMsg, "");
+
+      outletIsOpen.value = String(isOpen);
+      outletOpenTime.value = row?.open_time || "";
+      outletCloseTime.value = row?.close_time || "";
+
+      // if closed, clear time inputs visually (they can re-enter if open)
+      if (!isOpen){
+        outletOpenTime.value = "";
+        outletCloseTime.value = "";
+      }
+
+      outletModalBack.style.display = "flex";
+      document.body.style.overflow = "hidden";
+      syncOutletTimeEnabled();
+    }
+
+    function closeOutletModal(){
+      outletModalBack.style.display = "none";
+      outletEdit = { date:null, outlet_name:null };
+      document.body.style.overflow = "";
+    }
+
+    function syncOutletTimeEnabled(){
+      const isOpen = (outletIsOpen.value === "true");
+      outletOpenTime.disabled = !isOpen;
+      outletCloseTime.disabled = !isOpen;
+    }
+
+    async function saveOutletModal(){
       try{
-        setMsg(appMsg, "Copying…");
-        const { error } = await sb.rpc("copy_day", {
-          p_from_date: fromDate,
-          p_to_date: toDate,
-          p_copy_occupancy: copyOccBool
-        });
+        const date = outletEdit.date;
+        const outlet_name = outletEdit.outlet_name;
+        if (!date || !outlet_name) return;
+
+        const isLobby = (outlet_name === "LOBBY BAR");
+        if (isLobby && !canEditRestaurantAndLobby() && !isAdmin()){
+          setMsg(outletModalMsg, "Only F&B (or admin) can edit Lobby Bar.", "err");
+          return;
+        }
+        if (!isLobby && !canEditOutlets() && !isAdmin()){
+          setMsg(outletModalMsg, "Only Outlets Lead (or admin) can edit outlets.", "err");
+          return;
+        }
+
+        const is_open = (outletIsOpen.value === "true");
+        let open_time = null;
+        let close_time = null;
+
+        if (is_open){
+          open_time = String(outletOpenTime.value || "").trim();
+          close_time = String(outletCloseTime.value || "").trim();
+          if (!open_time || !close_time){
+            setMsg(outletModalMsg, "If Open, both times are required.", "err");
+            return;
+          }
+        }
+
+        setMsg(outletModalMsg, "Saving…");
+
+        const payload = { date, outlet_name, is_open, open_time, close_time };
+        const { error } = await sb
+          .from("daily_outlet_hours")
+          .upsert(payload, { onConflict: "date,outlet_name" });
+
         if (error) throw error;
 
-        await refreshAll();
-        setMsg(appMsg, "Copied.", "ok");
+        await fetchOutletHours();
+        renderOutletTable(lobbyHead, lobbyBody, LOBBY_BAR, () => canEditRestaurantAndLobby());
+        renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
+
+        setMsg(outletModalMsg, "Saved.", "ok");
+        setTimeout(closeOutletModal, 200);
       } catch(e){
-        setMsg(appMsg, e?.message || String(e), "err");
+        setMsg(outletModalMsg, e?.message || String(e), "err");
       }
     }
 
-    async function refreshAll(){
-      try{
-        setMsg(appMsg, "Loading…");
-        await loadServiceItems();
-        await fetchDashboard(startDateEl.value);
-        await fetchLastUpdates(startDateEl.value);
-        await fetchStatusMeta();
-
-        buildHeader();
-        renderOccCards();
-        renderStatusGrid();
-
-        copyTo.value = dashboardDays?.[0]?.day || startDateEl.value;
-        const d = new Date((dashboardDays?.[0]?.day || startDateEl.value) + "T00:00:00");
-        d.setDate(d.getDate() - 1);
-        copyFrom.value = toDateStr(d);
-
-        setMsg(appMsg, "");
-      } catch(e){
-        setMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
-    // ===== USERS (ADMIN) =====
+    // -----------------------------
+    // Users (admin)
+    // -----------------------------
     function renderUsersTable(rows){
       usersTable.innerHTML = "";
       if (!rows || rows.length === 0){
@@ -1225,14 +1380,13 @@
         usersTable.appendChild(tr);
         return;
       }
-
       for (const r of rows){
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td style="text-align:left;">${escapeHtml(safeText(r.full_name))}</td>
-          <td style="text-align:left;">${escapeHtml(safeText(r.email))}</td>
-          <td>${escapeHtml(safeText(r.role))}</td>
-          <td>${escapeHtml(safeText(r.department))}</td>
+          <td style="text-align:left;">${escapeHtml(r.full_name || "")}</td>
+          <td style="text-align:left;">${escapeHtml(r.email || "")}</td>
+          <td>${escapeHtml(r.role || "")}</td>
+          <td>${escapeHtml(r.department || "")}</td>
           <td>${escapeHtml(String(r.is_active))}</td>
         `;
         usersTable.appendChild(tr);
@@ -1267,14 +1421,8 @@
       const dept = String(newUserDept.value || "").trim();
       const active = (String(newUserActive.value) === "true");
 
-      if (!email){
-        setMsg(usersMsg, "Email is required.", "err");
-        return;
-      }
-      if (!name){
-        setMsg(usersMsg, "Name is required.", "err");
-        return;
-      }
+      if (!email) return setMsg(usersMsg, "Email is required.", "err");
+      if (!name) return setMsg(usersMsg, "Name is required.", "err");
 
       try{
         setMsg(usersMsg, "Saving…");
@@ -1294,7 +1442,9 @@
       }
     }
 
-    // ===== Auth: forgot password + recovery =====
+    // -----------------------------
+    // Auth: recovery handling
+    // -----------------------------
     async function handleRecoveryFromUrl(){
       const hp = parseHashParams();
 
@@ -1335,6 +1485,34 @@
       return false;
     }
 
+    // -----------------------------
+    // Refresh all
+    // -----------------------------
+    async function refreshAll(){
+      try{
+        setMsg(appMsg, "Loading…");
+        await loadServiceItems();
+        await fetchDashboard(startDateEl.value);
+        await fetchRestaurantMeta();
+        await fetchOutletHours();
+
+        // build headers
+        buildHeaderRow(headRow);
+        buildHeaderRow(lobbyHead);
+        buildHeaderRow(outletsHead);
+
+        renderOccCards();
+        renderRestaurantGrid();
+
+        renderOutletTable(lobbyHead, lobbyBody, LOBBY_BAR, () => canEditRestaurantAndLobby());
+        renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
+
+        setMsg(appMsg, "");
+      } catch(e){
+        setMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
     async function showApp(){
       show(appView);
 
@@ -1343,46 +1521,42 @@
       userPill.textContent = `User: ${myName ? myName : (currentUser?.email || "")}`;
 
       tabUsers.style.display = isAdmin() ? "inline-block" : "none";
-      copyRow.style.display = (canEditOcc() || isAdmin()) ? "flex" : "none";
 
       const occOk = canEditOcc();
-      const stOk = canEditStatus();
-      if (!isAdmin() && (!occOk || !stOk)){
-        permHint.style.display = "block";
-        permHint.textContent =
-          `Permissions: ` +
-          `${occOk ? "✅ Occupancy edit" : "❌ Occupancy edit"} • ` +
-          `${stOk ? "✅ Status edit" : "❌ Status edit"} ` +
-          `(Admin can do all.)`;
+      const restOk = canEditRestaurantAndLobby();
+      const outletsOk = canEditOutlets();
+
+      const parts = [];
+      parts.push(occOk ? "✅ Occupancy" : "❌ Occupancy");
+      parts.push(restOk ? "✅ Restaurant/Lobby" : "❌ Restaurant/Lobby");
+      parts.push(outletsOk ? "✅ Outlets" : "❌ Outlets");
+      permHint.style.display = (!isAdmin() ? "block" : "none");
+      permHint.textContent = (!isAdmin() ? ("Permissions: " + parts.join(" • ")) : "");
+
+      if (isAdmin()){
+        editHint.textContent = "Admin: edit everything.";
+      } else if (occOk){
+        editHint.textContent = "Guest Service: occupancy + notes.";
+      } else if (restOk){
+        editHint.textContent = "F&B: restaurant + lobby bar.";
+      } else if (outletsOk){
+        editHint.textContent = "Outlets Lead: outlets only.";
       } else {
-        permHint.style.display = "none";
+        editHint.textContent = "View only.";
       }
 
-      editHint.textContent = isAdmin()
-        ? "Admin: edit occupancy + statuses. Users tab available."
-        : (canEditOcc() && !canEditStatus())
-          ? "Guest Service: you can edit occupancy + notes."
-          : (!canEditOcc() && canEditStatus())
-            ? "F&B: you can edit restaurant statuses."
-            : "View only";
-
-      const t = new Date();
-      const todayStr = toDateStr(t);
+      const todayStr = toDateStr(new Date());
       startDateEl.value = todayStr;
-
-      copyTo.value = todayStr;
-      const y = new Date(t); y.setDate(y.getDate()-1);
-      copyFrom.value = toDateStr(y);
 
       switchTab("dashboard");
       await refreshAll();
 
-      if (isAdmin()){
-        await loadUsers();
-      }
+      if (isAdmin()) await loadUsers();
     }
 
-    // ===== Buttons =====
+    // -----------------------------
+    // Buttons / events
+    // -----------------------------
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
@@ -1420,7 +1594,6 @@
     document.getElementById("btnSetPass").addEventListener("click", async () => {
       const p1 = document.getElementById("newPass").value;
       const p2 = document.getElementById("newPass2").value;
-
       if (!p1 || p1.length < 6) return setMsg(recoveryMsg, "Password must be at least 6 characters.", "err");
       if (p1 !== p2) return setMsg(recoveryMsg, "Passwords do not match.", "err");
 
@@ -1431,7 +1604,6 @@
           setMsg(recoveryMsg, "No reset session found. Send a new reset email and open the new link.", "err");
           return;
         }
-
         const { error } = await sb.auth.updateUser({ password: p1 });
         if (error) throw error;
 
@@ -1458,14 +1630,9 @@
       show(loginView);
     });
 
-    // Tabs
     tabDashboard.addEventListener("click", () => switchTab("dashboard"));
-    tabUsers.addEventListener("click", async () => {
-      switchTab("users");
-      await loadUsers();
-    });
+    tabUsers.addEventListener("click", async () => { switchTab("users"); await loadUsers(); });
 
-    // Dashboard controls
     document.getElementById("btnRefresh").addEventListener("click", refreshAll);
     startDateEl.addEventListener("change", refreshAll);
     document.getElementById("btnToday").addEventListener("click", () => {
@@ -1473,34 +1640,18 @@
       refreshAll();
     });
 
-    // Copy controls
-    document.getElementById("btnCopyDay").addEventListener("click", async () => {
-      if (!isAdmin() && !canEditOcc()){
-        setMsg(appMsg, "You do not have permission to copy days.", "err");
-        return;
-      }
-      await doCopyDay(copyFrom.value, copyTo.value, copyOcc.value === "true");
-    });
-    document.getElementById("btnCopyYesterday").addEventListener("click", async () => {
-      if (!isAdmin() && !canEditOcc()){
-        setMsg(appMsg, "You do not have permission to copy days.", "err");
-        return;
-      }
-      const firstDay = dashboardDays?.[0]?.day || startDateEl.value;
-      const d = new Date(firstDay + "T00:00:00");
-      d.setDate(d.getDate()-1);
-      await doCopyDay(toDateStr(d), firstDay, copyOcc.value === "true");
-    });
-
-    // Users buttons
-    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
     document.getElementById("btnUpsertUser").addEventListener("click", upsertUser);
+    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
 
-    // Modal
     document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
     document.getElementById("btnOccSave").addEventListener("click", saveOccModal);
     document.getElementById("btnOccClear").addEventListener("click", clearOccModal);
     occModalBack.addEventListener("click", (e) => { if (e.target === occModalBack) closeOccModal(); });
+
+    document.getElementById("btnOutletClose").addEventListener("click", closeOutletModal);
+    document.getElementById("btnOutletSave").addEventListener("click", saveOutletModal);
+    outletModalBack.addEventListener("click", (e) => { if (e.target === outletModalBack) closeOutletModal(); });
+    outletIsOpen.addEventListener("change", syncOutletTimeEnabled);
 
     // Boot
     (async () => {
