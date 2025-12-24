@@ -143,7 +143,6 @@
     .daytitle{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
     .occ{font-size:22px;margin-top:4px;font-weight:750}
     .notes{font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .lastupd{font-size:11px;color:var(--muted);margin-top:8px}
     .clickable{cursor:pointer}
     .clickable:active{transform: scale(.995)}
 
@@ -326,7 +325,6 @@
 <body>
   <div class="wrap">
 
-    <!-- LOGIN VIEW -->
     <div id="loginView" class="loginBox card" style="display:none;">
       <h2 style="margin:0 0 8px;font-size:18px;">Sheraton Dashboard</h2>
       <div class="hint">Sign in to view / update occupancy and restaurant status.</div>
@@ -345,7 +343,6 @@
       <div id="loginMsg" class="msg"></div>
     </div>
 
-    <!-- RECOVERY VIEW -->
     <div id="recoveryView" class="loginBox card" style="display:none;">
       <h2 style="margin:0 0 8px;font-size:18px;">Set new password</h2>
       <div class="hint">This page opened from a reset email link.</div>
@@ -364,7 +361,6 @@
       <div id="recoveryMsg" class="msg"></div>
     </div>
 
-    <!-- APP VIEW -->
     <div id="appView" style="display:none;">
       <div class="topbar">
         <div class="titleRow">
@@ -381,7 +377,6 @@
         </div>
       </div>
 
-      <!-- DASHBOARD PANEL -->
       <div id="panelDashboard">
         <div class="card">
           <div class="row" style="justify-content:space-between;">
@@ -450,7 +445,6 @@
         <div id="appMsg" class="msg"></div>
       </div>
 
-      <!-- USERS PANEL (ADMIN) -->
       <div id="panelUsers" style="display:none;">
         <div class="sectionTitle">Admin – Users & Permissions</div>
 
@@ -529,7 +523,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Occupancy edit -->
+  <!-- MODAL: Occupancy edit (NO CLEAR BUTTON) -->
   <div id="occModalBack" class="modalBack">
     <div class="modal">
       <div class="modalHeader">
@@ -550,7 +544,6 @@
         <div id="occModalMsg" class="msg"></div>
       </div>
       <div class="modalFooter">
-        <button id="btnOccClear" class="btnGhost">Clear</button>
         <button id="btnOccSave" class="btnPrimary">Save</button>
       </div>
     </div>
@@ -662,15 +655,11 @@
     let dashboardDays = [];
     let serviceByName = new Map();
 
-    // per-cell meta for restaurant
-    let dssMeta = new Map(); // date|group -> {selected, last_action, updated_by_name, updated_at}
-    let dmsMeta = new Map(); // date|service_item_id -> {is_active, updated_by_name, updated_at}
-
-    // outlet hours map: date|outlet_name -> row
+    let dssMeta = new Map(); // date|group
+    let dmsMeta = new Map(); // date|service_item_id
     let outletMap = new Map();
 
     let occEditDate = null;
-
     let outletEdit = { date:null, outlet_name:null };
 
     const GROUPS = [
@@ -816,9 +805,6 @@
       return `<div class="stamp">${l1}${l2}${l3}</div>`;
     }
 
-    // -----------------------------
-    // Load profile + service items
-    // -----------------------------
     async function loadMyProfile(){
       const { data, error } = await sb
         .from("profiles")
@@ -847,18 +833,12 @@
       serviceByName = new Map((data || []).map(x => [x.name, x]));
     }
 
-    // -----------------------------
-    // Dashboard data (your existing RPC)
-    // -----------------------------
     async function fetchDashboard(startDate){
       const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: DAYS });
       if (error) throw error;
       dashboardDays = data || [];
     }
 
-    // -----------------------------
-    // Restaurant per-cell stamps
-    // -----------------------------
     async function fetchRestaurantMeta(){
       dssMeta = new Map();
       dmsMeta = new Map();
@@ -883,7 +863,7 @@
       }
 
       const massimoNames = ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"];
-      const massimoIds = massimoNames.map(n => serviceByName.get(n)?.id).filter(Boolean);
+      const massimoIds = massimoNames.map(n => serviceByName.get(n)?.id).filter(v => v !== undefined && v !== null);
 
       if (massimoIds.length > 0){
         const { data: dms, error: e2 } = await sb
@@ -903,15 +883,12 @@
       }
     }
 
-    // -----------------------------
-    // Lobby/Outlets data
-    // -----------------------------
     async function fetchOutletHours(){
       outletMap = new Map();
       const days = (dashboardDays || []).map(x => x.day);
       if (days.length === 0) return;
 
-      const names = [...LOBBY_BAR, ...OUTLETS];
+      const names = ["LOBBY BAR","STARBUCKS","SWEET JESUS","FRESHII"];
       const { data, error } = await sb
         .from("daily_outlet_hours")
         .select("date,outlet_name,is_open,open_time,close_time,updated_by_name,updated_at")
@@ -925,9 +902,6 @@
       }
     }
 
-    // -----------------------------
-    // Header building
-    // -----------------------------
     function buildHeaderRow(rowEl){
       while (rowEl.children.length > 1) rowEl.removeChild(rowEl.lastChild);
       for (const day of dashboardDays){
@@ -937,9 +911,6 @@
       }
     }
 
-    // -----------------------------
-    // Occupancy modal
-    // -----------------------------
     function openOccModal(day){
       const row = dashboardDays.find(x => x.day === day);
       occEditDate = day;
@@ -948,7 +919,6 @@
       setMsg(occModalMsg,"");
 
       occInput.value = (row?.occupancy_percent ?? "") === null ? "" : String(row?.occupancy_percent ?? "");
-      // Prefill notes with last saved entry
       occNotes.value = row?.notes || "";
 
       occModalBack.style.display = "flex";
@@ -999,12 +969,6 @@
       }
     }
 
-    async function clearOccModal(){
-      occInput.value = "";
-      occNotes.value = "";
-      await saveOccModal();
-    }
-
     function renderOccCards(){
       occCards.innerHTML = "";
       for (const day of dashboardDays){
@@ -1040,9 +1004,6 @@
       }
     }
 
-    // -----------------------------
-    // Restaurant behavior
-    // -----------------------------
     function pickOneIsOn(dayRow, serviceName){
       const item = serviceByName.get(serviceName);
       if (!item) return false;
@@ -1050,11 +1011,10 @@
       if (!["breakfast","lunch","dinner"].includes(group)) return false;
 
       const meta = dssMeta.get(keyDss(dayRow.day, group));
-      if (meta?.selected){
+      if (meta?.selected !== null && meta?.selected !== undefined){
         return String(meta.selected) === String(item.id);
       }
 
-      // fallback to dashboard fields
       const upper = serviceName.toUpperCase();
       if (group === "breakfast") return (dayRow.breakfast || "").toUpperCase() === upper;
       if (group === "lunch") return (dayRow.lunch || "").toUpperCase() === upper;
@@ -1070,10 +1030,7 @@
       const meta = dssMeta.get(keyDss(day, group));
       if (!meta?.by || !meta?.at) return "";
 
-      // Show stamp on:
-      // - the selected (green) cell
-      // - OR if cleared, show stamp on the last-clicked cell (even though it is now red)
-      const isLastClicked = meta.last_action && (String(meta.last_action) === String(item.id));
+      const isLastClicked = meta.last_action !== null && meta.last_action !== undefined && (String(meta.last_action) === String(item.id));
       if (isOn || (!meta.selected && isLastClicked)){
         return stampHtml([meta.by, fmtToronto(meta.at)]);
       }
@@ -1087,7 +1044,6 @@
       const meta = dmsMeta.get(keyDms(dayRow.day, item.id));
       if (meta) return !!meta.on;
 
-      // fallback
       if (serviceName === "MASSIMO BREAKFAST") return !!dayRow.massimo_breakfast;
       if (serviceName === "MASSIMO LUNCH") return !!dayRow.massimo_lunch;
       if (serviceName === "MASSIMO DINNER") return !!dayRow.massimo_dinner;
@@ -1199,7 +1155,6 @@
                   } else {
                     await setPickOne(dayRow.day, serviceName);
                   }
-
                   await fetchRestaurantMeta();
                   renderRestaurantGrid();
                   setMsg(appMsg, "Saved.", "ok");
@@ -1208,11 +1163,10 @@
                 }
               });
 
-              // Double-click a GREEN pick-one → clear it (all red)
               if (!serviceName.startsWith("MASSIMO ")){
                 td.addEventListener("dblclick", async () => {
                   try{
-                    if (!isOn) return; // only if green
+                    if (!isOn) return;
                     setMsg(appMsg, "");
                     await clearPickOne(dayRow.day, serviceName);
                     await fetchRestaurantMeta();
@@ -1233,24 +1187,17 @@
       }
     }
 
-    // -----------------------------
-    // Lobby + Outlets rendering
-    // -----------------------------
     function outletCellStamp(row){
       const who = row?.updated_by_name || "";
       const when = fmtToronto(row?.updated_at);
       const openLine = row?.is_open
         ? `OPEN ${fmtTime12(row?.open_time)}–${fmtTime12(row?.close_time)}`
         : "CLOSED";
-      const whoLine = who ? who : "";
-      const whenLine = when ? when : "";
-      return stampHtml([openLine, whoLine, whenLine]);
+      return stampHtml([openLine, who, when]);
     }
 
     function renderOutletTable(headerEl, bodyEl, names, canEditFn){
       bodyEl.innerHTML = "";
-
-      // header dates
       buildHeaderRow(headerEl);
 
       for (const name of names){
@@ -1260,8 +1207,7 @@
         tr.appendChild(tdLabel);
 
         for (const dayRow of dashboardDays){
-          const k = keyOutlet(dayRow.day, name);
-          const row = outletMap.get(k);
+          const row = outletMap.get(keyOutlet(dayRow.day, name));
           const isOn = !!row?.is_open;
 
           const td = document.createElement("td");
@@ -1276,7 +1222,6 @@
           if (canEditFn()){
             td.addEventListener("click", () => openOutletModal(dayRow.day, name));
           }
-
           tr.appendChild(td);
         }
 
@@ -1286,7 +1231,6 @@
 
     function openOutletModal(date, outletName){
       outletEdit = { date, outlet_name: outletName };
-
       const row = outletMap.get(keyOutlet(date, outletName));
       const isOpen = !!row?.is_open;
 
@@ -1294,14 +1238,8 @@
       setMsg(outletModalMsg, "");
 
       outletIsOpen.value = String(isOpen);
-      outletOpenTime.value = row?.open_time || "";
-      outletCloseTime.value = row?.close_time || "";
-
-      // if closed, clear time inputs visually (they can re-enter if open)
-      if (!isOpen){
-        outletOpenTime.value = "";
-        outletCloseTime.value = "";
-      }
+      outletOpenTime.value = isOpen ? (row?.open_time || "") : "";
+      outletCloseTime.value = isOpen ? (row?.close_time || "") : "";
 
       outletModalBack.style.display = "flex";
       document.body.style.overflow = "hidden";
@@ -1351,10 +1289,9 @@
 
         setMsg(outletModalMsg, "Saving…");
 
-        const payload = { date, outlet_name, is_open, open_time, close_time };
         const { error } = await sb
           .from("daily_outlet_hours")
-          .upsert(payload, { onConflict: "date,outlet_name" });
+          .upsert({ date, outlet_name, is_open, open_time, close_time }, { onConflict: "date,outlet_name" });
 
         if (error) throw error;
 
@@ -1369,9 +1306,6 @@
       }
     }
 
-    // -----------------------------
-    // Users (admin)
-    // -----------------------------
     function renderUsersTable(rows){
       usersTable.innerHTML = "";
       if (!rows || rows.length === 0){
@@ -1442,9 +1376,6 @@
       }
     }
 
-    // -----------------------------
-    // Auth: recovery handling
-    // -----------------------------
     async function handleRecoveryFromUrl(){
       const hp = parseHashParams();
 
@@ -1485,9 +1416,6 @@
       return false;
     }
 
-    // -----------------------------
-    // Refresh all
-    // -----------------------------
     async function refreshAll(){
       try{
         setMsg(appMsg, "Loading…");
@@ -1496,7 +1424,6 @@
         await fetchRestaurantMeta();
         await fetchOutletHours();
 
-        // build headers
         buildHeaderRow(headRow);
         buildHeaderRow(lobbyHead);
         buildHeaderRow(outletsHead);
@@ -1522,28 +1449,12 @@
 
       tabUsers.style.display = isAdmin() ? "inline-block" : "none";
 
-      const occOk = canEditOcc();
-      const restOk = canEditRestaurantAndLobby();
-      const outletsOk = canEditOutlets();
-
       const parts = [];
-      parts.push(occOk ? "✅ Occupancy" : "❌ Occupancy");
-      parts.push(restOk ? "✅ Restaurant/Lobby" : "❌ Restaurant/Lobby");
-      parts.push(outletsOk ? "✅ Outlets" : "❌ Outlets");
+      parts.push(canEditOcc() ? "✅ Occupancy" : "❌ Occupancy");
+      parts.push(canEditRestaurantAndLobby() ? "✅ Restaurant/Lobby" : "❌ Restaurant/Lobby");
+      parts.push(canEditOutlets() ? "✅ Outlets" : "❌ Outlets");
       permHint.style.display = (!isAdmin() ? "block" : "none");
       permHint.textContent = (!isAdmin() ? ("Permissions: " + parts.join(" • ")) : "");
-
-      if (isAdmin()){
-        editHint.textContent = "Admin: edit everything.";
-      } else if (occOk){
-        editHint.textContent = "Guest Service: occupancy + notes.";
-      } else if (restOk){
-        editHint.textContent = "F&B: restaurant + lobby bar.";
-      } else if (outletsOk){
-        editHint.textContent = "Outlets Lead: outlets only.";
-      } else {
-        editHint.textContent = "View only.";
-      }
 
       const todayStr = toDateStr(new Date());
       startDateEl.value = todayStr;
@@ -1554,9 +1465,6 @@
       if (isAdmin()) await loadUsers();
     }
 
-    // -----------------------------
-    // Buttons / events
-    // -----------------------------
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
@@ -1645,7 +1553,6 @@
 
     document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
     document.getElementById("btnOccSave").addEventListener("click", saveOccModal);
-    document.getElementById("btnOccClear").addEventListener("click", clearOccModal);
     occModalBack.addEventListener("click", (e) => { if (e.target === occModalBack) closeOccModal(); });
 
     document.getElementById("btnOutletClose").addEventListener("click", closeOutletModal);
@@ -1653,7 +1560,6 @@
     outletModalBack.addEventListener("click", (e) => { if (e.target === outletModalBack) closeOutletModal(); });
     outletIsOpen.addEventListener("change", syncOutletTimeEnabled);
 
-    // Boot
     (async () => {
       const didRecovery = await handleRecoveryFromUrl();
       if (didRecovery) return;
