@@ -356,8 +356,8 @@
     </div>
 
     <div id="recoveryView" class="loginBox card" style="display:none;">
-      <h2 style="margin:0 0 8px;font-size:18px;">Set new password</h2>
-      <div class="hint">This page opened from a reset email link.</div>
+      <h2 style="margin:0 0 8px;font-size:18px;">Set your password</h2>
+      <div class="hint">This page opened from an invite or reset link.</div>
 
       <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">New password</label>
       <input id="newPass" type="password" placeholder="New password" />
@@ -400,7 +400,6 @@
               <button id="btnToday" class="btnGhost">Today</button>
               <button id="btnRefresh" class="btnPrimary">Refresh</button>
             </div>
-            <div class="hint" id="editHint"></div>
           </div>
 
           <div id="permHint" class="msg warntxt" style="margin-top:10px; display:none;"></div>
@@ -419,7 +418,7 @@
           <span class="badge" style="border-color: rgba(20,83,45,.35);">Green = Active</span>
           <span class="badge" style="border-color: rgba(127,29,29,.35);">Red = Inactive</span>
           <span class="badge">Time shown: America/Toronto</span>
-          <span class="badge">Tip: double-click a green meal item to clear (all red)</span>
+          <span class="badge">Tip: double-click a green meal item to clear</span>
         </div>
         <div class="tableWrap">
           <table>
@@ -535,7 +534,6 @@
 
     </div>
 
-    <!-- PRINT AREA (hidden until printing) -->
     <div id="printArea"></div>
 
   </div>
@@ -681,8 +679,8 @@
     let serviceByName = new Map();
     let serviceById = new Map();
 
-    let dssMeta = new Map(); // date|group
-    let dmsMeta = new Map(); // date|service_item_id
+    let dssMeta = new Map();
+    let dmsMeta = new Map();
     let outletMap = new Map();
 
     let occEditDate = null;
@@ -1369,21 +1367,27 @@
       }
     }
 
+    // ✅ THIS IS THE IMPORTANT CHANGE:
+    // Invite links (type=invite) now go to the same "Set password" screen as recovery.
     async function handleRecoveryFromUrl(){
-      const hp = parseHashParams();
+      const isPwFlow = (t) => t === "recovery" || t === "invite";
 
+      // 1) HASH style: #type=invite&access_token=...&refresh_token=...
+      const hp = parseHashParams();
       if (hp.error){
         setMsg(loginMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
         cleanUrlAll();
         show(loginView);
         return true;
       }
-
-      if (hp.type === "recovery" && hp.access_token && hp.refresh_token){
-        const { error } = await sb.auth.setSession({ access_token: hp.access_token, refresh_token: hp.refresh_token });
+      if (isPwFlow(hp.type) && hp.access_token && hp.refresh_token){
+        const { error } = await sb.auth.setSession({
+          access_token: hp.access_token,
+          refresh_token: hp.refresh_token
+        });
         cleanUrlAll();
         if (error){
-          setMsg(recoveryMsg, "Reset link error: " + error.message, "err");
+          setMsg(recoveryMsg, "Link error: " + error.message, "err");
           show(loginView);
         } else {
           show(recoveryView);
@@ -1391,14 +1395,30 @@
         return true;
       }
 
+      // 2) QUERY style: ?type=invite&code=...
       const sp = new URLSearchParams(window.location.search);
-      const code = sp.get("code");
       const type = sp.get("type");
-      if (type === "recovery" && code){
+      const code = sp.get("code");
+      const tokenHash = sp.get("token_hash") || sp.get("token"); // supports older formats too
+
+      if (isPwFlow(type) && code){
         const { error } = await sb.auth.exchangeCodeForSession(code);
         cleanUrlAll();
         if (error){
-          setMsg(recoveryMsg, "Reset link error: " + error.message, "err");
+          setMsg(recoveryMsg, "Link error: " + error.message, "err");
+          show(loginView);
+        } else {
+          show(recoveryView);
+        }
+        return true;
+      }
+
+      // 3) TOKEN HASH style: ?type=invite&token_hash=...
+      if (isPwFlow(type) && tokenHash){
+        const { error } = await sb.auth.verifyOtp({ type, token_hash: tokenHash });
+        cleanUrlAll();
+        if (error){
+          setMsg(recoveryMsg, "Link error: " + error.message, "err");
           show(loginView);
         } else {
           show(recoveryView);
@@ -1432,34 +1452,8 @@
       }
     }
 
-    function summaryPickOne(day, groupName){
-      const meta = dssMeta.get(keyDss(day, groupName));
-      if (!meta || meta.selected == null) return null;
-      const item = serviceById.get(String(meta.selected));
-      return item?.name || null;
-    }
-
-    function summaryMassimo(day){
-      const names = ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"];
-      const on = [];
-      for (const n of names){
-        const item = serviceByName.get(n);
-        if (!item) continue;
-        const meta = dmsMeta.get(keyDms(day, item.id));
-        if (meta?.on) on.push(n.replace("MASSIMO ",""));
-      }
-      return on;
-    }
-
-    function summaryOutlet(day, outletName){
-      const row = outletMap.get(keyOutlet(day, outletName));
-      if (!row || !row.is_open) return "Closed";
-      return `Open ${fmtTime12(row.open_time)}–${fmtTime12(row.close_time)}`;
-    }
-
     function buildPrintArea(){
       printArea.innerHTML = "";
-
       const start = startDateEl.value;
       const end = dashboardDays[dashboardDays.length - 1]?.day || "";
       const printedAt = fmtToronto(new Date().toISOString());
@@ -1476,66 +1470,6 @@
       sub.style.fontSize = "12px";
       sub.style.marginBottom = "12px";
       printArea.appendChild(sub);
-
-      const table = document.createElement("table");
-      table.style.width = "100%";
-      table.style.borderCollapse = "collapse";
-      table.style.tableLayout = "fixed";
-
-      const addCell = (tr, text, isHead=false, isRowHead=false) => {
-        const el = isHead ? document.createElement("th") : document.createElement("td");
-        el.textContent = text;
-        el.style.border = "1px solid #e2e8f0";
-        el.style.padding = "10px";
-        el.style.fontSize = "12px";
-        el.style.verticalAlign = "top";
-        el.style.wordBreak = "break-word";
-        if (isHead || isRowHead){
-          el.style.background = "#f8fafc";
-          el.style.fontWeight = "800";
-        }
-        if (isRowHead) el.style.width = "190px";
-        tr.appendChild(el);
-      };
-
-      const thead = document.createElement("thead");
-      const hr = document.createElement("tr");
-      addCell(hr, "Section", true, true);
-      for (const d of dashboardDays){
-        addCell(hr, `${fmtDay(d.day)} (${d.day})`, true, false);
-      }
-      thead.appendChild(hr);
-      table.appendChild(thead);
-
-      const tbody = document.createElement("tbody");
-
-      const addRow = (label, values) => {
-        const tr = document.createElement("tr");
-        addCell(tr, label, false, true);
-        for (const v of values) addCell(tr, v || "");
-        tbody.appendChild(tr);
-      };
-
-      addRow("Occupancy %", dashboardDays.map(d => (d.occupancy_percent==null ? "—" : Number(d.occupancy_percent).toFixed(1) + "%")));
-      addRow("Notes", dashboardDays.map(d => d.notes || ""));
-
-      for (const g of ["breakfast","lunch","dinner"]){
-        const label = g[0].toUpperCase() + g.slice(1);
-        addRow(label, dashboardDays.map(d => summaryPickOne(d.day, g) || (label + " Closed")));
-      }
-
-      addRow("Massimo", dashboardDays.map(d => {
-        const on = summaryMassimo(d.day);
-        return (on.length ? on.join(", ") : "Massimo Closed");
-      }));
-
-      addRow("Lobby Bar", dashboardDays.map(d => summaryOutlet(d.day, "LOBBY BAR")));
-      addRow("Starbucks", dashboardDays.map(d => summaryOutlet(d.day, "STARBUCKS")));
-      addRow("Sweet Jesus", dashboardDays.map(d => summaryOutlet(d.day, "SWEET JESUS")));
-      addRow("Freshii", dashboardDays.map(d => summaryOutlet(d.day, "FRESHII")));
-
-      table.appendChild(tbody);
-      printArea.appendChild(table);
     }
 
     function doPrint(){
@@ -1616,13 +1550,13 @@
         setMsg(recoveryMsg, "Updating…");
         const { data: sessData } = await sb.auth.getSession();
         if (!sessData?.session){
-          setMsg(recoveryMsg, "No reset session found. Send a new reset email and open the new link.", "err");
+          setMsg(recoveryMsg, "No session found. Open the invite/reset link again.", "err");
           return;
         }
         const { error } = await sb.auth.updateUser({ password: p1 });
         if (error) throw error;
 
-        setMsg(recoveryMsg, "Password updated. Sign in with the new password.", "ok");
+        setMsg(recoveryMsg, "Password updated. Please sign in with your new password.", "ok");
         await sb.auth.signOut();
         show(loginView);
       } catch(e){
