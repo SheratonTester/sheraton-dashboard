@@ -1,2159 +1,1977 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sheraton Niagara Falls – Dashboard</title>
+  <title>Sheraton Niagara Falls – Ops Dashboard</title>
+
+  <!-- IMPORTANT:
+    This file expects a local Supabase JS UMD build at: ./supabase.js
+    (You already did this earlier when CDNs were blocked.)
+  -->
+  <script src="./supabase.js"></script>
 
   <style>
     :root{
-      --bg:#f6f8fc;
+      --bg:#f4f8ff;
       --card:#ffffff;
-      --text:#0f172a;
+      --ink:#0f172a;
       --muted:#475569;
-      --line:#e2e8f0;
-      --shadow: 0 10px 24px rgba(15,23,42,.08);
-
-      --on:#166534;   /* dark green */
-      --off:#991b1b;  /* dark red */
-
-      --rowHead:#f8fafc;
+      --line:#dbe6ff;
       --brand:#2563eb;
-      --brand2:#1d4ed8;
-      --warn:#b45309;
+
+      --good:#0b5a35; /* dark green */
+      --bad:#7a0f1c;  /* dark red */
+      --goodSoft:#e7f6ee;
+      --badSoft:#fde8eb;
+
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+      --radius:16px;
     }
 
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: linear-gradient(180deg, #f6f8fc 0%, #eef2ff 100%);
-      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink);
+      background: radial-gradient(1200px 500px at 20% 0%, #dbeafe 0%, rgba(219,234,254,0) 60%),
+                  radial-gradient(900px 500px at 90% 10%, #e0e7ff 0%, rgba(224,231,255,0) 55%),
+                  var(--bg);
     }
-    .wrap{max-width:1480px;margin:0 auto;padding:16px}
 
     .topbar{
-      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-      margin-bottom:12px;
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(244,248,255,.75);
+      border-bottom:1px solid var(--line);
     }
-    .titleRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    h1{font-size:18px;margin:0}
-    .pill{
-      font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);
-      background: rgba(255,255,255,.9);
-      backdrop-filter: blur(6px);
+    .topbar-inner{
+      max-width:1200px; margin:0 auto;
+      padding:14px 16px;
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap;
     }
-
-    .tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .tabBtn{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.9);
-      backdrop-filter: blur(6px);
-      padding:9px 12px;
+    .brand{
+      display:flex; align-items:flex-end; gap:10px;
+    }
+    .brand h1{
+      font-size:18px; margin:0; letter-spacing:.2px;
+    }
+    .badges{display:flex; gap:8px; flex-wrap:wrap}
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
       border-radius:999px;
-      font-size:13px;
-      cursor:pointer;
-      transition: all .15s ease;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      display:inline-flex; gap:6px; align-items:center;
     }
-    .tabBtn:hover{border-color:#cbd5e1}
-    .tabBtn.active{
-      background: linear-gradient(180deg, var(--brand) 0%, var(--brand2) 100%);
-      color:white;
-      border-color: rgba(29,78,216,.6);
-      box-shadow: 0 10px 18px rgba(37,99,235,.20);
+    .badge strong{color:var(--ink); font-weight:700}
+
+    .nav{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
     }
 
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    input,button,select,textarea{
-      background:#fff;color:var(--text);
-      border:1px solid var(--line);
+    .btn{
+      appearance:none; border:1px solid var(--line);
+      background:#fff;
+      color:var(--ink);
       border-radius:12px;
       padding:10px 12px;
-      font-size:14px;
-      outline:none;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 1px 0 rgba(15,23,42,.03);
     }
-    input[type="date"]{padding:9px 12px}
-    textarea{width:100%;min-height:170px;resize:vertical;line-height:1.35}
-    button{cursor:pointer;transition: all .15s ease}
-    button:hover{border-color:#cbd5e1}
-    .btnPrimary{
-      background: linear-gradient(180deg, var(--brand) 0%, var(--brand2) 100%);
-      border-color: rgba(29,78,216,.55);
-      color:white;
-      box-shadow: 0 10px 18px rgba(37,99,235,.18);
+    .btn:hover{border-color:#bcd3ff}
+    .btn.primary{
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+      border-color:#1d4ed8;
+      color:#fff;
     }
-    .btnPrimary:hover{filter: brightness(1.03)}
-    .btnGhost{background: rgba(255,255,255,.95)}
-    .btnDanger{
+    .btn.danger{
       background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
-      border-color: rgba(220,38,38,.5);
-      color:white;
-      box-shadow: 0 10px 18px rgba(239,68,68,.18);
+      border-color:#b91c1c;
+      color:#fff;
     }
-    .btnDanger:hover{filter: brightness(1.03)}
-    .btnSoft{
-      background: rgba(37,99,235,.08);
-      border-color: rgba(37,99,235,.22);
-      color:#1d4ed8;
+    .btn.ghost{
+      background:transparent;
     }
+    .btn.small{padding:8px 10px; border-radius:10px; font-size:13px}
+    .btn:disabled{opacity:.55; cursor:not-allowed}
 
+    .container{max-width:1200px; margin:0 auto; padding:16px}
+    .grid{display:grid; gap:14px}
     .card{
-      background: var(--card);
+      background:var(--card);
       border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-      box-shadow: var(--shadow);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
     }
+    .card-h{
+      padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .card-h h2{margin:0; font-size:14px; color:var(--muted); font-weight:900; letter-spacing:.2px}
+    .card-b{padding:14px 16px}
 
-    .sectionTitle{
-      margin:14px 0 10px;
+    .controls{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .field{
+      display:flex; gap:8px; align-items:center;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+    }
+    .field label{font-size:12px; color:var(--muted); font-weight:800}
+    .field input, .field select, .field textarea{
+      font:inherit; border:none; outline:none;
+      min-width:140px;
+      color:var(--ink);
+      background:transparent;
+    }
+    .field textarea{min-width:260px; min-height:90px; resize:vertical}
+
+    .hint{
+      font-size:12px; color:var(--muted);
+    }
+    .msg{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff;
       font-size:13px;
       color:var(--muted);
-      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      display:none;
     }
-    .hint{font-size:12px;color:var(--muted)}
-    .msg{margin-top:10px;font-size:13px;color:var(--muted)}
-    .err{color:#b91c1c}
-    .oktxt{color:#166534}
-    .warntxt{color:var(--warn)}
-    .badge{
-      font-size:11px;color:var(--muted);
-      padding:3px 8px;border-radius:999px;border:1px solid var(--line);
-      background: rgba(248,250,252,.95);
-      white-space:nowrap;
-    }
+    .msg.ok{display:block; border-color:#bbf7d0; background:#f0fdf4; color:#14532d}
+    .msg.err{display:block; border-color:#fecaca; background:#fff1f2; color:#7f1d1d}
+    .msg.info{display:block; border-color:#bfdbfe; background:#eff6ff; color:#1e3a8a}
 
-    .gridDays{
+    /* Occupancy cards */
+    .occ-row{
       display:grid;
-      grid-template-columns:repeat(7, minmax(180px,1fr));
-      gap:10px;
+      grid-template-columns: repeat(7, minmax(170px, 1fr));
+      gap:12px;
       overflow:auto;
       padding-bottom:6px;
     }
-    .daycard{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
-      min-width:180px;
-      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-    }
-    .daycard:hover{border-color:#cbd5e1; box-shadow: 0 12px 22px rgba(15,23,42,.08)}
-    .daycard.today{
-      border-color: rgba(37,99,235,.45);
-      box-shadow: 0 14px 28px rgba(37,99,235,.16);
-    }
-    .daytitle{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
-    .occ{font-size:22px;margin-top:4px;font-weight:750}
-    .notes{font-size:12px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .clickable{cursor:pointer}
-    .clickable:active{transform: scale(.995)}
-
-    .tableWrap{
-      overflow:auto;
-      border-radius:16px;
-      border:1px solid var(--line);
-      box-shadow: var(--shadow);
-      background:#fff;
-    }
-    table{border-collapse:separate;border-spacing:0;width:100%;min-width:980px}
-    th,td{
-      border-bottom:1px solid var(--line);
-      border-right:1px solid var(--line);
-      padding:10px;
-      text-align:center;
-      background:#fff;
-    }
-    th:first-child,td:first-child{
-      text-align:left;
-      position:sticky; left:0;
-      z-index:2;
-      background:#fff;
-      min-width:260px;
-    }
-    thead th{
-      position:sticky; top:0;
-      z-index:3;
-      font-size:12px;
-      color:var(--muted);
-      background: var(--rowHead);
-    }
-
-    .groupRow td{
-      position:sticky;
-      left:0;
-      z-index:4;
-      background: linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(29,78,216,.08) 100%);
-      color:#1e3a8a;
-      font-weight:900;
-      letter-spacing:.3px;
-      text-transform: uppercase;
-      font-size:12px;
-      border-right:1px solid var(--line);
-    }
-    .groupRow td:not(:first-child){ position:static; z-index:1; }
-
-    .serviceName{
-      display:flex;gap:10px;align-items:center;justify-content:space-between;
-      font-weight:750;
-    }
-
-    .statusCell{
-      user-select:none;
-      padding:6px 8px;
-      height:64px;
-      min-width:92px;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .statusFill{
-      width:100%;
-      height:56px;
-      border-radius:12px;
-      margin:0 auto;
-      border:2px solid rgba(15,23,42,.12);
-      transition: transform .08s ease, filter .12s ease, outline .12s ease;
-      position:relative;
-      overflow:hidden;
-      display:flex;
-      align-items:flex-end;
-      justify-content:flex-start;
-      padding:6px 7px;
-    }
-    .isOn{ background: var(--on); border-color: rgba(20,83,45,.55); }
-    .isOff{ background: var(--off); border-color: rgba(127,29,29,.55); }
-
-    .statusCell.clickable:hover .statusFill{
-      outline:3px solid rgba(37,99,235,.25);
-      outline-offset: 2px;
-      filter: brightness(1.03);
-    }
-    .statusCell.clickable:active .statusFill{ transform: scale(.98); }
-
-    .stamp{
-      font-size:10px;
-      line-height:1.05;
-      color: rgba(255,255,255,.95);
-      text-shadow: 0 1px 2px rgba(0,0,0,.35);
-      max-width:100%;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      pointer-events:none;
-    }
-    .stampLine{
-      font-weight:800;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:100%;
-    }
-    .stampLine2{
-      font-weight:700;
-      opacity:.95;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:100%;
-    }
-
-    .loginBox{max-width:560px;margin:40px auto}
-
-    .modalBack{
-      position:fixed; inset:0;
-      background: rgba(15,23,42,.45);
-      display:none; align-items:center; justify-content:center;
-      padding:16px;
-      z-index: 999999;
-    }
-    .modal{
-      width:100%; max-width:860px;
-      background:#fff;
-      border:1px solid rgba(226,232,240,.9);
-      border-radius:18px;
-      box-shadow: 0 24px 60px rgba(15,23,42,.22);
-      overflow:hidden;
-      position:relative;
-      z-index: 1000000;
-    }
-    .modalHeader{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      padding:14px;
-      border-bottom:1px solid var(--line);
-      background: var(--rowHead);
-    }
-    .modalHeader b{font-size:14px}
-    .modalBody{padding:14px}
-    .modalFooter{
-      padding:14px;
-      display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;
-      border-top:1px solid var(--line);
-      background: var(--rowHead);
-    }
-    .xBtn{border-radius:12px; padding:8px 10px}
-    .twoCol{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-
-    /* Week editor table */
-    .weekWrap{
+    .occ-tile{
       border:1px solid var(--line);
       border-radius:14px;
+      background:#fff;
+      padding:12px;
+      box-shadow:0 8px 20px rgba(15,23,42,.06);
+      cursor:pointer;
+      min-height:110px;
+      display:flex; flex-direction:column; justify-content:space-between;
+    }
+    .occ-tile:hover{border-color:#bcd3ff}
+    .occ-top{
+      display:flex; justify-content:space-between; gap:10px;
+      align-items:flex-start;
+    }
+    .occ-day{font-weight:900; font-size:13px; color:#1e293b}
+    .occ-date{font-size:12px; color:var(--muted)}
+    .occ-val{font-size:28px; font-weight:1000; letter-spacing:-.5px}
+    .occ-meta{font-size:11px; color:var(--muted); margin-top:8px; line-height:1.2}
+
+    /* Status tables */
+    .table-wrap{
       overflow:auto;
-      max-height: 64vh;
-      background:#fff;
+      border-top:1px solid var(--line);
     }
-    .weekTable{min-width: 1050px; width:100%; border-collapse:separate; border-spacing:0}
-    .weekTable th,.weekTable td{
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width:980px;
+    }
+    th, td{
       border-bottom:1px solid var(--line);
-      border-right:1px solid var(--line);
-      padding:10px;
-      vertical-align:top;
+      padding:10px 10px;
+      vertical-align:middle;
       background:#fff;
     }
-    .weekTable th{
-      position:sticky; top:0; z-index:3;
-      background: var(--rowHead);
-      font-size:12px; color:var(--muted);
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:#f8fbff;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:1000;
       text-align:center;
+      border-bottom:1px solid var(--line);
     }
-    .weekTable td:first-child,.weekTable th:first-child{
-      position:sticky; left:0; z-index:4;
-      background:#fff;
+    .col-service{
+      position:sticky;
+      left:0;
+      z-index:3;
       text-align:left;
-      min-width:210px;
-      font-weight:800;
+      min-width:220px;
+      max-width:260px;
+      background:#fff;
     }
-    .cellBox{
-      display:flex;flex-direction:column;gap:6px;
-    }
-    .cellRow{
-      display:flex;gap:8px;align-items:center;flex-wrap:wrap;
-    }
-    .mini{
-      font-size:11px;color:var(--muted);
-      line-height:1.15;
-    }
-    .mini strong{color:#0f172a}
-    .selSmall{
-      padding:8px 10px;
-      border-radius:12px;
-      font-size:13px;
-    }
-    .timeSmall{
-      padding:8px 10px;
-      border-radius:12px;
-      font-size:13px;
-      width:130px;
+    .section-row td{
+      background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+      font-weight:1000;
+      color:#1e293b;
+      letter-spacing:.3px;
+      border-bottom:1px solid #c7d2fe;
     }
 
-    @media (max-width: 860px){
-      .twoCol{grid-template-columns:1fr}
-      .wrap{padding:12px}
-      h1{font-size:16px}
+    .pill{
+      font-size:11px;
+      font-weight:900;
+      color:#1e293b;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+    }
 
-      .tabs{width:100%}
-      .tabBtn{flex:1; justify-content:center; text-align:center}
+    .cell{
+      text-align:center;
+      padding:8px;
+    }
+    .status-box{
+      width:100%;
+      height:38px;
+      border-radius:10px;
+      border:1px solid rgba(15,23,42,.12);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+      cursor:pointer;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .status-box.red{background:var(--bad)}
+    .status-box.green{background:var(--good)}
+    .status-box.disabled{
+      opacity:.45; cursor:not-allowed;
+      filter:grayscale(.2);
+    }
+    .status-box .mini{
+      position:absolute;
+      inset:auto 6px 5px auto;
+      font-size:10px;
+      color:rgba(255,255,255,.85);
+      white-space:nowrap;
+      max-width:calc(100% - 12px);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      display:none;
+    }
+    .status-box:hover .mini{display:block}
 
-      .gridDays{
-        display:grid;
-        grid-auto-flow: column;
-        grid-auto-columns: minmax(240px, 1fr);
-        grid-template-columns: unset;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom:10px;
-      }
-      .daycard{min-width:240px;scroll-snap-align: start}
+    /* Outlet cells show text */
+    .status-box.outlet{
+      height:auto;
+      padding:10px 8px;
+      min-height:44px;
+      flex-direction:column;
+      gap:4px;
+    }
+    .status-box.outlet .otxt{
+      font-size:12px;
+      color:#fff;
+      font-weight:1000;
+      line-height:1.1;
+    }
+    .status-box.outlet .mini{display:block; position:static; font-size:10px; opacity:.9}
 
-      table{min-width:900px}
-      th:first-child, td:first-child{min-width:200px}
-      th,td{padding:8px}
-      .statusCell{min-width:96px}
-      .statusFill{height:58px}
-      .weekWrap{max-height: 70vh}
+    /* Modal */
+    .overlay{
+      position:fixed; inset:0;
+      background:rgba(2,6,23,.55);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+    .overlay.show{display:flex}
+    .modal{
+      width:min(840px, 100%);
+      background:#fff;
+      border-radius:18px;
+      border:1px solid rgba(15,23,42,.12);
+      box-shadow:0 30px 80px rgba(2,6,23,.35);
+      overflow:hidden;
+    }
+    .modal-h{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background:#f8fbff;
+    }
+    .modal-h strong{font-size:14px}
+    .modal-b{padding:14px 16px}
+    .modal-actions{
+      padding:14px 16px;
+      border-top:1px solid var(--line);
+      display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;
+      background:#fff;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .note-long textarea{min-height:160px}
+
+    /* Auth */
+    .auth-wrap{
+      min-height:calc(100vh - 70px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .auth-card{
+      width:min(520px, 100%);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .auth-head{
+      padding:16px 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border-bottom:1px solid var(--line);
+    }
+    .auth-head h2{margin:0 0 4px 0; font-size:18px}
+    .auth-head p{margin:0; color:var(--muted); font-size:13px}
+    .auth-body{padding:16px 18px}
+    .auth-body .field{width:100%}
+    .auth-body .field input{width:100%}
+    .auth-body .row{display:grid; gap:10px}
+
+    /* Mobile tweaks */
+    @media (max-width: 820px){
+      .occ-row{grid-template-columns: repeat(7, minmax(150px, 1fr))}
+      .col-service{min-width:160px; max-width:200px}
+      .two-col{grid-template-columns:1fr}
+      .topbar-inner{gap:10px}
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-
-    <!-- LOGIN -->
-    <div id="loginView" class="loginBox card" style="display:none;">
-      <h2 style="margin:0 0 8px;font-size:18px;">Sheraton Dashboard</h2>
-      <div class="hint">Sign in to view / update occupancy and restaurant status.</div>
-
-      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Email</label>
-      <input id="email" type="email" placeholder="name@niagarafallshotels.com" />
-
-      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Password</label>
-      <input id="password" type="password" placeholder="••••••••" />
-
-      <div class="row" style="margin-top:12px;">
-        <button id="btnLogin" class="btnPrimary">Sign in</button>
-        <button id="btnForgot" class="btnGhost">Forgot password</button>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <h1>Sheraton Niagara Falls – Ops Dashboard</h1>
       </div>
 
-      <div id="loginMsg" class="msg"></div>
+      <div class="badges" id="userBadges" style="display:none;">
+        <span class="badge"><strong>Role:</strong> <span id="bRole"></span></span>
+        <span class="badge"><strong>Dept:</strong> <span id="bDept"></span></span>
+        <span class="badge"><strong>User:</strong> <span id="bName"></span></span>
+      </div>
+
+      <div class="nav" id="navBtns" style="display:none;">
+        <button class="btn small" id="btnDash">Dashboard</button>
+        <button class="btn small" id="btnUsers" style="display:none;">Users</button>
+        <button class="btn small danger" id="btnLogout">Logout</button>
+      </div>
     </div>
+  </div>
 
-    <!-- INVITE / RESET PASSWORD -->
-    <div id="recoveryView" class="loginBox card" style="display:none;">
-      <h2 style="margin:0 0 8px;font-size:18px;">Finish setup</h2>
-      <div class="hint">Enter your name, confirm your email, and set your password.</div>
+  <div class="container" id="appRoot">
+    <div class="msg" id="globalMsg"></div>
 
-      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Full name</label>
-      <input id="setupName" type="text" placeholder="Your full name" />
+    <!-- AUTH -->
+    <div id="viewAuth" class="auth-wrap" style="display:none;">
+      <div class="auth-card">
+        <div class="auth-head">
+          <h2 id="authTitle">Sign in</h2>
+          <p id="authSub">Use your work email and password.</p>
+        </div>
+        <div class="auth-body">
+          <div class="row" id="authFormSignin">
+            <div class="field">
+              <label>Email</label>
+              <input id="inEmail" type="email" placeholder="name@niagarafallshotels.com" autocomplete="email" />
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input id="inPass" type="password" placeholder="••••••••" autocomplete="current-password" />
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+              <button class="btn" id="btnForgot">Forgot password</button>
+              <button class="btn primary" id="btnSignin">Sign in</button>
+            </div>
+          </div>
 
-      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Email</label>
-      <input id="setupEmail" type="email" placeholder="name@niagarafallshotels.com" />
+          <div class="row" id="authFormReset" style="display:none;">
+            <div class="field">
+              <label>Email</label>
+              <input id="resetEmail" type="email" placeholder="name@niagarafallshotels.com" autocomplete="email" />
+            </div>
+            <div class="hint">
+              We’ll email you a reset link. If your link lands back on the login screen, open it again and wait 2–3 seconds.
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+              <button class="btn" id="btnBackSignin">Back</button>
+              <button class="btn primary" id="btnSendReset">Send reset link</button>
+            </div>
+          </div>
 
-      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">New password</label>
-      <input id="newPass" type="password" placeholder="New password" />
+          <div class="row" id="authFormSetPassword" style="display:none;">
+            <div class="hint" style="margin-bottom:6px;">
+              Finish setup: set your name + new password.
+            </div>
+            <div class="field">
+              <label>Full name</label>
+              <input id="setName" type="text" placeholder="Full name" />
+            </div>
+            <div class="field">
+              <label>New password</label>
+              <input id="setPass1" type="password" placeholder="••••••••" autocomplete="new-password" />
+            </div>
+            <div class="field">
+              <label>Confirm</label>
+              <input id="setPass2" type="password" placeholder="••••••••" autocomplete="new-password" />
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+              <button class="btn" id="btnSetCancel">Cancel</button>
+              <button class="btn primary" id="btnSetSave">Save & continue</button>
+            </div>
+          </div>
 
-      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Confirm new password</label>
-      <input id="newPass2" type="password" placeholder="Confirm new password" />
-
-      <div class="row" style="margin-top:12px;">
-        <button id="btnSetPass" class="btnPrimary">Save and continue</button>
-        <button id="btnCancelRecovery" class="btnGhost">Cancel</button>
+          <div class="msg" id="authMsg"></div>
+        </div>
       </div>
-
-      <div id="recoveryMsg" class="msg"></div>
     </div>
 
     <!-- APP -->
-    <div id="appView" style="display:none;">
-      <div class="topbar">
-        <div class="titleRow">
-          <h1>Sheraton Niagara Falls – Ops Dashboard</h1>
-          <span id="rolePill" class="pill">Role: …</span>
-          <span id="deptPill" class="pill">Dept: …</span>
-          <span id="userPill" class="pill">User: …</span>
-        </div>
-
-        <div class="tabs">
-          <button id="tabDashboard" class="tabBtn active">Dashboard</button>
-          <button id="tabUsers" class="tabBtn" style="display:none;">Users</button>
-          <button id="btnLogout" class="tabBtn btnDanger">Logout</button>
-        </div>
-      </div>
-
-      <!-- DASHBOARD -->
-      <div id="panelDashboard">
-        <div class="card">
-          <div class="row" style="justify-content:space-between;">
-            <div class="row">
-              <label style="margin:0;color:var(--muted);font-size:12px;">Start date</label>
+    <div id="viewApp" style="display:none;">
+      <div class="card">
+        <div class="card-b">
+          <div class="controls">
+            <div class="field">
+              <label>Start date</label>
               <input id="startDate" type="date" />
-              <button id="btnToday" class="btnGhost">Today</button>
-              <button id="btnRefresh" class="btnPrimary">Refresh</button>
-              <button id="btnPrintSnapshot" class="btnSoft">Print 7-Day Snapshot</button>
+            </div>
+            <button class="btn" id="btnToday">Today</button>
+            <button class="btn primary" id="btnRefresh">Refresh</button>
+            <button class="btn" id="btnPdf">Download 7-Day PDF Snapshot</button>
+
+            <div class="hint" style="margin-left:auto;">
+              Editors: tap occupancy cards to edit. Tap status boxes to change.
             </div>
           </div>
-
-          <div id="permHint" class="msg warntxt" style="margin-top:10px; display:none;"></div>
+          <div class="msg" id="appMsg"></div>
         </div>
-
-        <div class="sectionTitle">7-Day Occupancy Forecast</div>
-        <div class="card">
-          <div id="occCards" class="gridDays"></div>
-          <div class="hint" style="margin-top:10px;">
-            Click a day to edit (if you have permission). It will prefill the last saved percent + notes.
-          </div>
-        </div>
-
-        <div class="sectionTitle">
-          Restaurant Status
-          <span class="badge" style="border-color: rgba(20,83,45,.35);">Green = Active</span>
-          <span class="badge" style="border-color: rgba(127,29,29,.35);">Red = Inactive</span>
-          <span class="badge">Time shown: America/Toronto</span>
-          <span class="badge">Tip: double-click a green meal item to clear</span>
-        </div>
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr id="headRow">
-                <th>Service</th>
-              </tr>
-            </thead>
-            <tbody id="bodyRows"></tbody>
-          </table>
-        </div>
-
-        <div class="sectionTitle">
-          Lobby Bar
-          <span class="badge">Open/Closed + hours</span>
-          <span class="badge">F&B only</span>
-          <button id="btnEditLobbyWeek" class="btnSoft" style="margin-left:auto;">Edit week</button>
-        </div>
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr id="lobbyHead">
-                <th>Lobby Bar</th>
-              </tr>
-            </thead>
-            <tbody id="lobbyBody"></tbody>
-          </table>
-        </div>
-
-        <div class="sectionTitle">
-          Outlets
-          <span class="badge">Starbucks / Sweet Jesus / Freshii</span>
-          <span class="badge">Outlets only</span>
-          <button id="btnEditOutletsWeek" class="btnSoft" style="margin-left:auto;">Edit week</button>
-        </div>
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr id="outletsHead">
-                <th>Outlet</th>
-              </tr>
-            </thead>
-            <tbody id="outletsBody"></tbody>
-          </table>
-        </div>
-
-        <div id="appMsg" class="msg"></div>
       </div>
 
-      <!-- USERS -->
-      <div id="panelUsers" style="display:none;">
-        <div class="sectionTitle">Admin – Users</div>
-
+      <!-- DASHBOARD VIEW -->
+      <div id="viewDashboard" class="grid" style="margin-top:14px;">
         <div class="card">
-          <div class="hint" style="margin-bottom:10px;">
-            Use Supabase to invite/create Auth users. Then select them here and set name/role/department.
+          <div class="card-h">
+            <h2>7-Day Occupancy Forecast</h2>
+            <span class="pill">Toronto time</span>
           </div>
-
-          <label style="display:block;font-size:12px;color:var(--muted);margin:6px 0;">Select user</label>
-          <select id="userSelect" style="width:min(720px,100%);"></select>
-
-          <div class="twoCol" style="margin-top:10px;">
-            <div>
-              <label style="margin:0;color:var(--muted);font-size:12px;">Full name</label>
-              <input id="editUserName" placeholder="Full name" />
-            </div>
-            <div>
-              <label style="margin:0;color:var(--muted);font-size:12px;">Email (read only)</label>
-              <input id="editUserEmail" disabled />
+          <div class="card-b">
+            <div class="occ-row" id="occRow"></div>
+            <div class="hint" style="margin-top:10px;">
+              Tip: On mobile, swipe the cards left/right.
             </div>
           </div>
-
-          <div class="twoCol" style="margin-top:10px;">
-            <div>
-              <label style="margin:0;color:var(--muted);font-size:12px;">Role</label>
-              <select id="editUserRole">
-                <option value="viewer">viewer</option>
-                <option value="user">user</option>
-                <option value="admin">admin</option>
-              </select>
-            </div>
-            <div>
-              <label style="margin:0;color:var(--muted);font-size:12px;">Department</label>
-              <select id="editUserDept">
-                <option value="Guest Service">Guest Service</option>
-                <option value="F&B">F&amp;B</option>
-                <option value="Outlets">Outlets</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row" style="margin-top:10px;">
-            <label style="margin:0;color:var(--muted);font-size:12px;">Active</label>
-            <select id="editUserActive" style="width:160px;">
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-          </div>
-
-          <div class="row" style="margin-top:10px;">
-            <button id="btnSaveUser" class="btnPrimary">Save changes</button>
-            <button id="btnReloadUsers" class="btnGhost">Reload list</button>
-          </div>
-
-          <div id="usersMsg" class="msg"></div>
         </div>
 
-        <div class="card" style="margin-top:12px;">
-          <div class="sectionTitle" style="margin-top:0;">Current users</div>
-          <div class="tableWrap" style="box-shadow:none;">
-            <table style="min-width:980px;">
+        <div class="card">
+          <div class="card-h">
+            <h2>Restaurant Status (Green = Active, Red = Inactive)</h2>
+            <span class="pill">Double-click green to clear (closed)</span>
+          </div>
+          <div class="table-wrap">
+            <table id="tblRestaurants">
               <thead>
-                <tr>
-                  <th style="width:260px;">Name</th>
-                  <th>Email</th>
-                  <th style="width:160px;">Role</th>
-                  <th style="width:160px;">Department</th>
-                  <th style="width:120px;">Active</th>
+                <tr id="restHeadRow">
+                  <th class="col-service">Service</th>
                 </tr>
               </thead>
-              <tbody id="usersTable"></tbody>
+              <tbody id="restBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <h2>Lobby Bar & Outlets</h2>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn small" id="btnEditOutletWeek" style="display:none;">Edit Outlets Week</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="tblOutlets">
+              <thead>
+                <tr id="outHeadRow">
+                  <th class="col-service">Outlet</th>
+                </tr>
+              </thead>
+              <tbody id="outBody"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-    </div>
-
-  </div>
-
-  <!-- MODAL: Occupancy edit -->
-  <div id="occModalBack" class="modalBack">
-    <div class="modal">
-      <div class="modalHeader">
-        <b id="occModalTitle">Edit</b>
-        <button id="btnOccClose" class="btnGhost xBtn">Close</button>
-      </div>
-      <div class="modalBody">
-        <div class="twoCol">
-          <div>
-            <label style="margin:0;color:var(--muted);font-size:12px;">Occupancy % (0–100)</label>
-            <input id="occInput" type="number" min="0" max="100" step="0.1" placeholder="e.g. 78.5" />
+      <!-- USERS VIEW -->
+      <div id="viewUsers" class="grid" style="margin-top:14px; display:none;">
+        <div class="card">
+          <div class="card-h">
+            <h2>Admin – Users</h2>
+            <span class="pill">Name + role + department</span>
           </div>
-          <div>
-            <label style="margin:0;color:var(--muted);font-size:12px;">Notes</label>
-            <div class="hint">Big box so notes are easy to read.</div>
+          <div class="card-b">
+            <div class="hint" style="margin-bottom:10px;">
+              Pick a user, edit details, then save. No UIDs shown.
+            </div>
+
+            <div class="two-col">
+              <div class="field" style="width:100%;">
+                <label>Select user</label>
+                <select id="selUser"></select>
+              </div>
+
+              <div class="field" style="width:100%;">
+                <label>Email (read-only)</label>
+                <input id="uEmail" type="text" readonly />
+              </div>
+
+              <div class="field" style="width:100%;">
+                <label>Full name</label>
+                <input id="uName" type="text" />
+              </div>
+
+              <div class="field" style="width:100%;">
+                <label>Role</label>
+                <select id="uRole">
+                  <option value="admin">admin</option>
+                  <option value="user">user</option>
+                  <option value="viewer">viewer</option>
+                </select>
+              </div>
+
+              <div class="field" style="width:100%;">
+                <label>Department</label>
+                <select id="uDept">
+                  <option value="">(none)</option>
+                  <option value="Guest Service">Guest Service</option>
+                  <option value="F&B">F&B</option>
+                  <option value="Outlets">Outlets</option>
+                </select>
+              </div>
+
+              <div class="field" style="width:100%;">
+                <label>Active</label>
+                <select id="uActive">
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
+              <button class="btn" id="btnReloadUsers">Reload list</button>
+              <button class="btn primary" id="btnSaveUser">Save changes</button>
+            </div>
+
+            <div class="msg" id="usersMsg"></div>
           </div>
         </div>
 
-        <div style="margin-top:10px;">
-          <textarea id="occNotes" placeholder="Type full notes here…"></textarea>
+        <div class="card">
+          <div class="card-h">
+            <h2>Current users</h2>
+          </div>
+          <div class="table-wrap">
+            <table style="min-width:820px;">
+              <thead>
+                <tr>
+                  <th class="col-service">Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Department</th>
+                  <th>Active</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
         </div>
-
-        <div id="occModalMsg" class="msg"></div>
-      </div>
-      <div class="modalFooter">
-        <button id="btnOccSave" class="btnPrimary">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: Outlet/Lobby single-cell edit -->
-  <div id="outletModalBack" class="modalBack">
+  <!-- OCC MODAL -->
+  <div class="overlay" id="occOverlay">
     <div class="modal">
-      <div class="modalHeader">
-        <b id="outletModalTitle">Edit</b>
-        <button id="btnOutletClose" class="btnGhost xBtn">Close</button>
+      <div class="modal-h">
+        <strong id="occTitle">Edit occupancy</strong>
+        <button class="btn small" id="occClose">Close</button>
       </div>
-      <div class="modalBody">
-        <div class="twoCol">
-          <div>
-            <label style="margin:0;color:var(--muted);font-size:12px;">Status</label>
-            <select id="outletIsOpen">
+      <div class="modal-b">
+        <div class="two-col">
+          <div class="field">
+            <label>Occupancy % (0–100)</label>
+            <input id="occPct" type="number" min="0" max="100" step="0.1" />
+          </div>
+          <div class="field">
+            <label>Notes (short)</label>
+            <input id="occNote" type="text" placeholder="Optional" />
+          </div>
+        </div>
+
+        <div class="field note-long" style="margin-top:12px;">
+          <label>Notes (long)</label>
+          <textarea id="occLong" placeholder="Write longer notes here..."></textarea>
+        </div>
+
+        <div class="hint" style="margin-top:8px;">
+          Saving overwrites the current value but history remains in your DB history tables.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" id="occSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTLET DAY MODAL -->
+  <div class="overlay" id="outOverlay">
+    <div class="modal">
+      <div class="modal-h">
+        <strong id="outTitle">Edit outlet</strong>
+        <button class="btn small" id="outClose">Close</button>
+      </div>
+      <div class="modal-b">
+        <div class="two-col">
+          <div class="field">
+            <label>Status</label>
+            <select id="outOpen">
               <option value="false">Closed</option>
               <option value="true">Open</option>
             </select>
           </div>
-          <div>
-            <label style="margin:0;color:var(--muted);font-size:12px;">Open time</label>
-            <input id="outletOpenTime" type="time" />
+          <div class="field">
+            <label>Open time</label>
+            <input id="outTimeOpen" type="time" />
+          </div>
+          <div class="field">
+            <label>Close time</label>
+            <input id="outTimeClose" type="time" />
+          </div>
+          <div class="hint" style="align-self:center;">
+            If Open = true, times are required.
           </div>
         </div>
-
-        <div class="twoCol" style="margin-top:10px;">
-          <div>
-            <label style="margin:0;color:var(--muted);font-size:12px;">Close time</label>
-            <input id="outletCloseTime" type="time" />
-          </div>
-          <div class="hint" style="display:flex;align-items:flex-end;">
-            If Open is selected, both times are required.
-          </div>
-        </div>
-
-        <div id="outletModalMsg" class="msg"></div>
       </div>
-      <div class="modalFooter">
-        <button id="btnOutletSave" class="btnPrimary">Save</button>
+      <div class="modal-actions">
+        <button class="btn primary" id="outSave">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: Week editor -->
-  <div id="weekModalBack" class="modalBack">
-    <div class="modal" style="max-width:1180px;">
-      <div class="modalHeader">
-        <b id="weekModalTitle">Edit week</b>
-        <button id="btnWeekClose" class="btnGhost xBtn">Close</button>
+  <!-- OUTLET WEEK MODAL -->
+  <div class="overlay" id="outWeekOverlay">
+    <div class="modal">
+      <div class="modal-h">
+        <strong id="outWeekTitle">Edit Outlets Week</strong>
+        <button class="btn small" id="outWeekClose">Close</button>
       </div>
-      <div class="modalBody">
+      <div class="modal-b">
         <div class="hint" style="margin-bottom:10px;">
-          Change as much or as little as you want. Only changed cells are saved.
-          If you set a day to <b>Open</b>, hours are required.
+          Fill as much as you want. If a day is set to Open, times are required.
         </div>
 
-        <div class="weekWrap">
-          <table class="weekTable">
+        <div class="table-wrap" style="border:1px solid var(--line); border-radius:14px;">
+          <table style="min-width:760px;">
             <thead>
-              <tr id="weekHead">
-                <th>Outlet</th>
+              <tr>
+                <th class="col-service">Date</th>
+                <th>Starbucks</th>
+                <th>Sweet Jesus</th>
+                <th>Freshii</th>
               </tr>
             </thead>
-            <tbody id="weekBody"></tbody>
+            <tbody id="outWeekBody"></tbody>
           </table>
         </div>
-
-        <div id="weekModalMsg" class="msg"></div>
       </div>
-      <div class="modalFooter">
-        <button id="btnWeekSave" class="btnPrimary">Save changes</button>
+      <div class="modal-actions">
+        <button class="btn primary" id="outWeekSave">Save week</button>
       </div>
     </div>
   </div>
 
-  <script src="./supabase.js"></script>
-
   <script>
-    // === CONFIG ===
+    /********************
+     * CONFIG (your project)
+     ********************/
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    const TIMEZONE = "America/Toronto";
     const DAYS = 7;
 
-    const loginView = document.getElementById("loginView");
-    const recoveryView = document.getElementById("recoveryView");
-    const appView = document.getElementById("appView");
-
-    const tabDashboard = document.getElementById("tabDashboard");
-    const tabUsers = document.getElementById("tabUsers");
-    const panelDashboard = document.getElementById("panelDashboard");
-    const panelUsers = document.getElementById("panelUsers");
-
-    const rolePill = document.getElementById("rolePill");
-    const deptPill = document.getElementById("deptPill");
-    const userPill = document.getElementById("userPill");
-    const permHint = document.getElementById("permHint");
-
-    const startDateEl = document.getElementById("startDate");
-    const occCards = document.getElementById("occCards");
-    const headRow = document.getElementById("headRow");
-    const bodyRows = document.getElementById("bodyRows");
-    const appMsg = document.getElementById("appMsg");
-
-    const lobbyHead = document.getElementById("lobbyHead");
-    const lobbyBody = document.getElementById("lobbyBody");
-    const outletsHead = document.getElementById("outletsHead");
-    const outletsBody = document.getElementById("outletsBody");
-
-    const loginMsg = document.getElementById("loginMsg");
-    const recoveryMsg = document.getElementById("recoveryMsg");
-
-    const setupName = document.getElementById("setupName");
-    const setupEmail = document.getElementById("setupEmail");
-
-    const usersMsg = document.getElementById("usersMsg");
-    const usersTable = document.getElementById("usersTable");
-    const userSelect = document.getElementById("userSelect");
-    const editUserName = document.getElementById("editUserName");
-    const editUserEmail = document.getElementById("editUserEmail");
-    const editUserRole = document.getElementById("editUserRole");
-    const editUserDept = document.getElementById("editUserDept");
-    const editUserActive = document.getElementById("editUserActive");
-
-    const occModalBack = document.getElementById("occModalBack");
-    const occModalTitle = document.getElementById("occModalTitle");
-    const occModalMsg = document.getElementById("occModalMsg");
-    const occInput = document.getElementById("occInput");
-    const occNotes = document.getElementById("occNotes");
-
-    const outletModalBack = document.getElementById("outletModalBack");
-    const outletModalTitle = document.getElementById("outletModalTitle");
-    const outletModalMsg = document.getElementById("outletModalMsg");
-    const outletIsOpen = document.getElementById("outletIsOpen");
-    const outletOpenTime = document.getElementById("outletOpenTime");
-    const outletCloseTime = document.getElementById("outletCloseTime");
-
-    const weekModalBack = document.getElementById("weekModalBack");
-    const weekModalTitle = document.getElementById("weekModalTitle");
-    const weekHead = document.getElementById("weekHead");
-    const weekBody = document.getElementById("weekBody");
-    const weekModalMsg = document.getElementById("weekModalMsg");
-
-    let currentUser = null;
-    let myRole = "viewer";
-    let myDept = "";
-    let myName = "";
-
-    let dashboardDays = [];
-    let serviceByName = new Map();
-
-    let dssMeta = new Map(); // pick-one meals
-    let dmsMeta = new Map(); // massimo
-    let outletMap = new Map(); // daily_outlet_hours
-
-    let occEditDate = null;
-    let outletEdit = { date:null, outlet_name:null };
-
-    let weekEditMode = null; // "lobby" or "outlets"
-
-    let adminUsersCache = []; // for dropdown
-
-    const GROUPS = [
-      { title: "Breakfast", groupName: "breakfast", items: [
-        "BREAKFAST ALA CARTE",
-        "BREAKFAST BUFFET REDUCED",
-        "BREAKFAST FULL BUFFET",
-        "BRUNCH",
-        "SPECIAL BREAKFAST- CLOSED"
-      ]},
-      { title: "Lunch", groupName: "lunch", items: [
-        "LUNCH ALA CARTE",
-        "LUNCH BUFFET",
-        "HOLIDAY LUNCH BUFFET BRUNCH",
-        "SPECIAL LUNCH- CLOSED"
-      ]},
-      { title: "Dinner", groupName: "dinner", items: [
-        "DINNER ALA CARTE",
-        "DINNER BUFFET",
-        "DINNER HOLIDAY /SPECIAL BUFFET",
-        "DINNER CLOSED"
-      ]},
-      { title: "Massimo", groupName: "massimo", items: [
-        "MASSIMO BREAKFAST",
-        "MASSIMO LUNCH",
-        "MASSIMO DINNER"
-      ]}
-    ];
-
-    const LOBBY_BAR = ["LOBBY BAR"];
-    const OUTLETS = ["STARBUCKS","SWEET JESUS","FRESHII"];
-
-    // === HELPERS ===
-    function setMsg(el, text, type="") {
-      el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : type === "warn" ? "warntxt" : "");
+    /********************
+     * SAFE HELPERS
+     ********************/
+    const $ = (id) => document.getElementById(id);
+    const showMsg = (el, text, kind="info") => {
+      el.className = "msg " + (kind || "info");
       el.textContent = text || "";
-    }
-    function show(view){
-      loginView.style.display = "none";
-      recoveryView.style.display = "none";
-      appView.style.display = "none";
-      view.style.display = "block";
+      el.style.display = text ? "block" : "none";
+    };
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    function toISODateToronto(d=new Date()){
+      // Format as YYYY-MM-DD in Toronto time
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: TIMEZONE, year:"numeric", month:"2-digit", day:"2-digit"
+      }).formatToParts(d);
+      const y = parts.find(p=>p.type==="year").value;
+      const m = parts.find(p=>p.type==="month").value;
+      const da = parts.find(p=>p.type==="day").value;
+      return `${y}-${m}-${da}`;
     }
 
-    function isAdmin(){ return myRole === "admin"; }
-    function isUser(){ return myRole === "user"; }
-
-    function canEditOcc(){
-      return isAdmin() || (isUser() && (myDept || "") === "Guest Service");
+    function fmtDay(yyyy_mm_dd){
+      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
+      const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: TIMEZONE, weekday:"short", month:"short", day:"2-digit"
+      }).format(dt);
     }
-    function canEditRestaurantAndLobby(){
-      return isAdmin() || (isUser() && (myDept || "") === "F&B");
+
+    function fmtTsToronto(ts){
+      if (!ts) return "";
+      const dt = new Date(ts);
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: TIMEZONE,
+        year:"numeric", month:"short", day:"2-digit",
+        hour:"2-digit", minute:"2-digit"
+      }).format(dt);
+    }
+
+    function addDays(yyyy_mm_dd, n){
+      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
+      const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+      dt.setUTCDate(dt.getUTCDate() + n);
+      const yy = dt.getUTCFullYear();
+      const mm = String(dt.getUTCMonth()+1).padStart(2,"0");
+      const dd = String(dt.getUTCDate()).padStart(2,"0");
+      return `${yy}-${mm}-${dd}`;
+    }
+
+    function fmtTime12(timeStr){
+      if (!timeStr) return "";
+      const parts = String(timeStr).split(":");
+      if (parts.length < 2) return "";
+      let hh = parseInt(parts[0],10);
+      const mm = parts[1].padStart(2,"0");
+      const ap = hh >= 12 ? "PM" : "AM";
+      hh = hh % 12; if (hh===0) hh=12;
+      return `${hh}:${mm} ${ap}`;
+    }
+
+    /********************
+     * SUPABASE INIT
+     ********************/
+    const globalMsg = $("globalMsg");
+    if (!window.supabase || !window.supabase.createClient){
+      showMsg(globalMsg,
+        "Supabase library not found. Make sure supabase.js is in the repo root (same folder as index.html).",
+        "err"
+      );
+    }
+    const sb = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_KEY);
+
+    /********************
+     * STATE
+     ********************/
+    let session = null;
+    let me = { user_id:null, role:"viewer", department:null, name:"", email:"" };
+
+    let dash = null;
+    let days = []; // array of YYYY-MM-DD
+    let serviceItems = []; // from RPC
+    let serviceById = new Map(); // uuid -> item
+    let itemsByGroup = { breakfast:[], lunch:[], dinner:[], massimo:[] };
+
+    // daily maps
+    let forecastByDate = new Map(); // date -> row
+    let selByKey = new Map(); // `${date}|${group}` -> row
+    let massimoByKey = new Map(); // `${date}|${service_item_id}` -> row
+    let outletByKey = new Map(); // `${date}|${outlet}` -> row
+    let profiles = []; // from RPC
+    let profileById = new Map(); // uuid -> profile
+
+    // modals
+    let occEditDate = null;
+    let outEdit = { date:null, outlet:null };
+    let outWeekDraft = []; // for week editor
+
+    /********************
+     * PERMISSIONS
+     ********************/
+    function canAdmin(){ return me.role === "admin"; }
+    function canViewUsers(){ return canAdmin(); }
+
+    function canEditForecast(){
+      return canAdmin() || (me.role==="user" && me.department==="Guest Service");
+    }
+    function canEditRestaurants(){
+      return canAdmin() || (me.role==="user" && me.department==="F&B");
+    }
+    function canEditLobbyBar(){
+      return canAdmin() || (me.role==="user" && me.department==="F&B");
     }
     function canEditOutlets(){
-      return isAdmin() || (isUser() && (myDept || "") === "Outlets");
+      return canAdmin() || (me.role==="user" && me.department==="Outlets");
     }
 
-    function switchTab(which){
-      tabDashboard.classList.remove("active");
-      tabUsers.classList.remove("active");
-      panelDashboard.style.display = "none";
-      panelUsers.style.display = "none";
+    /********************
+     * VIEWS
+     ********************/
+    const viewAuth = $("viewAuth");
+    const viewApp = $("viewApp");
+    const navBtns = $("navBtns");
+    const userBadges = $("userBadges");
+    const btnUsers = $("btnUsers");
+    const viewDashboard = $("viewDashboard");
+    const viewUsers = $("viewUsers");
 
-      if (which === "dashboard"){
-        tabDashboard.classList.add("active");
-        panelDashboard.style.display = "block";
-      } else {
-        tabUsers.classList.add("active");
-        panelUsers.style.display = "block";
+    function showAuth(mode="signin"){
+      viewApp.style.display = "none";
+      navBtns.style.display = "none";
+      userBadges.style.display = "none";
+      viewAuth.style.display = "flex";
+
+      $("authFormSignin").style.display = (mode==="signin") ? "grid" : "none";
+      $("authFormReset").style.display = (mode==="reset") ? "grid" : "none";
+      $("authFormSetPassword").style.display = (mode==="setpass") ? "grid" : "none";
+
+      showMsg($("authMsg"), "", "info");
+
+      if (mode==="signin"){
+        $("authTitle").textContent = "Sign in";
+        $("authSub").textContent = "Use your work email and password.";
+      }
+      if (mode==="reset"){
+        $("authTitle").textContent = "Reset password";
+        $("authSub").textContent = "We’ll email you a reset link.";
+      }
+      if (mode==="setpass"){
+        $("authTitle").textContent = "Set your password";
+        $("authSub").textContent = "Finish setup to access the dashboard.";
       }
     }
 
-    function cleanUrlAll(){
-      const clean = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, clean);
-    }
-    function parseHashParams(){
-      const h = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
-      const p = new URLSearchParams(h);
-      return {
-        type: p.get("type"),
-        access_token: p.get("access_token"),
-        refresh_token: p.get("refresh_token"),
-        error: p.get("error"),
-        error_description: p.get("error_description")
-      };
+    function showApp(){
+      viewAuth.style.display = "none";
+      viewApp.style.display = "block";
+      navBtns.style.display = "flex";
+      userBadges.style.display = "flex";
+
+      $("bRole").textContent = me.role || "viewer";
+      $("bDept").textContent = me.department || "—";
+      $("bName").textContent = me.name || me.email || "—";
+
+      btnUsers.style.display = canViewUsers() ? "inline-flex" : "none";
+      showDashboard();
     }
 
-    function pad2(n){ return String(n).padStart(2,"0"); }
-    function toDateStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
-    function fmtDay(d){
-      const dt = new Date(d + "T00:00:00");
-      return dt.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
+    function showDashboard(){
+      viewDashboard.style.display = "grid";
+      viewUsers.style.display = "none";
     }
-    function isToday(d){
-      const t = new Date(); t.setHours(0,0,0,0);
-      const dt = new Date(d + "T00:00:00");
-      return dt.getTime() === t.getTime();
+    function showUsers(){
+      viewDashboard.style.display = "none";
+      viewUsers.style.display = "grid";
     }
 
-    function fmtToronto(ts) {
-      if (!ts) return "";
+    /********************
+     * AUTH HANDLING
+     ********************/
+    async function handleAuthLinksIfAny(){
+      // Support code-based links: ?code=... (invite/reset)
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      const type = url.searchParams.get("type"); // invite / recovery / magiclink etc
+
+      if (sb && code){
+        try{
+          showMsg(globalMsg, "Finishing sign-in link…", "info");
+          const { data, error } = await sb.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+
+          // Clean URL (remove code)
+          url.searchParams.delete("code");
+          url.searchParams.delete("type");
+          window.history.replaceState({}, document.title, url.toString());
+
+          // If invite or recovery, show set password UI
+          if (type === "invite" || type === "recovery"){
+            showAuth("setpass");
+            return true;
+          }
+        }catch(e){
+          showMsg(globalMsg, e?.message || String(e), "err");
+        }
+      }
+      return false;
+    }
+
+    async function loadSession(){
+      if (!sb) return;
+      const { data } = await sb.auth.getSession();
+      session = data?.session || null;
+    }
+
+    async function signIn(email, password){
+      const authMsg = $("authMsg");
       try{
-        return new Intl.DateTimeFormat("en-CA", {
-          timeZone: "America/Toronto",
-          year: "numeric", month: "short", day: "2-digit",
-          hour: "2-digit", minute: "2-digit",
-          hour12: true
-        }).format(new Date(ts));
-      } catch { return ""; }
-    }
-
-    function escapeHtml(s){
-      return String(s ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function keyDss(day, group){ return `${day}|${group}`; }
-    function keyDms(day, serviceItemId){ return `${day}|${serviceItemId}`; }
-    function keyOutlet(day, name){ return `${day}|${name}`; }
-
-    function fmtTime12(hhmm){
-      if (!hhmm) return "";
-      const parts = String(hhmm).split(":");
-      const h = Number(parts[0]);
-      const m = Number(parts[1]);
-      if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
-      const ampm = h >= 12 ? "PM" : "AM";
-      const hr = (h % 12) === 0 ? 12 : (h % 12);
-      return `${hr}:${String(m).padStart(2,"0")} ${ampm}`;
-    }
-
-    function stampHtml(lines){
-      const clean = lines.filter(Boolean);
-      if (clean.length === 0) return "";
-      const l1 = clean[0] ? `<div class="stampLine">${escapeHtml(clean[0])}</div>` : "";
-      const l2 = clean[1] ? `<div class="stampLine2">${escapeHtml(clean[1])}</div>` : "";
-      const l3 = clean[2] ? `<div class="stampLine2">${escapeHtml(clean[2])}</div>` : "";
-      return `<div class="stamp">${l1}${l2}${l3}</div>`;
-    }
-
-    function normOutletRow(r){
-      // keep it stable for comparisons
-      const is_open = r?.is_open === true;
-      const open_time = r?.open_time || null;
-      const close_time = r?.close_time || null;
-      return JSON.stringify({is_open, open_time, close_time});
-    }
-
-    // === LOAD PROFILE ===
-    async function loadMyProfile(){
-      const { data, error } = await sb
-        .from("profiles")
-        .select("role, full_name, email, department, is_active")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-      if (error) throw error;
-
-      myRole = data?.role || "viewer";
-      myName = data?.full_name || "";
-      myDept = data?.department || "";
-
-      if (data?.is_active === false){
-        throw new Error("Your account is disabled. Contact an admin.");
+        showMsg(authMsg, "Signing in…", "info");
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        session = data.session;
+        showMsg(authMsg, "Signed in.", "ok");
+        await initAfterLogin();
+      }catch(e){
+        showMsg(authMsg, e?.message || String(e), "err");
       }
     }
 
-    // === DATA LOADERS ===
-    async function loadServiceItems(){
-      const { data, error } = await sb
-        .from("service_items")
-        .select("id,name,group_name,sort_order")
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      serviceByName = new Map((data || []).map(x => [x.name, x]));
+    async function sendReset(email){
+      const authMsg = $("authMsg");
+      try{
+        showMsg(authMsg, "Sending reset link…", "info");
+        const redirectTo = window.location.origin + window.location.pathname; // same page
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) throw error;
+        showMsg(authMsg, "Reset email sent. Check your inbox.", "ok");
+      }catch(e){
+        showMsg(authMsg, e?.message || String(e), "err");
+      }
     }
 
-    async function fetchDashboard(startDate){
-      const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: DAYS });
-      if (error) throw error;
-      dashboardDays = data || [];
+    async function setPasswordAndProfile(fullName, pass1, pass2){
+      const authMsg = $("authMsg");
+      try{
+        if (!pass1 || pass1.length < 8) throw new Error("Password must be at least 8 characters.");
+        if (pass1 !== pass2) throw new Error("Passwords do not match.");
+
+        showMsg(authMsg, "Saving…", "info");
+
+        // Update password
+        const { error: e1 } = await sb.auth.updateUser({ password: pass1 });
+        if (e1) throw e1;
+
+        // Update profile name (best effort)
+        const { data: sessData } = await sb.auth.getSession();
+        const uid = sessData?.session?.user?.id;
+        const email = sessData?.session?.user?.email;
+
+        if (uid){
+          // Try update by user_id column
+          await sb.from("profiles").upsert({
+            user_id: uid,
+            email: email || null,
+            name: fullName || null,
+            is_active: true
+          }, { onConflict: "user_id" });
+        }
+
+        showMsg(authMsg, "Done. You can now use the dashboard.", "ok");
+        await initAfterLogin();
+      }catch(e){
+        showMsg(authMsg, e?.message || String(e), "err");
+      }
     }
 
-    async function fetchRestaurantMeta(){
-      dssMeta = new Map();
-      dmsMeta = new Map();
+    async function logout(){
+      try{
+        await sb.auth.signOut();
+      }catch{}
+      session = null;
+      me = { user_id:null, role:"viewer", department:null, name:"", email:"" };
+      showAuth("signin");
+    }
 
-      const days = (dashboardDays || []).map(x => x.day);
-      if (days.length === 0) return;
+    /********************
+     * DASHBOARD LOAD
+     ********************/
+    function hydrateFromRpc(json){
+      dash = json;
 
-      const { data: dss, error: e1 } = await sb
-        .from("daily_service_selection")
-        .select("date,group_name,selected_service_item_id,last_action_service_item_id,updated_by_name,updated_at")
-        .in("date", days)
-        .in("group_name", ["breakfast","lunch","dinner"]);
-      if (e1) throw e1;
+      // days
+      const startDate = $("startDate").value;
+      days = Array.from({ length: DAYS }, (_,i)=> addDays(startDate, i));
 
-      for (const r of (dss || [])){
-        dssMeta.set(keyDss(r.date, r.group_name), {
-          selected: r.selected_service_item_id,
-          last_action: r.last_action_service_item_id,
-          by: r.updated_by_name,
-          at: r.updated_at
+      // profiles
+      profiles = Array.isArray(json.profiles) ? json.profiles : [];
+      profileById = new Map(profiles.map(p => [String(p.user_id), p]));
+
+      // service items
+      serviceItems = Array.isArray(json.service_items) ? json.service_items : [];
+      serviceById = new Map(serviceItems.map(si => [String(si.id), si]));
+
+      itemsByGroup = { breakfast:[], lunch:[], dinner:[], massimo:[] };
+      for (const si of serviceItems){
+        if (!itemsByGroup[si.group_name]) continue;
+        itemsByGroup[si.group_name].push(si);
+      }
+      // sort by sort_order if present else by name
+      for (const g of Object.keys(itemsByGroup)){
+        itemsByGroup[g].sort((a,b)=>{
+          const ao = (a.sort_order ?? 9999), bo = (b.sort_order ?? 9999);
+          if (ao !== bo) return ao - bo;
+          return String(a.name).localeCompare(String(b.name));
         });
       }
 
-      const massimoNames = ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"];
-      const massimoIds = massimoNames.map(n => serviceByName.get(n)?.id).filter(v => v !== undefined && v !== null);
+      // forecast
+      forecastByDate = new Map();
+      for (const r of (json.daily_forecast || [])){
+        forecastByDate.set(r.date, r);
+      }
 
-      if (massimoIds.length > 0){
-        const { data: dms, error: e2 } = await sb
-          .from("daily_massimo_status")
-          .select("date,service_item_id,is_active,updated_by_name,updated_at")
-          .in("date", days)
-          .in("service_item_id", massimoIds);
-        if (e2) throw e2;
+      // selections
+      selByKey = new Map();
+      for (const r of (json.daily_service_selection || [])){
+        selByKey.set(`${r.date}|${r.group_name}`, r);
+      }
 
-        for (const r of (dms || [])){
-          dmsMeta.set(keyDms(r.date, r.service_item_id), {
-            on: !!r.is_active,
-            by: r.updated_by_name,
-            at: r.updated_at
-          });
-        }
+      // massimo
+      massimoByKey = new Map();
+      for (const r of (json.daily_massimo_status || [])){
+        massimoByKey.set(`${r.date}|${String(r.service_item_id)}`, r);
+      }
+
+      // outlets
+      outletByKey = new Map();
+      for (const r of (json.daily_outlet_hours || [])){
+        outletByKey.set(`${r.date}|${r.outlet_name}`, r);
+      }
+
+      // me
+      if (session?.user?.id){
+        const p = profileById.get(String(session.user.id));
+        me.user_id = String(session.user.id);
+        me.email = session.user.email || "";
+        me.name = p?.name || me.email || "";
+        me.role = p?.role || "viewer";
+        me.department = p?.department || null;
       }
     }
 
-    async function fetchOutletHours(){
-      outletMap = new Map();
-      const days = (dashboardDays || []).map(x => x.day);
-      if (days.length === 0) return;
-
-      const names = ["LOBBY BAR","STARBUCKS","SWEET JESUS","FRESHII"];
-      const { data, error } = await sb
-        .from("daily_outlet_hours")
-        .select("date,outlet_name,is_open,open_time,close_time,updated_by_name,updated_at")
-        .in("date", days)
-        .in("outlet_name", names);
-
-      if (error) throw error;
-
-      for (const r of (data || [])){
-        outletMap.set(keyOutlet(r.date, r.outlet_name), r);
-      }
-    }
-
-    // === UI BUILDERS ===
-    function buildHeaderRow(rowEl){
-      while (rowEl.children.length > 1) rowEl.removeChild(rowEl.lastChild);
-      for (const day of dashboardDays){
-        const th = document.createElement("th");
-        th.textContent = fmtDay(day.day);
-        rowEl.appendChild(th);
-      }
-    }
-
-    // === OCCUPANCY MODAL ===
-    function openOccModal(day){
-      const row = dashboardDays.find(x => x.day === day);
-      occEditDate = day;
-
-      occModalTitle.textContent = `Edit occupancy – ${day}`;
-      setMsg(occModalMsg,"");
-
-      occInput.value = (row?.occupancy_percent ?? "") === null ? "" : String(row?.occupancy_percent ?? "");
-      occNotes.value = row?.notes || "";
-
-      occModalBack.style.display = "flex";
-      document.body.style.overflow = "hidden";
-    }
-    function closeOccModal(){
-      occModalBack.style.display = "none";
-      occEditDate = null;
-      document.body.style.overflow = "";
-    }
-
-    async function saveOccModal(){
+    async function loadDashboard(){
+      const appMsg = $("appMsg");
       try{
-        if (!occEditDate) return;
-        if (!canEditOcc()){
-          setMsg(occModalMsg,"You do not have permission to edit occupancy.","err");
-          return;
-        }
-
-        const occRaw = String(occInput.value || "").trim();
-        const occNum = occRaw === "" ? null : Number(occRaw);
-        if (occNum !== null && (Number.isNaN(occNum) || occNum < 0 || occNum > 100)){
-          setMsg(occModalMsg,"Occupancy must be 0 to 100 (or blank).","err");
-          return;
-        }
-
-        const notes = String(occNotes.value || "").trim() || null;
-
-        setMsg(occModalMsg,"Saving…");
-
-        const { error } = await sb
-          .from("daily_forecast")
-          .upsert({ date: occEditDate, occupancy_percent: occNum, notes }, { onConflict: "date" });
-
+        showMsg(appMsg, "Loading dashboard…", "info");
+        const startDate = $("startDate").value;
+        const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: DAYS });
         if (error) throw error;
 
-        const row = dashboardDays.find(x => x.day === occEditDate);
-        if (row){
-          row.occupancy_percent = occNum;
-          row.notes = notes;
-        }
-
-        setMsg(occModalMsg,"Saved.","ok");
-        renderOccCards();
-        setTimeout(closeOccModal, 150);
-      } catch(e){
-        setMsg(occModalMsg, e?.message || String(e), "err");
+        hydrateFromRpc(data);
+        renderAll();
+        showMsg(appMsg, "Loaded.", "ok");
+      }catch(e){
+        showMsg(appMsg, e?.message || String(e), "err");
       }
     }
 
-    function renderOccCards(){
-      occCards.innerHTML = "";
-      for (const day of dashboardDays){
-        const card = document.createElement("div");
-        card.className = "daycard" + (isToday(day.day) ? " today" : "");
+    async function initAfterLogin(){
+      await loadSession();
+      if (!session){
+        showAuth("signin");
+        return;
+      }
+      // Ensure start date is set
+      if (!$("startDate").value) $("startDate").value = toISODateToronto();
+      await loadDashboard();
+      showApp();
+    }
 
-        const title = document.createElement("div");
-        title.className = "daytitle";
-        title.innerHTML = `<span>${fmtDay(day.day)}</span><span>${day.day}</span>`;
+    /********************
+     * RENDER
+     ********************/
+    function renderAll(){
+      // badges
+      $("bRole").textContent = me.role || "viewer";
+      $("bDept").textContent = me.department || "—";
+      $("bName").textContent = me.name || me.email || "—";
+      btnUsers.style.display = canViewUsers() ? "inline-flex" : "none";
 
-        const occ = document.createElement("div");
-        occ.className = "occ";
-        occ.textContent = (day.occupancy_percent === null || day.occupancy_percent === undefined)
-          ? "—"
-          : `${Number(day.occupancy_percent).toFixed(1)}%`;
+      renderOcc();
+      renderRestaurantTables();
+      renderOutletTables();
+      if (canViewUsers()) renderUsersAdmin();
+    }
 
-        const notes = document.createElement("div");
-        notes.className = "notes";
-        notes.textContent = day.notes || "";
+    function renderOcc(){
+      const row = $("occRow");
+      row.innerHTML = "";
 
-        card.appendChild(title);
-        card.appendChild(occ);
-        card.appendChild(notes);
+      for (const d of days){
+        const r = forecastByDate.get(d) || {};
+        const pct = (r.occupancy_percent ?? r.occupancy ?? null);
+        const notesShort = (r.notes ?? r.note ?? r.notes_short ?? "").trim?.() ?? "";
+        const who = r.updated_by ? (profileById.get(String(r.updated_by))?.name || profileById.get(String(r.updated_by))?.email || "Unknown") : "—";
+        const when = r.updated_at ? fmtTsToronto(r.updated_at) : "";
 
-        if (canEditOcc()){
-          card.classList.add("clickable");
-          card.title = "Click to edit (prefilled)";
-          card.addEventListener("click", () => openOccModal(day.day));
-        } else {
-          card.title = "View only";
-        }
-        occCards.appendChild(card);
+        const tile = document.createElement("div");
+        tile.className = "occ-tile";
+        tile.title = canEditForecast() ? "Tap to edit" : "View only";
+        tile.addEventListener("click", ()=>{
+          if (!canEditForecast()) return;
+          openOccModal(d);
+        });
+
+        tile.innerHTML = `
+          <div class="occ-top">
+            <div>
+              <div class="occ-day">${esc(fmtDay(d))}</div>
+              <div class="occ-date">${esc(d)}</div>
+            </div>
+          </div>
+          <div>
+            <div class="occ-val">${pct==null ? "—" : esc(Number(pct).toFixed(1) + "%")}</div>
+            <div class="occ-meta">
+              ${notesShort ? ("Note: " + esc(notesShort) + "<br>") : ""}
+              Last update: ${esc(who)}${when ? (" • " + esc(when)) : ""}
+            </div>
+          </div>
+        `;
+        row.appendChild(tile);
       }
     }
 
-    // === RESTAURANT LOGIC ===
-    function pickOneIsOn(day, serviceName){
-      const item = serviceByName.get(serviceName);
-      if (!item) return false;
-      const group = item.group_name;
-      if (!["breakfast","lunch","dinner"].includes(group)) return false;
+    function renderRestaurantTables(){
+      // headers
+      const head = $("restHeadRow");
+      head.innerHTML = `<th class="col-service">Service</th>` + days.map(d => `
+        <th>
+          ${esc(fmtDay(d))}
+          <div style="font-size:10px;color:#64748b;margin-top:2px;">${esc(d)}</div>
+        </th>
+      `).join("");
 
-      const meta = dssMeta.get(keyDss(day, group));
-      return meta?.selected != null && String(meta.selected) === String(item.id);
-    }
+      const body = $("restBody");
+      body.innerHTML = "";
 
-    function pickOneStamp(day, serviceName, isOn){
-      const item = serviceByName.get(serviceName);
-      if (!item) return "";
-      const group = item.group_name;
-      const meta = dssMeta.get(keyDss(day, group));
-      if (!meta?.by || !meta?.at) return "";
-
-      const isLastClicked = meta.last_action != null && String(meta.last_action) === String(item.id);
-      if (isOn || (!meta.selected && isLastClicked)){
-        return stampHtml([meta.by, fmtToronto(meta.at)]);
-      }
-      return "";
-    }
-
-    function massimoIsOn(day, serviceName){
-      const item = serviceByName.get(serviceName);
-      if (!item) return false;
-      const meta = dmsMeta.get(keyDms(day, item.id));
-      return !!meta?.on;
-    }
-
-    function massimoStamp(day, serviceName){
-      const item = serviceByName.get(serviceName);
-      if (!item) return "";
-      const meta = dmsMeta.get(keyDms(day, item.id));
-      if (!meta?.by || !meta?.at) return "";
-      return stampHtml([meta.by, fmtToronto(meta.at)]);
-    }
-
-    async function setPickOne(date, serviceName){
-      const item = serviceByName.get(serviceName);
-      if (!item) throw new Error("Service item not found: " + serviceName);
-      const group = item.group_name;
-      const { error } = await sb
-        .from("daily_service_selection")
-        .upsert({
-          date,
-          group_name: group,
-          selected_service_item_id: item.id,
-          last_action_service_item_id: item.id
-        }, { onConflict: "date,group_name" });
-      if (error) throw error;
-    }
-
-    async function clearPickOne(date, serviceName){
-      const item = serviceByName.get(serviceName);
-      if (!item) throw new Error("Service item not found: " + serviceName);
-      const group = item.group_name;
-      const { error } = await sb
-        .from("daily_service_selection")
-        .upsert({
-          date,
-          group_name: group,
-          selected_service_item_id: null,
-          last_action_service_item_id: item.id
-        }, { onConflict: "date,group_name" });
-      if (error) throw error;
-    }
-
-    async function toggleMassimo(date, serviceName, isOn){
-      const item = serviceByName.get(serviceName);
-      if (!item) throw new Error("Service item not found: " + serviceName);
-      const { error } = await sb
-        .from("daily_massimo_status")
-        .upsert({ date, service_item_id: item.id, is_active: !isOn }, { onConflict: "date,service_item_id" });
-      if (error) throw error;
-    }
-
-    function renderRestaurantGrid(){
-      bodyRows.innerHTML = "";
-      const colspan = 1 + (dashboardDays?.length || DAYS);
-
-      for (const group of GROUPS){
-        const trg = document.createElement("tr");
-        trg.className = "groupRow";
-        const tdg = document.createElement("td");
-        tdg.colSpan = colspan;
-        tdg.textContent = group.title;
-        trg.appendChild(tdg);
-        bodyRows.appendChild(trg);
-
-        for (const serviceName of group.items){
-          const tr = document.createElement("tr");
-
-          const tdLabel = document.createElement("td");
-          tdLabel.innerHTML = `<div class="serviceName"><span>${escapeHtml(serviceName)}</span><span class="badge">${escapeHtml(group.title)}</span></div>`;
-          tr.appendChild(tdLabel);
-
-          for (const dayRow of dashboardDays){
-            let isOn = false;
-            let stamp = "";
-
-            if (serviceName.startsWith("MASSIMO ")){
-              isOn = massimoIsOn(dayRow.day, serviceName);
-              stamp = massimoStamp(dayRow.day, serviceName);
-            } else {
-              isOn = pickOneIsOn(dayRow.day, serviceName);
-              stamp = pickOneStamp(dayRow.day, serviceName, isOn);
-            }
-
-            const td = document.createElement("td");
-            td.className = "statusCell " + (canEditRestaurantAndLobby() ? "clickable" : "");
-            td.title = isOn ? "Active" : "Inactive";
-
-            const fill = document.createElement("div");
-            fill.className = "statusFill " + (isOn ? "isOn" : "isOff");
-            fill.innerHTML = stamp;
-            td.appendChild(fill);
-
-            if (canEditRestaurantAndLobby()){
-              td.addEventListener("click", async () => {
-                try{
-                  setMsg(appMsg, "");
-                  if (serviceName.startsWith("MASSIMO ")){
-                    await toggleMassimo(dayRow.day, serviceName, isOn);
-                  } else {
-                    await setPickOne(dayRow.day, serviceName);
-                  }
-                  await fetchRestaurantMeta();
-                  renderRestaurantGrid();
-                  setMsg(appMsg, "Saved.", "ok");
-                } catch(e){
-                  setMsg(appMsg, e?.message || String(e), "err");
-                }
-              });
-
-              if (!serviceName.startsWith("MASSIMO ")){
-                td.addEventListener("dblclick", async () => {
-                  try{
-                    if (!isOn) return;
-                    setMsg(appMsg, "");
-                    await clearPickOne(dayRow.day, serviceName);
-                    await fetchRestaurantMeta();
-                    renderRestaurantGrid();
-                    setMsg(appMsg, "Cleared.", "ok");
-                  } catch(e){
-                    setMsg(appMsg, e?.message || String(e), "err");
-                  }
-                });
-              }
-            }
-
-            tr.appendChild(td);
-          }
-
-          bodyRows.appendChild(tr);
-        }
-      }
-    }
-
-    // === OUTLETS/Lobby single-cell ===
-    function outletCellStamp(row){
-      const who = row?.updated_by_name || "";
-      const when = fmtToronto(row?.updated_at);
-      const openLine = row?.is_open
-        ? `OPEN ${fmtTime12(row?.open_time)}–${fmtTime12(row?.close_time)}`
-        : "CLOSED";
-      return stampHtml([openLine, who, when]);
-    }
-
-    function renderOutletTable(headerEl, bodyEl, names, canEditFn){
-      bodyEl.innerHTML = "";
-      buildHeaderRow(headerEl);
-
-      for (const name of names){
+      // Section helper
+      const addSection = (title) => {
         const tr = document.createElement("tr");
-        const tdLabel = document.createElement("td");
-        tdLabel.innerHTML = `<div class="serviceName"><span>${escapeHtml(name)}</span><span class="badge">${canEditFn() ? "Editable" : "View only"}</span></div>`;
-        tr.appendChild(tdLabel);
+        tr.className = "section-row";
+        tr.innerHTML = `<td class="col-service" colspan="${1 + days.length}">${esc(title)}</td>`;
+        body.appendChild(tr);
+      };
 
-        for (const dayRow of dashboardDays){
-          const row = outletMap.get(keyOutlet(dayRow.day, name));
-          const isOn = !!row?.is_open;
-
-          const td = document.createElement("td");
-          td.className = "statusCell " + (canEditFn() ? "clickable" : "");
-          td.title = isOn ? "Open" : "Closed";
-
-          const fill = document.createElement("div");
-          fill.className = "statusFill " + (isOn ? "isOn" : "isOff");
-          fill.innerHTML = outletCellStamp(row);
-          td.appendChild(fill);
-
-          if (canEditFn()){
-            td.addEventListener("click", () => openOutletModal(dayRow.day, name));
-          }
-          tr.appendChild(td);
-        }
-
-        bodyEl.appendChild(tr);
-      }
-    }
-
-    function openOutletModal(date, outletName){
-      outletEdit = { date, outlet_name: outletName };
-      const row = outletMap.get(keyOutlet(date, outletName));
-      const isOpen = !!row?.is_open;
-
-      outletModalTitle.textContent = `Edit – ${outletName} (${date})`;
-      setMsg(outletModalMsg, "");
-
-      outletIsOpen.value = String(isOpen);
-      outletOpenTime.value = isOpen ? (row?.open_time || "") : "";
-      outletCloseTime.value = isOpen ? (row?.close_time || "") : "";
-
-      outletModalBack.style.display = "flex";
-      document.body.style.overflow = "hidden";
-      syncOutletTimeEnabled();
-    }
-
-    function closeOutletModal(){
-      outletModalBack.style.display = "none";
-      outletEdit = { date:null, outlet_name:null };
-      document.body.style.overflow = "";
-    }
-
-    function syncOutletTimeEnabled(){
-      const isOpen = (outletIsOpen.value === "true");
-      outletOpenTime.disabled = !isOpen;
-      outletCloseTime.disabled = !isOpen;
-    }
-
-    async function saveOutletModal(){
-      try{
-        const date = outletEdit.date;
-        const outlet_name = outletEdit.outlet_name;
-        if (!date || !outlet_name) return;
-
-        const isLobby = (outlet_name === "LOBBY BAR");
-        if (isLobby && !canEditRestaurantAndLobby()){
-          setMsg(outletModalMsg, "Only F&B (or admin) can edit Lobby Bar.", "err");
-          return;
-        }
-        if (!isLobby && !canEditOutlets()){
-          setMsg(outletModalMsg, "Only Outlets (or admin) can edit outlets.", "err");
-          return;
-        }
-
-        const is_open = (outletIsOpen.value === "true");
-        let open_time = null;
-        let close_time = null;
-
-        if (is_open){
-          open_time = String(outletOpenTime.value || "").trim();
-          close_time = String(outletCloseTime.value || "").trim();
-          if (!open_time || !close_time){
-            setMsg(outletModalMsg, "If Open, both times are required.", "err");
-            return;
-          }
-        }
-
-        setMsg(outletModalMsg, "Saving…");
-
-        const { error } = await sb
-          .from("daily_outlet_hours")
-          .upsert({ date, outlet_name, is_open, open_time, close_time }, { onConflict: "date,outlet_name" });
-
-        if (error) throw error;
-
-        await fetchOutletHours();
-        renderOutletTable(lobbyHead, lobbyBody, LOBBY_BAR, () => canEditRestaurantAndLobby());
-        renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
-
-        setMsg(outletModalMsg, "Saved.", "ok");
-        setTimeout(closeOutletModal, 150);
-      } catch(e){
-        setMsg(outletModalMsg, e?.message || String(e), "err");
-      }
-    }
-
-    // === WEEK EDITOR ===
-    function openWeekEditor(mode){
-      // mode: "lobby" or "outlets"
-      weekEditMode = mode;
-
-      if (mode === "lobby"){
-        if (!canEditRestaurantAndLobby()){
-          setMsg(appMsg, "Only F&B (or admin) can edit Lobby Bar.", "err");
-          return;
-        }
-        weekModalTitle.textContent = "Edit week – Lobby Bar";
-      } else {
-        if (!canEditOutlets()){
-          setMsg(appMsg, "Only Outlets (or admin) can edit outlets.", "err");
-          return;
-        }
-        weekModalTitle.textContent = "Edit week – Outlets";
-      }
-
-      setMsg(weekModalMsg, "");
-      renderWeekEditorTable();
-      weekModalBack.style.display = "flex";
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeWeekEditor(){
-      weekModalBack.style.display = "none";
-      weekEditMode = null;
-      weekBody.innerHTML = "";
-      document.body.style.overflow = "";
-    }
-
-    function renderWeekEditorTable(){
-      // head
-      while (weekHead.children.length > 1) weekHead.removeChild(weekHead.lastChild);
-      for (const d of dashboardDays){
-        const th = document.createElement("th");
-        th.textContent = fmtDay(d.day);
-        weekHead.appendChild(th);
-      }
-
-      weekBody.innerHTML = "";
-
-      const names = (weekEditMode === "lobby") ? LOBBY_BAR : OUTLETS;
-
-      for (const outlet_name of names){
+      const addItemRowSinglePick = (groupName, item) => {
         const tr = document.createElement("tr");
+        const nameTd = document.createElement("td");
+        nameTd.className = "col-service";
+        nameTd.innerHTML = `<strong>${esc(item.name)}</strong>`;
+        tr.appendChild(nameTd);
 
-        const tdName = document.createElement("td");
-        tdName.textContent = outlet_name;
-        tr.appendChild(tdName);
-
-        for (const d of dashboardDays){
-          const day = d.day;
-          const existing = outletMap.get(keyOutlet(day, outlet_name));
-          const origNorm = normOutletRow(existing);
-
+        for (const d of days){
           const td = document.createElement("td");
+          td.className = "cell";
+          const key = `${d}|${groupName}`;
+          const sel = selByKey.get(key);
+          const selectedId = sel?.service_item_id ? String(sel.service_item_id) : null;
+          const isGreen = selectedId && selectedId === String(item.id);
+
+          const who = sel?.updated_by ? (profileById.get(String(sel.updated_by))?.name || profileById.get(String(sel.updated_by))?.email || "Unknown") : "";
+          const when = sel?.updated_at ? fmtTsToronto(sel.updated_at) : "";
+          const meta = (who || when) ? `${who}${when ? (" • " + when) : ""}` : "";
 
           const box = document.createElement("div");
-          box.className = "cellBox";
-
-          const row1 = document.createElement("div");
-          row1.className = "cellRow";
-
-          const sel = document.createElement("select");
-          sel.className = "selSmall";
-          // allow "no change" option
-          // BUT: we prefill with current value so user can edit fast
-          const optOpen = document.createElement("option");
-          optOpen.value = "open"; optOpen.textContent = "Open";
-          const optClosed = document.createElement("option");
-          optClosed.value = "closed"; optClosed.textContent = "Closed";
-
-          sel.appendChild(optOpen);
-          sel.appendChild(optClosed);
-
-          const tOpen = document.createElement("input");
-          tOpen.type = "time";
-          tOpen.className = "timeSmall";
-
-          const tClose = document.createElement("input");
-          tClose.type = "time";
-          tClose.className = "timeSmall";
-
-          // prefill
-          const isOpen = !!existing?.is_open;
-          sel.value = isOpen ? "open" : "closed";
-          tOpen.value = isOpen ? (existing?.open_time || "") : "";
-          tClose.value = isOpen ? (existing?.close_time || "") : "";
-
-          // store original + identity on elements
-          sel.dataset.day = day;
-          sel.dataset.outlet = outlet_name;
-          sel.dataset.orig = origNorm;
-
-          tOpen.dataset.day = day;
-          tOpen.dataset.outlet = outlet_name;
-
-          tClose.dataset.day = day;
-          tClose.dataset.outlet = outlet_name;
-
-          function sync(){
-            const open = (sel.value === "open");
-            tOpen.disabled = !open;
-            tClose.disabled = !open;
+          box.className = "status-box " + (isGreen ? "green" : "red") + (canEditRestaurants() ? "" : " disabled");
+          box.title = meta || (canEditRestaurants() ? "Click to select. Double-click green to clear." : "View only");
+          if (meta){
+            const mini = document.createElement("div");
+            mini.className = "mini";
+            mini.textContent = meta;
+            box.appendChild(mini);
           }
-          sel.addEventListener("change", sync);
-          sync();
 
-          row1.appendChild(sel);
-          row1.appendChild(tOpen);
-          row1.appendChild(tClose);
+          // click: select this item (UUID only)
+          box.addEventListener("click", async (ev)=>{
+            ev.preventDefault();
+            if (!canEditRestaurants()) return;
+            await setSelection(groupName, d, String(item.id));
+          });
 
-          const meta = document.createElement("div");
-          meta.className = "mini";
-          const who = existing?.updated_by_name || "";
-          const when = fmtToronto(existing?.updated_at);
-          meta.innerHTML = existing
-            ? `<div><strong>Last:</strong> ${escapeHtml(who || "—")}</div><div>${escapeHtml(when || "")}</div>`
-            : `<div><strong>Last:</strong> —</div><div></div>`;
-
-          box.appendChild(row1);
-          box.appendChild(meta);
+          // double click: if this is selected (green), clear (closed)
+          box.addEventListener("dblclick", async (ev)=>{
+            ev.preventDefault();
+            if (!canEditRestaurants()) return;
+            if (isGreen){
+              await setSelection(groupName, d, null);
+            }
+          });
 
           td.appendChild(box);
           tr.appendChild(td);
         }
 
-        weekBody.appendChild(tr);
-      }
-    }
+        body.appendChild(tr);
+      };
 
-    async function saveWeekEditor(){
-      try{
-        setMsg(weekModalMsg, "Saving…");
+      const addItemRowMassimoToggle = (item) => {
+        const tr = document.createElement("tr");
+        const nameTd = document.createElement("td");
+        nameTd.className = "col-service";
+        nameTd.innerHTML = `<strong>${esc(item.name)}</strong>`;
+        tr.appendChild(nameTd);
 
-        const names = (weekEditMode === "lobby") ? LOBBY_BAR : OUTLETS;
+        for (const d of days){
+          const td = document.createElement("td");
+          td.className = "cell";
+          const k = `${d}|${String(item.id)}`;
+          const r = massimoByKey.get(k);
+          const isOn = !!r?.is_active;
 
-        // collect all controls
-        const selects = Array.from(weekBody.querySelectorAll("select.selSmall"));
-        const opens = Array.from(weekBody.querySelectorAll("input[type='time']")).filter(x => x.previousSibling && x.previousSibling.tagName !== "INPUT"); // not used, just keep simple
+          const who = r?.updated_by ? (profileById.get(String(r.updated_by))?.name || profileById.get(String(r.updated_by))?.email || "Unknown") : (r?.updated_by_name || "");
+          const when = r?.updated_at ? fmtTsToronto(r.updated_at) : "";
+          const meta = (who || when) ? `${who}${when ? (" • " + when) : ""}` : "";
 
-        let changedCount = 0;
+          const box = document.createElement("div");
+          box.className = "status-box " + (isOn ? "green" : "red") + (canEditRestaurants() ? "" : " disabled");
+          box.title = meta || (canEditRestaurants() ? "Click to toggle" : "View only");
 
-        for (const sel of selects){
-          const day = sel.dataset.day;
-          const outlet_name = sel.dataset.outlet;
-          if (!day || !outlet_name) continue;
-          if (!names.includes(outlet_name)) continue;
+          const mini = document.createElement("div");
+          mini.className = "mini";
+          mini.textContent = meta;
+          box.appendChild(mini);
 
-          // find corresponding time inputs
-          const cell = sel.closest("td");
-          const inputs = Array.from(cell.querySelectorAll("input[type='time']"));
-          const tOpen = inputs[0];
-          const tClose = inputs[1];
+          box.addEventListener("click", async (ev)=>{
+            ev.preventDefault();
+            if (!canEditRestaurants()) return;
+            await setMassimo(d, String(item.id), !isOn);
+          });
 
-          const is_open = (sel.value === "open");
-          let open_time = null;
-          let close_time = null;
-
-          if (is_open){
-            open_time = String(tOpen.value || "").trim();
-            close_time = String(tClose.value || "").trim();
-            if (!open_time || !close_time){
-              setMsg(weekModalMsg, `Missing hours: ${outlet_name} on ${day}. If Open, you must set both times.`, "err");
-              return;
-            }
-          }
-
-          const newNorm = JSON.stringify({is_open, open_time, close_time});
-          const origNorm = sel.dataset.orig || JSON.stringify({is_open:false, open_time:null, close_time:null});
-
-          if (newNorm === origNorm){
-            continue; // no change
-          }
-
-          // permission check by mode
-          if (weekEditMode === "lobby"){
-            if (!canEditRestaurantAndLobby()){
-              setMsg(weekModalMsg, "Only F&B (or admin) can edit Lobby Bar.", "err");
-              return;
-            }
-          } else {
-            if (!canEditOutlets()){
-              setMsg(weekModalMsg, "Only Outlets (or admin) can edit outlets.", "err");
-              return;
-            }
-          }
-
-          const { error } = await sb
-            .from("daily_outlet_hours")
-            .upsert({ date: day, outlet_name, is_open, open_time, close_time }, { onConflict: "date,outlet_name" });
-
-          if (error) throw error;
-
-          changedCount++;
+          td.appendChild(box);
+          tr.appendChild(td);
         }
 
-        await fetchOutletHours();
-        renderOutletTable(lobbyHead, lobbyBody, LOBBY_BAR, () => canEditRestaurantAndLobby());
-        renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
+        body.appendChild(tr);
+      };
 
-        if (changedCount === 0){
-          setMsg(weekModalMsg, "No changes to save.", "ok");
-        } else {
-          setMsg(weekModalMsg, `Saved ${changedCount} change(s).`, "ok");
-        }
+      // Build groups
+      addSection("BREAKFAST");
+      for (const item of itemsByGroup.breakfast) addItemRowSinglePick("breakfast", item);
 
-        setTimeout(closeWeekEditor, 200);
-      } catch(e){
-        setMsg(weekModalMsg, e?.message || String(e), "err");
-      }
+      addSection("LUNCH");
+      for (const item of itemsByGroup.lunch) addItemRowSinglePick("lunch", item);
+
+      addSection("DINNER");
+      for (const item of itemsByGroup.dinner) addItemRowSinglePick("dinner", item);
+
+      addSection("MASSIMO");
+      for (const item of itemsByGroup.massimo) addItemRowMassimoToggle(item);
     }
 
-    // === SNAPSHOT / PDF PRINT ===
-    function getSelectedServiceName(day, groupName){
-      const meta = dssMeta.get(keyDss(day, groupName));
-      if (!meta?.selected) return null;
-      // find by id
-      const id = String(meta.selected);
-      for (const [name, item] of serviceByName.entries()){
-        if (String(item.id) === id) return name;
-      }
-      return null;
-    }
+    function renderOutletTables(){
+      // headers
+      const head = $("outHeadRow");
+      head.innerHTML = `<th class="col-service">Outlet</th>` + days.map(d => `
+        <th>
+          ${esc(fmtDay(d))}
+          <div style="font-size:10px;color:#64748b;margin-top:2px;">${esc(d)}</div>
+        </th>
+      `).join("");
 
-    function getMassimoActiveNames(day){
-      const names = ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"];
-      const active = [];
-      for (const n of names){
-        if (massimoIsOn(day, n)) active.push(n.replace("MASSIMO ",""));
-      }
-      return active;
-    }
+      const body = $("outBody");
+      body.innerHTML = "";
 
-    function outletSummary(day, outlet_name){
-      const row = outletMap.get(keyOutlet(day, outlet_name));
-      if (!row) return "—";
-      if (!row.is_open) return "Closed";
-      const ot = fmtTime12(row.open_time);
-      const ct = fmtTime12(row.close_time);
-      if (!ot || !ct) return "Open (hours missing)";
-      return `Open ${ot}–${ct}`;
-    }
+      const addSection = (title) => {
+        const tr = document.createElement("tr");
+        tr.className = "section-row";
+        tr.innerHTML = `<td class="col-service" colspan="${1 + days.length}">${esc(title)}</td>`;
+        body.appendChild(tr);
+      };
 
-    function buildSnapshotHtml(){
-      const startDate = startDateEl.value;
-      const title = `Sheraton Niagara Falls – 7-Day Snapshot (${startDate})`;
+      const outletRow = (label, outletName, canEditFn) => {
+        const tr = document.createElement("tr");
+        const td0 = document.createElement("td");
+        td0.className = "col-service";
+        td0.innerHTML = `<strong>${esc(label)}</strong>`;
+        tr.appendChild(td0);
 
-      const dayCols = dashboardDays.map(d => ({
-        day: d.day,
-        label: fmtDay(d.day)
-      }));
+        for (const d of days){
+          const td = document.createElement("td");
+          td.className = "cell";
 
-      function rowHtml(label, cells){
-        return `
-          <tr>
-            <td class="label">${escapeHtml(label)}</td>
-            ${cells.map(c => `<td>${c}</td>`).join("")}
-          </tr>
-        `;
-      }
+          const r = outletByKey.get(`${d}|${outletName}`) || {};
+          const isOpen = !!r.is_open;
+          const ot = fmtTime12(r.open_time);
+          const ct = fmtTime12(r.close_time);
+          const mainText = isOpen ? (ot && ct ? `${ot}–${ct}` : "Open") : "Closed";
 
-      // Occupancy rows
-      const occCells = dashboardDays.map(d => {
-        if (d.occupancy_percent == null) return "—";
-        return `<b>${Number(d.occupancy_percent).toFixed(1)}%</b>`;
-      });
+          const who = r.updated_by ? (profileById.get(String(r.updated_by))?.name || profileById.get(String(r.updated_by))?.email || "Unknown") : "";
+          const when = r.updated_at ? fmtTsToronto(r.updated_at) : "";
+          const meta = (who || when) ? `${who}${when ? (" • " + when) : ""}` : "";
 
-      const noteCells = dashboardDays.map(d => {
-        const n = (d.notes || "").trim();
-        return n ? `<div class="notes">${escapeHtml(n)}</div>` : "—";
-      });
+          const box = document.createElement("div");
+          box.className = "status-box outlet " + (isOpen ? "green" : "red") + (canEditFn() ? "" : " disabled");
+          box.title = meta || (canEditFn() ? "Click to edit" : "View only");
 
-      // Restaurants: only show what is selected; otherwise Closed
-      const breakfastCells = dashboardDays.map(d => escapeHtml(getSelectedServiceName(d.day, "breakfast") || "Breakfast closed"));
-      const lunchCells = dashboardDays.map(d => escapeHtml(getSelectedServiceName(d.day, "lunch") || "Lunch closed"));
-      const dinnerCells = dashboardDays.map(d => escapeHtml(getSelectedServiceName(d.day, "dinner") || "Dinner closed"));
-
-      // Massimo can have multiple green
-      const massimoCells = dashboardDays.map(d => {
-        const a = getMassimoActiveNames(d.day);
-        return a.length ? escapeHtml(a.join(", ")) : "Massimo closed";
-      });
-
-      // Lobby/Outlets
-      const lobbyCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "LOBBY BAR")));
-      const starCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "STARBUCKS")));
-      const sjCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "SWEET JESUS")));
-      const freshCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "FRESHII")));
-
-      // Build HTML
-      const html = `
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${escapeHtml(title)}</title>
-  <style>
-    body{font-family:Arial, sans-serif; margin:22px; color:#111827;}
-    h1{font-size:18px; margin:0 0 10px;}
-    .sub{color:#475569; font-size:12px; margin-bottom:14px;}
-    table{border-collapse:collapse; width:100%; table-layout:fixed;}
-    th,td{border:1px solid #cbd5e1; padding:8px; vertical-align:top; font-size:12px;}
-    th{background:#f1f5f9; color:#334155;}
-    td.label{font-weight:800; width:170px; background:#fbfdff;}
-    .notes{white-space:pre-wrap; line-height:1.25;}
-    @media print {
-      body{margin:10mm;}
-      h1{page-break-after:avoid;}
-      table{page-break-inside:avoid;}
-    }
-  </style>
-</head>
-<body>
-  <h1>${escapeHtml(title)}</h1>
-  <div class="sub">Generated by Sheraton Dashboard • Times shown in America/Toronto where applicable</div>
-
-  <table>
-    <thead>
-      <tr>
-        <th style="text-align:left;">Section</th>
-        ${dayCols.map(d => `<th>${escapeHtml(d.label)}<div style="font-size:10px;color:#64748b;margin-top:2px;">${escapeHtml(d.day)}</div></th>`).join("")}
-      </tr>
-    </thead>
-    <tbody>
-      ${rowHtml("Occupancy %", occCells)}
-      ${rowHtml("Notes", noteCells)}
-      ${rowHtml("Breakfast", breakfastCells)}
-      ${rowHtml("Lunch", lunchCells)}
-      ${rowHtml("Dinner", dinnerCells)}
-      ${rowHtml("Massimo", massimoCells)}
-      ${rowHtml("Lobby Bar", lobbyCells)}
-      ${rowHtml("Starbucks", starCells)}
-      ${rowHtml("Sweet Jesus", sjCells)}
-      ${rowHtml("Freshii", freshCells)}
-    </tbody>
-  </table>
-</body>
-</html>
-      `.trim();
-
-      return html;
-    }
-
-    function printSnapshot(){
-      try{
-        const html = buildSnapshotHtml();
-        const w = window.open("", "_blank", "noopener,noreferrer");
-        if (!w){
-          setMsg(appMsg, "Popup blocked. Allow popups for this site, then try again.", "err");
-          return;
-        }
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
-        w.focus();
-        // give it a moment to render
-        setTimeout(() => {
-          w.print();
-        }, 350);
-      } catch(e){
-        setMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
-    // === USERS (admin) ===
-    function buildUsersDropdown(){
-      userSelect.innerHTML = "";
-      const opt0 = document.createElement("option");
-      opt0.value = "";
-      opt0.textContent = "Select a user…";
-      userSelect.appendChild(opt0);
-
-      for (const u of adminUsersCache){
-        const opt = document.createElement("option");
-        opt.value = u.email || "";
-        const labelName = (u.full_name || "(no name)");
-        opt.textContent = `${labelName} — ${u.email || ""}`;
-        userSelect.appendChild(opt);
-      }
-    }
-
-    function fillUserEditorByEmail(email){
-      const u = adminUsersCache.find(x => (x.email || "") === email);
-      if (!u){
-        editUserName.value = "";
-        editUserEmail.value = "";
-        editUserRole.value = "viewer";
-        editUserDept.value = "Guest Service";
-        editUserActive.value = "true";
-        return;
-      }
-      editUserName.value = u.full_name || "";
-      editUserEmail.value = u.email || "";
-      editUserRole.value = (u.role || "viewer");
-      editUserDept.value = (u.department || "Guest Service");
-      editUserActive.value = String(!!u.is_active);
-    }
-
-    async function loadUsers(){
-      if (!isAdmin()){
-        setMsg(usersMsg, "Not authorized (admin only).", "err");
-        return;
-      }
-      try{
-        setMsg(usersMsg, "Loading users…");
-        const { data, error } = await sb.rpc("admin_list_profiles");
-        if (error) throw error;
-
-        adminUsersCache = (data || []).slice().sort((a,b) => (a.full_name || "").localeCompare((b.full_name || "")));
-
-        buildUsersDropdown();
-        fillUserEditorByEmail(userSelect.value);
-
-        usersTable.innerHTML = "";
-        for (const r of adminUsersCache){
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="text-align:left;">${escapeHtml(r.full_name || "")}</td>
-            <td style="text-align:left;">${escapeHtml(r.email || "")}</td>
-            <td>${escapeHtml(r.role || "")}</td>
-            <td>${escapeHtml(r.department || "")}</td>
-            <td>${escapeHtml(String(r.is_active))}</td>
+          box.innerHTML = `
+            <div class="otxt">${esc(isOpen ? "Open" : "Closed")}</div>
+            <div class="otxt" style="font-size:11px;opacity:.95;">${esc(mainText)}</div>
+            <div class="mini">${esc(meta || "")}</div>
           `;
-          usersTable.appendChild(tr);
+
+          box.addEventListener("click", ()=>{
+            if (!canEditFn()) return;
+            openOutletModal(d, outletName, label);
+          });
+
+          td.appendChild(box);
+          tr.appendChild(td);
         }
-        setMsg(usersMsg, "");
-      } catch(e){
-        setMsg(usersMsg, e?.message || String(e), "err");
+
+        body.appendChild(tr);
+      };
+
+      addSection("LOBBY BAR");
+      outletRow("Lobby Bar", "LOBBY BAR", canEditLobbyBar);
+
+      addSection("OUTLETS");
+      outletRow("Starbucks", "STARBUCKS", canEditOutlets);
+      outletRow("Sweet Jesus", "SWEET JESUS", canEditOutlets);
+      outletRow("Freshii", "FRESHII", canEditOutlets);
+
+      // Outlets week edit button
+      $("btnEditOutletWeek").style.display = canEditOutlets() ? "inline-flex" : "none";
+    }
+
+    /********************
+     * USERS ADMIN
+     ********************/
+    function renderUsersAdmin(){
+      const sel = $("selUser");
+      const tb = $("usersTableBody");
+      sel.innerHTML = "";
+      tb.innerHTML = "";
+
+      // dropdown
+      const sorted = [...profiles].sort((a,b)=> String(a.email||"").localeCompare(String(b.email||"")));
+      for (const p of sorted){
+        const opt = document.createElement("option");
+        const label = `${p.name || p.email || "(no name)"} — ${p.email || ""}`;
+        opt.value = String(p.user_id);
+        opt.textContent = label;
+        sel.appendChild(opt);
+      }
+
+      // table list
+      for (const p of sorted){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="col-service">${esc(p.name || "")}</td>
+          <td>${esc(p.email || "")}</td>
+          <td>${esc(p.role || "")}</td>
+          <td>${esc(p.department || "")}</td>
+          <td>${esc(String(!!p.is_active))}</td>
+        `;
+        tb.appendChild(tr);
+      }
+
+      // select first + fill
+      if (sorted.length){
+        sel.value = String(sorted[0].user_id);
+        fillUserEditor(sorted[0]);
       }
     }
 
-    async function saveSelectedUser(){
-      if (!isAdmin()){
-        setMsg(usersMsg, "Not authorized (admin only).", "err");
+    function fillUserEditor(p){
+      $("uEmail").value = p.email || "";
+      $("uName").value = p.name || "";
+      $("uRole").value = p.role || "viewer";
+      $("uDept").value = p.department || "";
+      $("uActive").value = String(!!p.is_active);
+    }
+
+    async function saveUserChanges(){
+      const usersMsg = $("usersMsg");
+      try{
+        const uid = $("selUser").value;
+        if (!uid) throw new Error("Select a user first.");
+
+        const payload = {
+          user_id: uid,
+          name: $("uName").value.trim() || null,
+          role: $("uRole").value,
+          department: $("uDept").value || null,
+          is_active: $("uActive").value === "true"
+        };
+
+        showMsg(usersMsg, "Saving…", "info");
+        const { error } = await sb.from("profiles").upsert(payload, { onConflict: "user_id" });
+        if (error) throw error;
+
+        showMsg(usersMsg, "Saved.", "ok");
+        await loadDashboard(); // refresh lists
+      }catch(e){
+        showMsg(usersMsg, e?.message || String(e), "err");
+      }
+    }
+
+    /********************
+     * WRITE ACTIONS (UUID ONLY)
+     ********************/
+    async function setSelection(groupName, date, serviceItemIdOrNull){
+      const appMsg = $("appMsg");
+      try{
+        showMsg(appMsg, "Saving…", "info");
+
+        const payload = {
+          date,
+          group_name: groupName,
+          service_item_id: serviceItemIdOrNull, // uuid or null
+          updated_by: me.user_id,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb.from("daily_service_selection")
+          .upsert(payload, { onConflict: "date,group_name" });
+
+        if (error) throw error;
+
+        await loadDashboard();
+      }catch(e){
+        showMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
+    async function setMassimo(date, serviceItemId, isActive){
+      const appMsg = $("appMsg");
+      try{
+        showMsg(appMsg, "Saving…", "info");
+
+        const payload = {
+          date,
+          service_item_id: serviceItemId, // uuid
+          is_active: !!isActive,
+          updated_by: me.user_id,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb.from("daily_massimo_status")
+          .upsert(payload, { onConflict: "date,service_item_id" });
+
+        if (error) throw error;
+
+        await loadDashboard();
+      }catch(e){
+        showMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
+    async function saveForecast(date, pct, notes, notesLong){
+      const appMsg = $("appMsg");
+      const payloadBase = {
+        date,
+        occupancy_percent: pct,
+        notes: notes || null,
+        updated_by: me.user_id,
+        updated_at: new Date().toISOString()
+      };
+
+      // Try with notes_long first; if column doesn't exist, retry without it
+      try{
+        showMsg(appMsg, "Saving…", "info");
+
+        let payload = { ...payloadBase, notes_long: notesLong || null };
+        let res = await sb.from("daily_forecast").upsert(payload, { onConflict: "date" });
+        if (res.error){
+          // Retry without notes_long
+          payload = { ...payloadBase };
+          res = await sb.from("daily_forecast").upsert(payload, { onConflict: "date" });
+          if (res.error) throw res.error;
+        }
+
+        await loadDashboard();
+      }catch(e){
+        showMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
+    async function saveOutlet(date, outletName, isOpen, openTime, closeTime){
+      const appMsg = $("appMsg");
+      try{
+        showMsg(appMsg, "Saving…", "info");
+
+        const payload = {
+          date,
+          outlet_name: outletName,
+          is_open: !!isOpen,
+          open_time: isOpen ? (openTime || null) : null,
+          close_time: isOpen ? (closeTime || null) : null,
+          updated_by: me.user_id,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb.from("daily_outlet_hours")
+          .upsert(payload, { onConflict: "date,outlet_name" });
+
+        if (error) throw error;
+
+        await loadDashboard();
+      }catch(e){
+        showMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
+    /********************
+     * MODALS
+     ********************/
+    function openOccModal(date){
+      occEditDate = date;
+      const r = forecastByDate.get(date) || {};
+
+      const pct = (r.occupancy_percent ?? r.occupancy ?? "");
+      const notes = (r.notes ?? r.note ?? r.notes_short ?? "");
+      const notesLong = (r.notes_long ?? r.notesLong ?? r.long_notes ?? "");
+
+      $("occTitle").textContent = `Edit occupancy — ${date}`;
+      $("occPct").value = (pct === null || pct === undefined) ? "" : Number(pct);
+      $("occNote").value = notes || "";
+      $("occLong").value = notesLong || "";
+
+      $("occOverlay").classList.add("show");
+    }
+
+    function closeOccModal(){
+      $("occOverlay").classList.remove("show");
+      occEditDate = null;
+    }
+
+    function openOutletModal(date, outletName, label){
+      outEdit = { date, outlet: outletName, label };
+      const r = outletByKey.get(`${date}|${outletName}`) || {};
+      $("outTitle").textContent = `Edit ${label} — ${date}`;
+      $("outOpen").value = String(!!r.is_open);
+      $("outTimeOpen").value = r.open_time ? String(r.open_time).slice(0,5) : "";
+      $("outTimeClose").value = r.close_time ? String(r.close_time).slice(0,5) : "";
+      $("outOverlay").classList.add("show");
+    }
+
+    function closeOutletModal(){
+      $("outOverlay").classList.remove("show");
+      outEdit = { date:null, outlet:null, label:null };
+    }
+
+    function openOutletWeekModal(){
+      // only for Outlets dept/admin
+      const tbody = $("outWeekBody");
+      tbody.innerHTML = "";
+      outWeekDraft = [];
+
+      for (const d of days){
+        const mkCell = (outletName) => {
+          const r = outletByKey.get(`${d}|${outletName}`) || {};
+          const isOpen = !!r.is_open;
+          const ot = r.open_time ? String(r.open_time).slice(0,5) : "";
+          const ct = r.close_time ? String(r.close_time).slice(0,5) : "";
+          return { date:d, outlet: outletName, isOpen, ot, ct };
+        };
+
+        const star = mkCell("STARBUCKS");
+        const sj = mkCell("SWEET JESUS");
+        const fr = mkCell("FRESHII");
+
+        outWeekDraft.push(star, sj, fr);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="col-service"><strong>${esc(fmtDay(d))}</strong><div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(d)}</div></td>
+          ${weekEditorCellHtml(star)}
+          ${weekEditorCellHtml(sj)}
+          ${weekEditorCellHtml(fr)}
+        `;
+        tbody.appendChild(tr);
+      }
+
+      $("outWeekOverlay").classList.add("show");
+    }
+
+    function weekEditorCellHtml(obj){
+      const key = `${obj.date}|${obj.outlet}`;
+      const s = `
+        <td>
+          <div style="display:grid; gap:8px;">
+            <div class="field" style="padding:8px 10px; border-radius:12px;">
+              <label>Status</label>
+              <select data-week="status" data-key="${esc(key)}">
+                <option value="false" ${obj.isOpen? "":"selected"}>Closed</option>
+                <option value="true" ${obj.isOpen? "selected":""}>Open</option>
+              </select>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div class="field" style="padding:8px 10px; border-radius:12px;">
+                <label>Open</label>
+                <input data-week="open" data-key="${esc(key)}" type="time" value="${esc(obj.ot)}" />
+              </div>
+              <div class="field" style="padding:8px 10px; border-radius:12px;">
+                <label>Close</label>
+                <input data-week="close" data-key="${esc(key)}" type="time" value="${esc(obj.ct)}" />
+              </div>
+            </div>
+          </div>
+        </td>
+      `;
+      return s;
+    }
+
+    function closeOutletWeekModal(){
+      $("outWeekOverlay").classList.remove("show");
+      outWeekDraft = [];
+    }
+
+    async function saveOutletWeek(){
+      const appMsg = $("appMsg");
+      try{
+        // read values from DOM
+        const statusEls = document.querySelectorAll("[data-week='status']");
+        const openEls = document.querySelectorAll("[data-week='open']");
+        const closeEls = document.querySelectorAll("[data-week='close']");
+
+        const statusMap = new Map();
+        statusEls.forEach(el => statusMap.set(el.getAttribute("data-key"), el.value === "true"));
+        const openMap = new Map();
+        openEls.forEach(el => openMap.set(el.getAttribute("data-key"), el.value || ""));
+        const closeMap = new Map();
+        closeEls.forEach(el => closeMap.set(el.getAttribute("data-key"), el.value || ""));
+
+        // Build payloads for outlets only
+        const payloads = [];
+        for (const d of days){
+          for (const outletName of ["STARBUCKS","SWEET JESUS","FRESHII"]){
+            const key = `${d}|${outletName}`;
+            const isOpen = statusMap.get(key) || false;
+            const ot = openMap.get(key) || "";
+            const ct = closeMap.get(key) || "";
+
+            // If user set open, require times
+            if (isOpen && (!ot || !ct)){
+              throw new Error(`Hours required when Open: ${outletName} on ${d}`);
+            }
+
+            // Only save rows the user touched OR any explicit open/closed choice.
+            // We’ll always upsert so it’s consistent.
+            payloads.push({
+              date: d,
+              outlet_name: outletName,
+              is_open: isOpen,
+              open_time: isOpen ? ot : null,
+              close_time: isOpen ? ct : null,
+              updated_by: me.user_id,
+              updated_at: new Date().toISOString()
+            });
+          }
+        }
+
+        showMsg(appMsg, "Saving week…", "info");
+        const { error } = await sb.from("daily_outlet_hours").upsert(payloads, { onConflict:"date,outlet_name" });
+        if (error) throw error;
+
+        closeOutletWeekModal();
+        await loadDashboard();
+      }catch(e){
+        showMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
+    /********************
+     * PDF SNAPSHOT (simple, no libs)
+     ********************/
+    function pdfEscape(s){
+      return String(s ?? "")
+        .replace(/\\/g, "\\\\")
+        .replace(/\(/g, "\\(")
+        .replace(/\)/g, "\\)")
+        .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "?");
+    }
+
+    function buildSimplePdfFromLines(lines){
+      const pageW = 612, pageH = 792;
+      const marginL = 48, marginT = 56;
+      const lineH = 14;
+      const maxLinesPerPage = Math.floor((pageH - marginT - 48) / lineH);
+
+      const pages = [];
+      for (let i=0; i<lines.length; i+=maxLinesPerPage) pages.push(lines.slice(i, i+maxLinesPerPage));
+
+      const objs = [];
+      const add = (s)=>{ objs.push(s); return objs.length; };
+
+      add(`<< /Type /Catalog /Pages 2 0 R >>`);
+      add(`<< >>`); // pages placeholder
+      const fontId = add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
+
+      const contentIds = [];
+      const pageIds = [];
+
+      for (let p=0; p<pages.length; p++){
+        const pageLines = pages[p];
+
+        const content = [];
+        content.push("BT");
+        content.push(`/F1 11 Tf`);
+        content.push(`${marginL} ${pageH - marginT} Td`);
+        for (let i=0; i<pageLines.length; i++){
+          const t = pdfEscape(pageLines[i]);
+          if (i===0) content.push(`(${t}) Tj`);
+          else content.push(`0 -${lineH} Td (${t}) Tj`);
+        }
+        content.push("ET");
+        const cs = content.join("\n");
+        const cid = add(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
+        contentIds.push(cid);
+
+        const pid = add(
+          `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] ` +
+          `/Resources << /Font << /F1 ${fontId} 0 R >> >> ` +
+          `/Contents ${cid} 0 R >>`
+        );
+        pageIds.push(pid);
+      }
+
+      objs[1] = `<< /Type /Pages /Kids [${pageIds.map(id=>`${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
+
+      let pdf = `%PDF-1.4\n`;
+      const xref = [];
+      xref.push("0000000000 65535 f \n");
+
+      for (let i=0; i<objs.length; i++){
+        const offset = pdf.length;
+        xref.push(String(offset).padStart(10,"0") + " 00000 n \n");
+        pdf += `${i+1} 0 obj\n${objs[i]}\nendobj\n`;
+      }
+
+      const xrefOffset = pdf.length;
+      pdf += `xref\n0 ${objs.length+1}\n` + xref.join("") +
+             `trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+      return new Uint8Array(Array.from(pdf).map(ch => ch.charCodeAt(0)));
+    }
+
+    function serviceSelectedName(date, group){
+      const r = selByKey.get(`${date}|${group}`);
+      const id = r?.service_item_id ? String(r.service_item_id) : null;
+      if (!id) return null;
+      return serviceById.get(id)?.name || null;
+    }
+
+    function massimoActiveNames(date){
+      const out = [];
+      for (const item of itemsByGroup.massimo){
+        const r = massimoByKey.get(`${date}|${String(item.id)}`);
+        if (r?.is_active) out.push(item.name.replace("MASSIMO ",""));
+      }
+      return out;
+    }
+
+    function outletSummary(date, outletName){
+      const r = outletByKey.get(`${date}|${outletName}`);
+      if (!r) return "Closed";
+      if (!r.is_open) return "Closed";
+      const ot = fmtTime12(r.open_time);
+      const ct = fmtTime12(r.close_time);
+      return (ot && ct) ? `Open ${ot}–${ct}` : "Open";
+    }
+
+    function downloadPdf(){
+      const start = $("startDate").value;
+      const now = fmtTsToronto(new Date().toISOString());
+
+      const lines = [];
+      lines.push("Sheraton Niagara Falls – 7-Day Snapshot");
+      lines.push(`Start date: ${start}`);
+      lines.push(`Generated: ${now} (Toronto time)`);
+      lines.push("");
+
+      for (const d of days){
+        const bf = serviceSelectedName(d,"breakfast") || "Breakfast closed";
+        const lu = serviceSelectedName(d,"lunch") || "Lunch closed";
+        const di = serviceSelectedName(d,"dinner") || "Dinner closed";
+        const ma = massimoActiveNames(d);
+        const maLine = ma.length ? ("Massimo: " + ma.join(", ")) : "Massimo closed";
+
+        lines.push(`${fmtDay(d)}  [${d}]`);
+        lines.push(`  Breakfast: ${bf}`);
+        lines.push(`  Lunch: ${lu}`);
+        lines.push(`  Dinner: ${di}`);
+        lines.push(`  ${maLine}`);
+        lines.push(`  Lobby Bar: ${outletSummary(d,"LOBBY BAR")}`);
+        lines.push(`  Starbucks: ${outletSummary(d,"STARBUCKS")}`);
+        lines.push(`  Sweet Jesus: ${outletSummary(d,"SWEET JESUS")}`);
+        lines.push(`  Freshii: ${outletSummary(d,"FRESHII")}`);
+        lines.push("");
+      }
+
+      const bytes = buildSimplePdfFromLines(lines);
+      const blob = new Blob([bytes], { type:"application/pdf" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Sheraton_7Day_Snapshot_${start}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }
+
+    /********************
+     * EVENTS
+     ********************/
+    $("btnSignin").addEventListener("click", ()=>{
+      const email = $("inEmail").value.trim();
+      const pass = $("inPass").value;
+      signIn(email, pass);
+    });
+
+    $("btnForgot").addEventListener("click", ()=>{
+      $("resetEmail").value = $("inEmail").value.trim();
+      showAuth("reset");
+    });
+
+    $("btnBackSignin").addEventListener("click", ()=> showAuth("signin"));
+    $("btnSendReset").addEventListener("click", ()=>{
+      const email = $("resetEmail").value.trim();
+      sendReset(email);
+    });
+
+    $("btnSetCancel").addEventListener("click", ()=> showAuth("signin"));
+    $("btnSetSave").addEventListener("click", ()=>{
+      setPasswordAndProfile(
+        $("setName").value.trim(),
+        $("setPass1").value,
+        $("setPass2").value
+      );
+    });
+
+    $("btnLogout").addEventListener("click", logout);
+    $("btnDash").addEventListener("click", showDashboard);
+    $("btnUsers").addEventListener("click", ()=>{
+      if (!canViewUsers()) return;
+      showUsers();
+      renderUsersAdmin();
+    });
+
+    $("btnRefresh").addEventListener("click", loadDashboard);
+    $("btnToday").addEventListener("click", ()=>{
+      $("startDate").value = toISODateToronto();
+      loadDashboard();
+    });
+    $("btnPdf").addEventListener("click", downloadPdf);
+
+    // Occ modal
+    $("occClose").addEventListener("click", closeOccModal);
+    $("occOverlay").addEventListener("click", (e)=>{ if (e.target.id==="occOverlay") closeOccModal(); });
+    $("occSave").addEventListener("click", ()=>{
+      if (!occEditDate) return;
+      const pctRaw = $("occPct").value;
+      const pct = pctRaw === "" ? null : Number(pctRaw);
+      if (pct !== null && (isNaN(pct) || pct < 0 || pct > 100)){
+        showMsg($("appMsg"), "Occupancy must be between 0 and 100.", "err");
+        return;
+      }
+      closeOccModal();
+      saveForecast(occEditDate, pct, $("occNote").value.trim(), $("occLong").value.trim());
+    });
+
+    // Outlet day modal
+    $("outClose").addEventListener("click", closeOutletModal);
+    $("outOverlay").addEventListener("click", (e)=>{ if (e.target.id==="outOverlay") closeOutletModal(); });
+    $("outSave").addEventListener("click", ()=>{
+      if (!outEdit?.date || !outEdit?.outlet) return;
+
+      const isOpen = $("outOpen").value === "true";
+      const ot = $("outTimeOpen").value || "";
+      const ct = $("outTimeClose").value || "";
+
+      if (isOpen && (!ot || !ct)){
+        showMsg($("appMsg"), "If Open is selected, you must enter open and close times.", "err");
         return;
       }
 
-      const email = String(editUserEmail.value || "").trim();
-      const name = String(editUserName.value || "").trim();
-      const role = String(editUserRole.value || "").trim().toLowerCase();
-      const dept = String(editUserDept.value || "").trim();
-      const active = (String(editUserActive.value) === "true");
-
-      if (!email) return setMsg(usersMsg, "Select a user first.", "err");
-      if (!name) return setMsg(usersMsg, "Name is required.", "err");
-
-      try{
-        setMsg(usersMsg, "Saving…");
-        const { error } = await sb.rpc("admin_upsert_profile_by_email", {
-          p_email: email,
-          p_full_name: name,
-          p_role: role,
-          p_department: dept,
-          p_is_active: active
-        });
-        if (error) throw error;
-
-        setMsg(usersMsg, "Saved.", "ok");
-        await loadUsers();
-        userSelect.value = email;
-        fillUserEditorByEmail(email);
-      } catch(e){
-        setMsg(usersMsg, e?.message || String(e), "err");
-      }
-    }
-
-    // === MAIN REFRESH ===
-    async function refreshAll(){
-      try{
-        setMsg(appMsg, "Loading…");
-        await loadServiceItems();
-        await fetchDashboard(startDateEl.value);
-        await fetchRestaurantMeta();
-        await fetchOutletHours();
-
-        buildHeaderRow(headRow);
-        buildHeaderRow(lobbyHead);
-        buildHeaderRow(outletsHead);
-
-        renderOccCards();
-        renderRestaurantGrid();
-        renderOutletTable(lobbyHead, lobbyBody, LOBBY_BAR, () => canEditRestaurantAndLobby());
-        renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
-
-        setMsg(appMsg, "");
-      } catch(e){
-        setMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function showApp(){
-      show(appView);
-
-      rolePill.textContent = `Role: ${myRole}`;
-      deptPill.textContent = `Dept: ${myDept || "—"}`;
-      userPill.textContent = `User: ${myName ? myName : (currentUser?.email || "")}`;
-
-      tabUsers.style.display = isAdmin() ? "inline-flex" : "none";
-
-      const parts = [];
-      parts.push(canEditOcc() ? "✅ Occupancy" : "❌ Occupancy");
-      parts.push(canEditRestaurantAndLobby() ? "✅ Restaurant/Lobby" : "❌ Restaurant/Lobby");
-      parts.push(canEditOutlets() ? "✅ Outlets" : "❌ Outlets");
-      permHint.style.display = (!isAdmin() ? "block" : "none");
-      permHint.textContent = (!isAdmin() ? ("Permissions: " + parts.join(" • ")) : "");
-
-      startDateEl.value = toDateStr(new Date());
-
-      switchTab("dashboard");
-      await refreshAll();
-      if (isAdmin()) await loadUsers();
-    }
-
-    // === RECOVERY / INVITE ===
-    async function handleRecoveryFromUrl(){
-      const isPwFlow = (t) => t === "recovery" || t === "invite";
-
-      const hp = parseHashParams();
-      if (hp.error){
-        setMsg(loginMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
-        cleanUrlAll();
-        show(loginView);
-        return true;
-      }
-      if (isPwFlow(hp.type) && hp.access_token && hp.refresh_token){
-        const { error } = await sb.auth.setSession({
-          access_token: hp.access_token,
-          refresh_token: hp.refresh_token
-        });
-        cleanUrlAll();
-        if (error){
-          setMsg(recoveryMsg, "Link error: " + error.message, "err");
-          show(loginView);
-        } else {
-          await prefillSetupFields();
-          show(recoveryView);
-        }
-        return true;
-      }
-
-      const sp = new URLSearchParams(window.location.search);
-      const type = sp.get("type");
-      const code = sp.get("code");
-      const tokenHash = sp.get("token_hash") || sp.get("token");
-
-      if (isPwFlow(type) && code){
-        const { error } = await sb.auth.exchangeCodeForSession(code);
-        cleanUrlAll();
-        if (error){
-          setMsg(recoveryMsg, "Link error: " + error.message, "err");
-          show(loginView);
-        } else {
-          await prefillSetupFields();
-          show(recoveryView);
-        }
-        return true;
-      }
-
-      if (isPwFlow(type) && tokenHash){
-        const { error } = await sb.auth.verifyOtp({ type, token_hash: tokenHash });
-        cleanUrlAll();
-        if (error){
-          setMsg(recoveryMsg, "Link error: " + error.message, "err");
-          show(loginView);
-        } else {
-          await prefillSetupFields();
-          show(recoveryView);
-        }
-        return true;
-      }
-
-      return false;
-    }
-
-    async function prefillSetupFields(){
-      const { data } = await sb.auth.getSession();
-      const email = data?.session?.user?.email || "";
-      if (email) setupEmail.value = email;
-      setupName.value = setupName.value || "";
-    }
-
-    // === EVENTS ===
-    document.getElementById("btnLogin").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      if (!email || !password) return setMsg(loginMsg, "Enter email and password.", "err");
-
-      try{
-        setMsg(loginMsg, "Signing in…");
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        currentUser = data.user;
-        await loadMyProfile();
-        setMsg(loginMsg, "");
-        await showApp();
-      } catch(e){
-        setMsg(loginMsg, e?.message || String(e), "err");
-      }
+      closeOutletModal();
+      saveOutlet(outEdit.date, outEdit.outlet, isOpen, ot, ct);
     });
 
-    document.getElementById("btnForgot").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      if (!email) return setMsg(loginMsg, "Enter your email first.", "err");
+    // Outlet week modal
+    $("btnEditOutletWeek").addEventListener("click", ()=>{
+      if (!canEditOutlets()) return;
+      openOutletWeekModal();
+    });
+    $("outWeekClose").addEventListener("click", closeOutletWeekModal);
+    $("outWeekOverlay").addEventListener("click", (e)=>{ if (e.target.id==="outWeekOverlay") closeOutletWeekModal(); });
+    $("outWeekSave").addEventListener("click", saveOutletWeek);
 
-      try{
-        setMsg(loginMsg, "Sending reset email…");
-        const redirectTo = window.location.origin + window.location.pathname;
-        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
-        if (error) throw error;
-        setMsg(loginMsg, "Reset email sent. Open the link, then set your new password.", "ok");
-      } catch(e){
-        setMsg(loginMsg, e?.message || String(e), "err");
+    // Users admin
+    $("selUser").addEventListener("change", ()=>{
+      const uid = $("selUser").value;
+      const p = profiles.find(x => String(x.user_id) === String(uid));
+      if (p) fillUserEditor(p);
+    });
+    $("btnSaveUser").addEventListener("click", saveUserChanges);
+    $("btnReloadUsers").addEventListener("click", async ()=>{
+      showMsg($("usersMsg"), "Reloading…", "info");
+      await loadDashboard();
+      showMsg($("usersMsg"), "Reloaded.", "ok");
+      renderUsersAdmin();
+    });
+
+    /********************
+     * BOOT
+     ********************/
+    (async function boot(){
+      if (!sb) return;
+
+      // If link-based auth flow, handle it first
+      const usedLink = await handleAuthLinksIfAny();
+
+      await loadSession();
+      if (!session){
+        // start date default
+        $("startDate").value = toISODateToronto();
+        showAuth("signin");
+        return;
       }
-    });
 
-    document.getElementById("btnSetPass").addEventListener("click", async () => {
-      const fullName = String(setupName.value || "").trim();
-      const email = String(setupEmail.value || "").trim().toLowerCase();
-      const p1 = document.getElementById("newPass").value;
-      const p2 = document.getElementById("newPass2").value;
-
-      if (!fullName) return setMsg(recoveryMsg, "Please enter your full name.", "err");
-      if (!email) return setMsg(recoveryMsg, "Please enter your email.", "err");
-      if (!p1 || p1.length < 6) return setMsg(recoveryMsg, "Password must be at least 6 characters.", "err");
-      if (p1 !== p2) return setMsg(recoveryMsg, "Passwords do not match.", "err");
-
-      try{
-        setMsg(recoveryMsg, "Saving…");
-
-        const { data: sessData } = await sb.auth.getSession();
-        if (!sessData?.session){
-          setMsg(recoveryMsg, "No session found. Open the invite/reset link again.", "err");
-          return;
-        }
-
-        const { error: e1 } = await sb.auth.updateUser({ password: p1 });
-        if (e1) throw e1;
-
-        const { error: e2 } = await sb.rpc("self_update_profile", {
-          p_full_name: fullName,
-          p_email: email
-        });
-        if (e2) throw e2;
-
-        setMsg(recoveryMsg, "Setup saved. Please sign in with your new password.", "ok");
-        await sb.auth.signOut();
-        show(loginView);
-      } catch(e){
-        setMsg(recoveryMsg, e?.message || String(e), "err");
+      // If this was an invite/reset link, show set password prompt once
+      if (usedLink){
+        showAuth("setpass");
+        return;
       }
-    });
 
-    document.getElementById("btnCancelRecovery").addEventListener("click", async () => {
-      await sb.auth.signOut();
-      cleanUrlAll();
-      show(loginView);
-    });
-
-    document.getElementById("btnLogout").addEventListener("click", async () => {
-      await sb.auth.signOut();
-      currentUser = null;
-      myRole = "viewer";
-      myDept = "";
-      myName = "";
-      show(loginView);
-    });
-
-    tabDashboard.addEventListener("click", () => switchTab("dashboard"));
-    tabUsers.addEventListener("click", async () => { switchTab("users"); await loadUsers(); });
-
-    document.getElementById("btnRefresh").addEventListener("click", refreshAll);
-    startDateEl.addEventListener("change", refreshAll);
-    document.getElementById("btnToday").addEventListener("click", () => {
-      startDateEl.value = toDateStr(new Date());
-      refreshAll();
-    });
-
-    document.getElementById("btnPrintSnapshot").addEventListener("click", printSnapshot);
-
-    document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
-    document.getElementById("btnOccSave").addEventListener("click", saveOccModal);
-    occModalBack.addEventListener("click", (e) => { if (e.target === occModalBack) closeOccModal(); });
-
-    document.getElementById("btnOutletClose").addEventListener("click", closeOutletModal);
-    document.getElementById("btnOutletSave").addEventListener("click", saveOutletModal);
-    outletModalBack.addEventListener("click", (e) => { if (e.target === outletModalBack) closeOutletModal(); });
-    outletIsOpen.addEventListener("change", syncOutletTimeEnabled);
-
-    // Week edit buttons
-    document.getElementById("btnEditLobbyWeek").addEventListener("click", () => openWeekEditor("lobby"));
-    document.getElementById("btnEditOutletsWeek").addEventListener("click", () => openWeekEditor("outlets"));
-    document.getElementById("btnWeekClose").addEventListener("click", closeWeekEditor);
-    document.getElementById("btnWeekSave").addEventListener("click", saveWeekEditor);
-    weekModalBack.addEventListener("click", (e) => { if (e.target === weekModalBack) closeWeekEditor(); });
-
-    // Users
-    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
-    document.getElementById("btnSaveUser").addEventListener("click", saveSelectedUser);
-    userSelect.addEventListener("change", () => fillUserEditorByEmail(userSelect.value));
-
-    // === STARTUP ===
-    (async () => {
-      const didRecovery = await handleRecoveryFromUrl();
-      if (didRecovery) return;
-
-      const { data } = await sb.auth.getSession();
-      if (data?.session?.user){
-        try{
-          currentUser = data.session.user;
-          await loadMyProfile();
-          await showApp();
-        } catch(e){
-          await sb.auth.signOut();
-          setMsg(loginMsg, e?.message || String(e), "err");
-          show(loginView);
-        }
-      } else {
-        show(loginView);
-      }
+      $("startDate").value = $("startDate").value || toISODateToronto();
+      await initAfterLogin();
     })();
   </script>
 </body>
