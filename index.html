@@ -4,1975 +4,1255 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sheraton Niagara Falls – Ops Dashboard</title>
-
-  <!-- IMPORTANT:
-    This file expects a local Supabase JS UMD build at: ./supabase.js
-    (You already did this earlier when CDNs were blocked.)
-  -->
-  <script src="./supabase.js"></script>
-
   <style>
     :root{
-      --bg:#f4f8ff;
+      --bg:#f6f9ff;
       --card:#ffffff;
-      --ink:#0f172a;
-      --muted:#475569;
-      --line:#dbe6ff;
+      --text:#0b1220;
+      --muted:#5b6b86;
       --brand:#2563eb;
+      --border:#e6eefc;
 
-      --good:#0b5a35; /* dark green */
-      --bad:#7a0f1c;  /* dark red */
-      --goodSoft:#e7f6ee;
-      --badSoft:#fde8eb;
+      --green:#0f5132;     /* dark green */
+      --red:#7a1020;       /* dark red */
+      --tileText:#ffffff;
 
-      --shadow:0 10px 30px rgba(15,23,42,.08);
+      --shadow: 0 10px 30px rgba(16, 38, 96, .10);
       --radius:16px;
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--ink);
-      background: radial-gradient(1200px 500px at 20% 0%, #dbeafe 0%, rgba(219,234,254,0) 60%),
-                  radial-gradient(900px 500px at 90% 10%, #e0e7ff 0%, rgba(224,231,255,0) 55%),
-                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: linear-gradient(180deg, #eef4ff, #f7fbff 35%, var(--bg));
+      color:var(--text);
     }
-
-    .topbar{
+    header{
       position:sticky; top:0; z-index:50;
-      backdrop-filter: blur(10px);
-      background: rgba(244,248,255,.75);
-      border-bottom:1px solid var(--line);
+      background: rgba(246,249,255,.92);
+      backdrop-filter: blur(8px);
+      border-bottom:1px solid var(--border);
     }
-    .topbar-inner{
-      max-width:1200px; margin:0 auto;
-      padding:14px 16px;
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
-      flex-wrap:wrap;
+    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px}
+    .topbar{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
     }
-    .brand{
-      display:flex; align-items:flex-end; gap:10px;
-    }
-    .brand h1{
-      font-size:18px; margin:0; letter-spacing:.2px;
-    }
-    .badges{display:flex; gap:8px; flex-wrap:wrap}
-    .badge{
-      font-size:12px;
-      padding:6px 10px;
+    h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.2px}
+    .pillrow{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    .pill{
+      border:1px solid var(--border);
+      background: #fff;
       border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
+      padding:6px 10px;
+      font-size:12px;
       color:var(--muted);
-      display:inline-flex; gap:6px; align-items:center;
+      box-shadow: 0 2px 10px rgba(0,0,0,.03);
     }
-    .badge strong{color:var(--ink); font-weight:700}
-
-    .nav{
-      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    .actions{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
     }
-
-    .btn{
-      appearance:none; border:1px solid var(--line);
-      background:#fff;
-      color:var(--ink);
-      border-radius:12px;
+    label{font-size:12px;color:var(--muted)}
+    input[type="date"], input[type="text"], input[type="password"], select, textarea{
+      border:1px solid var(--border);
+      border-radius:10px;
       padding:10px 12px;
+      font-size:14px;
+      background:#fff;
+      outline:none;
+      width:100%;
+    }
+    textarea{min-height:140px; resize:vertical}
+    .btn{
+      border:0;
+      background:var(--brand);
+      color:white;
+      padding:10px 14px;
+      border-radius:12px;
       font-weight:700;
       cursor:pointer;
-      box-shadow:0 1px 0 rgba(15,23,42,.03);
+      box-shadow: 0 10px 20px rgba(37,99,235,.18);
     }
-    .btn:hover{border-color:#bcd3ff}
-    .btn.primary{
-      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-      border-color:#1d4ed8;
-      color:#fff;
+    .btn:active{transform: translateY(1px)}
+    .btn.secondary{
+      background:#fff;
+      color:var(--brand);
+      border:1px solid var(--border);
+      box-shadow:none;
+      font-weight:700;
     }
     .btn.danger{
-      background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
-      border-color:#b91c1c;
-      color:#fff;
+      background:#ef4444;
+      box-shadow: 0 10px 20px rgba(239,68,68,.15);
     }
-    .btn.ghost{
-      background:transparent;
+    .grid{
+      display:grid;
+      gap:14px;
     }
-    .btn.small{padding:8px 10px; border-radius:10px; font-size:13px}
-    .btn:disabled{opacity:.55; cursor:not-allowed}
-
-    .container{max-width:1200px; margin:0 auto; padding:16px}
-    .grid{display:grid; gap:14px}
     .card{
       background:var(--card);
-      border:1px solid var(--line);
+      border:1px solid var(--border);
       border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
+      box-shadow: var(--shadow);
+      padding:14px;
     }
-    .card-h{
-      padding:14px 16px;
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      border-bottom:1px solid var(--line);
-      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    .sectionTitle{
+      font-weight:900;
+      letter-spacing:.2px;
+      margin:0 0 10px 0;
     }
-    .card-h h2{margin:0; font-size:14px; color:var(--muted); font-weight:900; letter-spacing:.2px}
-    .card-b{padding:14px 16px}
+    .subtle{color:var(--muted);font-size:12px}
 
-    .controls{
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-    }
-    .field{
-      display:flex; gap:8px; align-items:center;
-      padding:10px 12px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#fff;
-    }
-    .field label{font-size:12px; color:var(--muted); font-weight:800}
-    .field input, .field select, .field textarea{
-      font:inherit; border:none; outline:none;
-      min-width:140px;
-      color:var(--ink);
-      background:transparent;
-    }
-    .field textarea{min-width:260px; min-height:90px; resize:vertical}
-
-    .hint{
-      font-size:12px; color:var(--muted);
-    }
-    .msg{
+    .errorBanner{
       margin-top:10px;
+      display:none;
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#7f1d1d;
       padding:10px 12px;
       border-radius:12px;
-      border:1px solid var(--line);
-      background:#fff;
       font-size:13px;
-      color:var(--muted);
-      display:none;
     }
-    .msg.ok{display:block; border-color:#bbf7d0; background:#f0fdf4; color:#14532d}
-    .msg.err{display:block; border-color:#fecaca; background:#fff1f2; color:#7f1d1d}
-    .msg.info{display:block; border-color:#bfdbfe; background:#eff6ff; color:#1e3a8a}
+    .errorBanner.show{display:block}
+
+    /* Login */
+    .center{
+      min-height: calc(100vh - 76px);
+      display:flex; align-items:center; justify-content:center;
+      padding:22px 16px;
+    }
+    .loginCard{
+      width:min(520px, 100%);
+      padding:18px;
+    }
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .row > div{flex:1 1 220px}
 
     /* Occupancy cards */
-    .occ-row{
-      display:grid;
-      grid-template-columns: repeat(7, minmax(170px, 1fr));
-      gap:12px;
+    .occRow{
+      display:flex;
+      gap:10px;
       overflow:auto;
       padding-bottom:6px;
+      scroll-snap-type:x mandatory;
     }
-    .occ-tile{
-      border:1px solid var(--line);
+    .occTile{
+      min-width:170px;
+      border:1px solid var(--border);
       border-radius:14px;
-      background:#fff;
       padding:12px;
-      box-shadow:0 8px 20px rgba(15,23,42,.06);
+      background: #ffffff;
+      scroll-snap-align:start;
       cursor:pointer;
-      min-height:110px;
-      display:flex; flex-direction:column; justify-content:space-between;
     }
-    .occ-tile:hover{border-color:#bcd3ff}
-    .occ-top{
-      display:flex; justify-content:space-between; gap:10px;
-      align-items:flex-start;
+    .occTop{
+      display:flex; justify-content:space-between; align-items:flex-start;
+      gap:8px;
     }
-    .occ-day{font-weight:900; font-size:13px; color:#1e293b}
-    .occ-date{font-size:12px; color:var(--muted)}
-    .occ-val{font-size:28px; font-weight:1000; letter-spacing:-.5px}
-    .occ-meta{font-size:11px; color:var(--muted); margin-top:8px; line-height:1.2}
+    .occDay{font-weight:900}
+    .occDate{font-size:12px;color:var(--muted)}
+    .occPct{font-size:26px;font-weight:950;margin-top:6px}
+    .occMeta{font-size:12px;color:var(--muted);margin-top:8px}
 
-    /* Status tables */
-    .table-wrap{
+    /* Status table */
+    .tableWrap{
       overflow:auto;
-      border-top:1px solid var(--line);
+      border:1px solid var(--border);
+      border-radius:14px;
     }
     table{
       width:100%;
       border-collapse:separate;
       border-spacing:0;
-      min-width:980px;
+      min-width:900px;
+      background:#fff;
     }
     th, td{
-      border-bottom:1px solid var(--line);
-      padding:10px 10px;
+      padding:10px;
+      border-bottom:1px solid var(--border);
       vertical-align:middle;
-      background:#fff;
     }
-    thead th{
-      position:sticky;
-      top:0;
+    th{
+      position:sticky; top:0;
+      background:#f3f7ff;
       z-index:2;
-      background:#f8fbff;
       font-size:12px;
       color:var(--muted);
-      font-weight:1000;
-      text-align:center;
-      border-bottom:1px solid var(--line);
-    }
-    .col-service{
-      position:sticky;
-      left:0;
-      z-index:3;
       text-align:left;
-      min-width:220px;
-      max-width:260px;
-      background:#fff;
     }
-    .section-row td{
-      background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
-      font-weight:1000;
-      color:#1e293b;
-      letter-spacing:.3px;
-      border-bottom:1px solid #c7d2fe;
+    .groupHeader{
+      background:#f8fbff;
+      font-weight:950;
+      color:#1f2a44;
     }
-
-    .pill{
-      font-size:11px;
-      font-weight:900;
-      color:#1e293b;
-      padding:5px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      display:inline-flex;
-      gap:6px;
-      align-items:center;
-    }
-
-    .cell{
-      text-align:center;
-      padding:8px;
-    }
-    .status-box{
+    .svcName{font-weight:800}
+    .tile{
       width:100%;
-      height:38px;
-      border-radius:10px;
-      border:1px solid rgba(15,23,42,.12);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+      height:44px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,.08);
       cursor:pointer;
       position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
       overflow:hidden;
     }
-    .status-box.red{background:var(--bad)}
-    .status-box.green{background:var(--good)}
-    .status-box.disabled{
-      opacity:.45; cursor:not-allowed;
-      filter:grayscale(.2);
-    }
-    .status-box .mini{
+    .tile.green{background:var(--green)}
+    .tile.red{background:var(--red)}
+    .tileInfo{
       position:absolute;
-      inset:auto 6px 5px auto;
-      font-size:10px;
-      color:rgba(255,255,255,.85);
-      white-space:nowrap;
-      max-width:calc(100% - 12px);
-      overflow:hidden;
-      text-overflow:ellipsis;
-      display:none;
+      left:10px; right:10px; bottom:6px;
+      font-size:11px;
+      color:rgba(255,255,255,.92);
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      pointer-events:none;
     }
-    .status-box:hover .mini{display:block}
-
-    /* Outlet cells show text */
-    .status-box.outlet{
-      height:auto;
-      padding:10px 8px;
-      min-height:44px;
-      flex-direction:column;
-      gap:4px;
-    }
-    .status-box.outlet .otxt{
-      font-size:12px;
-      color:#fff;
-      font-weight:1000;
-      line-height:1.1;
-    }
-    .status-box.outlet .mini{display:block; position:static; font-size:10px; opacity:.9}
+    .tileInfo span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
     /* Modal */
-    .overlay{
+    .modalBack{
       position:fixed; inset:0;
-      background:rgba(2,6,23,.55);
+      background:rgba(6,10,18,.45);
       display:none;
-      align-items:center; justify-content:center;
-      padding:18px;
-      z-index:9999;
-    }
-    .overlay.show{display:flex}
-    .modal{
-      width:min(840px, 100%);
-      background:#fff;
-      border-radius:18px;
-      border:1px solid rgba(15,23,42,.12);
-      box-shadow:0 30px 80px rgba(2,6,23,.35);
-      overflow:hidden;
-    }
-    .modal-h{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      background:#f8fbff;
-    }
-    .modal-h strong{font-size:14px}
-    .modal-b{padding:14px 16px}
-    .modal-actions{
-      padding:14px 16px;
-      border-top:1px solid var(--line);
-      display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;
-      background:#fff;
-    }
-
-    .two-col{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-    .note-long textarea{min-height:160px}
-
-    /* Auth */
-    .auth-wrap{
-      min-height:calc(100vh - 70px);
-      display:flex;
       align-items:center;
       justify-content:center;
-      padding:16px;
+      padding:18px;
+      z-index:9999; /* above everything */
     }
-    .auth-card{
-      width:min(520px, 100%);
+    .modalBack.show{display:flex}
+    .modal{
+      width:min(820px, 100%);
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow:var(--shadow);
+      border-radius:18px;
+      border:1px solid var(--border);
+      box-shadow: 0 30px 90px rgba(0,0,0,.25);
       overflow:hidden;
     }
-    .auth-head{
-      padding:16px 18px;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-      border-bottom:1px solid var(--line);
+    .modalHead{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 16px;
+      background:#f7faff;
+      border-bottom:1px solid var(--border);
     }
-    .auth-head h2{margin:0 0 4px 0; font-size:18px}
-    .auth-head p{margin:0; color:var(--muted); font-size:13px}
-    .auth-body{padding:16px 18px}
-    .auth-body .field{width:100%}
-    .auth-body .field input{width:100%}
-    .auth-body .row{display:grid; gap:10px}
+    .modalHead strong{font-size:14px}
+    .modalBody{padding:14px 16px}
+    .modalFoot{
+      padding:14px 16px;
+      border-top:1px solid var(--border);
+      display:flex; gap:10px; justify-content:flex-end;
+      background:#fff;
+    }
 
-    /* Mobile tweaks */
-    @media (max-width: 820px){
-      .occ-row{grid-template-columns: repeat(7, minmax(150px, 1fr))}
-      .col-service{min-width:160px; max-width:200px}
-      .two-col{grid-template-columns:1fr}
-      .topbar-inner{gap:10px}
+    .tabs{
+      display:flex; gap:8px; margin-top:12px;
+    }
+    .tabbtn{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      font-weight:800;
+      color:var(--muted);
+    }
+    .tabbtn.active{
+      background: #eaf1ff;
+      color:#103a9c;
+      border-color:#cfe0ff;
+    }
+
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+
+    @media (max-width:720px){
+      .wrap{padding:12px}
+      table{min-width:780px}
+      .occTile{min-width:160px}
     }
   </style>
 </head>
-
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
         <h1>Sheraton Niagara Falls – Ops Dashboard</h1>
+        <div class="pillrow" style="margin-top:8px">
+          <div class="pill" id="pillRole">Role: —</div>
+          <div class="pill" id="pillDept">Dept: —</div>
+          <div class="pill" id="pillUser">User: —</div>
+        </div>
       </div>
+      <div class="actions">
+        <div style="min-width:170px">
+          <label>Start date</label>
+          <input id="startDate" type="date" />
+        </div>
+        <button class="btn secondary" id="btnToday">Today</button>
+        <button class="btn" id="btnRefresh">Refresh</button>
+        <button class="btn secondary" id="btnPdf">Download 7-Day PDF Snapshot</button>
+        <button class="btn danger" id="btnLogout" style="display:none">Logout</button>
+      </div>
+    </div>
+    <div id="err" class="errorBanner"></div>
 
-      <div class="badges" id="userBadges" style="display:none;">
-        <span class="badge"><strong>Role:</strong> <span id="bRole"></span></span>
-        <span class="badge"><strong>Dept:</strong> <span id="bDept"></span></span>
-        <span class="badge"><strong>User:</strong> <span id="bName"></span></span>
-      </div>
-
-      <div class="nav" id="navBtns" style="display:none;">
-        <button class="btn small" id="btnDash">Dashboard</button>
-        <button class="btn small" id="btnUsers" style="display:none;">Users</button>
-        <button class="btn small danger" id="btnLogout">Logout</button>
-      </div>
+    <div class="tabs">
+      <button class="tabbtn active" id="tabDash">Dashboard</button>
+      <button class="tabbtn" id="tabUsers" style="display:none">Users</button>
     </div>
   </div>
+</header>
 
-  <div class="container" id="appRoot">
-    <div class="msg" id="globalMsg"></div>
+<main class="wrap" id="appRoot"></main>
 
-    <!-- AUTH -->
-    <div id="viewAuth" class="auth-wrap" style="display:none;">
-      <div class="auth-card">
-        <div class="auth-head">
-          <h2 id="authTitle">Sign in</h2>
-          <p id="authSub">Use your work email and password.</p>
-        </div>
-        <div class="auth-body">
-          <div class="row" id="authFormSignin">
-            <div class="field">
-              <label>Email</label>
-              <input id="inEmail" type="email" placeholder="name@niagarafallshotels.com" autocomplete="email" />
-            </div>
-            <div class="field">
-              <label>Password</label>
-              <input id="inPass" type="password" placeholder="••••••••" autocomplete="current-password" />
-            </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-              <button class="btn" id="btnForgot">Forgot password</button>
-              <button class="btn primary" id="btnSignin">Sign in</button>
-            </div>
-          </div>
-
-          <div class="row" id="authFormReset" style="display:none;">
-            <div class="field">
-              <label>Email</label>
-              <input id="resetEmail" type="email" placeholder="name@niagarafallshotels.com" autocomplete="email" />
-            </div>
-            <div class="hint">
-              We’ll email you a reset link. If your link lands back on the login screen, open it again and wait 2–3 seconds.
-            </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-              <button class="btn" id="btnBackSignin">Back</button>
-              <button class="btn primary" id="btnSendReset">Send reset link</button>
-            </div>
-          </div>
-
-          <div class="row" id="authFormSetPassword" style="display:none;">
-            <div class="hint" style="margin-bottom:6px;">
-              Finish setup: set your name + new password.
-            </div>
-            <div class="field">
-              <label>Full name</label>
-              <input id="setName" type="text" placeholder="Full name" />
-            </div>
-            <div class="field">
-              <label>New password</label>
-              <input id="setPass1" type="password" placeholder="••••••••" autocomplete="new-password" />
-            </div>
-            <div class="field">
-              <label>Confirm</label>
-              <input id="setPass2" type="password" placeholder="••••••••" autocomplete="new-password" />
-            </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-              <button class="btn" id="btnSetCancel">Cancel</button>
-              <button class="btn primary" id="btnSetSave">Save & continue</button>
-            </div>
-          </div>
-
-          <div class="msg" id="authMsg"></div>
-        </div>
-      </div>
+<!-- Modal: occupancy edit -->
+<div class="modalBack" id="occModalBack" aria-hidden="true">
+  <div class="modal">
+    <div class="modalHead">
+      <strong id="occModalTitle">Edit occupancy</strong>
+      <button class="btn secondary" id="occClose">Close</button>
     </div>
-
-    <!-- APP -->
-    <div id="viewApp" style="display:none;">
-      <div class="card">
-        <div class="card-b">
-          <div class="controls">
-            <div class="field">
-              <label>Start date</label>
-              <input id="startDate" type="date" />
-            </div>
-            <button class="btn" id="btnToday">Today</button>
-            <button class="btn primary" id="btnRefresh">Refresh</button>
-            <button class="btn" id="btnPdf">Download 7-Day PDF Snapshot</button>
-
-            <div class="hint" style="margin-left:auto;">
-              Editors: tap occupancy cards to edit. Tap status boxes to change.
-            </div>
-          </div>
-          <div class="msg" id="appMsg"></div>
+    <div class="modalBody">
+      <div class="row">
+        <div>
+          <label>Occupancy % (0–100)</label>
+          <input id="occPct" type="text" placeholder="e.g., 78.5" />
+        </div>
+        <div>
+          <label>Notes (short)</label>
+          <input id="occShort" type="text" placeholder="Optional" />
         </div>
       </div>
-
-      <!-- DASHBOARD VIEW -->
-      <div id="viewDashboard" class="grid" style="margin-top:14px;">
-        <div class="card">
-          <div class="card-h">
-            <h2>7-Day Occupancy Forecast</h2>
-            <span class="pill">Toronto time</span>
-          </div>
-          <div class="card-b">
-            <div class="occ-row" id="occRow"></div>
-            <div class="hint" style="margin-top:10px;">
-              Tip: On mobile, swipe the cards left/right.
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-h">
-            <h2>Restaurant Status (Green = Active, Red = Inactive)</h2>
-            <span class="pill">Double-click green to clear (closed)</span>
-          </div>
-          <div class="table-wrap">
-            <table id="tblRestaurants">
-              <thead>
-                <tr id="restHeadRow">
-                  <th class="col-service">Service</th>
-                </tr>
-              </thead>
-              <tbody id="restBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-h">
-            <h2>Lobby Bar & Outlets</h2>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn small" id="btnEditOutletWeek" style="display:none;">Edit Outlets Week</button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table id="tblOutlets">
-              <thead>
-                <tr id="outHeadRow">
-                  <th class="col-service">Outlet</th>
-                </tr>
-              </thead>
-              <tbody id="outBody"></tbody>
-            </table>
-          </div>
-        </div>
+      <div style="margin-top:10px">
+        <label>Notes (long)</label>
+        <textarea id="occLong" placeholder="Type your longer notes here…"></textarea>
       </div>
-
-      <!-- USERS VIEW -->
-      <div id="viewUsers" class="grid" style="margin-top:14px; display:none;">
-        <div class="card">
-          <div class="card-h">
-            <h2>Admin – Users</h2>
-            <span class="pill">Name + role + department</span>
-          </div>
-          <div class="card-b">
-            <div class="hint" style="margin-bottom:10px;">
-              Pick a user, edit details, then save. No UIDs shown.
-            </div>
-
-            <div class="two-col">
-              <div class="field" style="width:100%;">
-                <label>Select user</label>
-                <select id="selUser"></select>
-              </div>
-
-              <div class="field" style="width:100%;">
-                <label>Email (read-only)</label>
-                <input id="uEmail" type="text" readonly />
-              </div>
-
-              <div class="field" style="width:100%;">
-                <label>Full name</label>
-                <input id="uName" type="text" />
-              </div>
-
-              <div class="field" style="width:100%;">
-                <label>Role</label>
-                <select id="uRole">
-                  <option value="admin">admin</option>
-                  <option value="user">user</option>
-                  <option value="viewer">viewer</option>
-                </select>
-              </div>
-
-              <div class="field" style="width:100%;">
-                <label>Department</label>
-                <select id="uDept">
-                  <option value="">(none)</option>
-                  <option value="Guest Service">Guest Service</option>
-                  <option value="F&B">F&B</option>
-                  <option value="Outlets">Outlets</option>
-                </select>
-              </div>
-
-              <div class="field" style="width:100%;">
-                <label>Active</label>
-                <select id="uActive">
-                  <option value="true">true</option>
-                  <option value="false">false</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
-              <button class="btn" id="btnReloadUsers">Reload list</button>
-              <button class="btn primary" id="btnSaveUser">Save changes</button>
-            </div>
-
-            <div class="msg" id="usersMsg"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-h">
-            <h2>Current users</h2>
-          </div>
-          <div class="table-wrap">
-            <table style="min-width:820px;">
-              <thead>
-                <tr>
-                  <th class="col-service">Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Department</th>
-                  <th>Active</th>
-                </tr>
-              </thead>
-              <tbody id="usersTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <div class="hint">Tip: clicking a day card will pre-fill the last saved data for that date.</div>
+    </div>
+    <div class="modalFoot">
+      <button class="btn secondary" id="occCancel">Close</button>
+      <button class="btn" id="occSave">Save</button>
     </div>
   </div>
+</div>
 
-  <!-- OCC MODAL -->
-  <div class="overlay" id="occOverlay">
-    <div class="modal">
-      <div class="modal-h">
-        <strong id="occTitle">Edit occupancy</strong>
-        <button class="btn small" id="occClose">Close</button>
+<!-- Login / Complete Account -->
+<div class="center" id="authRoot" style="display:none">
+  <div class="card loginCard">
+    <h2 style="margin:0 0 8px 0">Sign in</h2>
+    <div class="subtle">Use your work email.</div>
+
+    <div style="margin-top:14px" class="row">
+      <div>
+        <label>Email</label>
+        <input id="loginEmail" type="text" placeholder="name@niagarafallshotels.com" />
       </div>
-      <div class="modal-b">
-        <div class="two-col">
-          <div class="field">
-            <label>Occupancy % (0–100)</label>
-            <input id="occPct" type="number" min="0" max="100" step="0.1" />
-          </div>
-          <div class="field">
-            <label>Notes (short)</label>
-            <input id="occNote" type="text" placeholder="Optional" />
-          </div>
-        </div>
-
-        <div class="field note-long" style="margin-top:12px;">
-          <label>Notes (long)</label>
-          <textarea id="occLong" placeholder="Write longer notes here..."></textarea>
-        </div>
-
-        <div class="hint" style="margin-top:8px;">
-          Saving overwrites the current value but history remains in your DB history tables.
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn primary" id="occSave">Save</button>
+      <div>
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="••••••••" />
       </div>
     </div>
-  </div>
 
-  <!-- OUTLET DAY MODAL -->
-  <div class="overlay" id="outOverlay">
-    <div class="modal">
-      <div class="modal-h">
-        <strong id="outTitle">Edit outlet</strong>
-        <button class="btn small" id="outClose">Close</button>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+      <button class="btn" id="btnLogin">Sign in</button>
+      <button class="btn secondary" id="btnForgot">Send reset email</button>
+    </div>
+
+    <hr style="border:0;border-top:1px solid var(--border); margin:16px 0">
+
+    <h3 style="margin:0 0 8px 0">First time / invited?</h3>
+    <div class="subtle">If you clicked an invite or reset link, set your name + new password here.</div>
+
+    <div style="margin-top:12px" class="row">
+      <div>
+        <label>Full name</label>
+        <input id="setupName" type="text" placeholder="First Last" />
       </div>
-      <div class="modal-b">
-        <div class="two-col">
-          <div class="field">
-            <label>Status</label>
-            <select id="outOpen">
-              <option value="false">Closed</option>
-              <option value="true">Open</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Open time</label>
-            <input id="outTimeOpen" type="time" />
-          </div>
-          <div class="field">
-            <label>Close time</label>
-            <input id="outTimeClose" type="time" />
-          </div>
-          <div class="hint" style="align-self:center;">
-            If Open = true, times are required.
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn primary" id="outSave">Save</button>
+      <div>
+        <label>New password</label>
+        <input id="setupPass" type="password" placeholder="New password" />
       </div>
     </div>
-  </div>
-
-  <!-- OUTLET WEEK MODAL -->
-  <div class="overlay" id="outWeekOverlay">
-    <div class="modal">
-      <div class="modal-h">
-        <strong id="outWeekTitle">Edit Outlets Week</strong>
-        <button class="btn small" id="outWeekClose">Close</button>
-      </div>
-      <div class="modal-b">
-        <div class="hint" style="margin-bottom:10px;">
-          Fill as much as you want. If a day is set to Open, times are required.
-        </div>
-
-        <div class="table-wrap" style="border:1px solid var(--line); border-radius:14px;">
-          <table style="min-width:760px;">
-            <thead>
-              <tr>
-                <th class="col-service">Date</th>
-                <th>Starbucks</th>
-                <th>Sweet Jesus</th>
-                <th>Freshii</th>
-              </tr>
-            </thead>
-            <tbody id="outWeekBody"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn primary" id="outWeekSave">Save week</button>
-      </div>
+    <div style="margin-top:12px">
+      <button class="btn" id="btnComplete">Save name + password</button>
     </div>
+
+    <div class="hint">If your company network blocks CDNs, you’re doing the right thing using local <b>supabase.js</b>.</div>
   </div>
+</div>
 
-  <script>
-    /********************
-     * CONFIG (your project)
-     ********************/
-    const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-    const TIMEZONE = "America/Toronto";
-    const DAYS = 7;
+<!-- Supabase client (LOCAL) -->
+<script src="./supabase.js"></script>
 
-    /********************
-     * SAFE HELPERS
-     ********************/
-    const $ = (id) => document.getElementById(id);
-    const showMsg = (el, text, kind="info") => {
-      el.className = "msg " + (kind || "info");
-      el.textContent = text || "";
-      el.style.display = text ? "block" : "none";
+<script>
+(() => {
+  // ====== CONFIG ======
+  const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
+  const TZ = "America/Toronto";
+  const DAYS = 7;
+
+  // Make sure we only create the client ONCE.
+  const sb = window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+  // ====== Helpers ======
+  const $ = (id) => document.getElementById(id);
+  const errBox = $("err");
+  function showErr(msg){
+    errBox.textContent = msg;
+    errBox.classList.add("show");
+  }
+  function clearErr(){
+    errBox.textContent = "";
+    errBox.classList.remove("show");
+  }
+  function fmtToronto(iso){
+    if(!iso) return "—";
+    try{
+      return new Date(iso).toLocaleString("en-CA", { timeZone: TZ, year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }catch{ return "—"; }
+  }
+  function toISODate(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  function addDays(isoDate, n){
+    const d = new Date(isoDate + "T12:00:00");
+    d.setDate(d.getDate() + n);
+    return toISODate(d);
+  }
+  function dayLabel(isoDate){
+    const d = new Date(isoDate + "T12:00:00");
+    return d.toLocaleDateString("en-CA", { timeZone: TZ, weekday:"short", month:"short", day:"2-digit" });
+  }
+
+  // Permissions
+  function canEditOccupancy(profile){
+    return profile?.role === "admin" || (profile?.role === "user" && profile?.department === "Guest Service");
+  }
+  function canEditRestaurants(profile){
+    return profile?.role === "admin" || (profile?.role === "user" && profile?.department === "F&B");
+  }
+  function canEditOutlets(profile){
+    return profile?.role === "admin" || (profile?.role === "user" && profile?.department === "Outlets");
+  }
+
+  // ====== State ======
+  let currentUser = null;
+  let profile = null;
+
+  let startDate = toISODate(new Date());
+  let serviceItems = [];
+  let forecastByDate = new Map(); // date -> row
+  let selectionByKey = new Map(); // `${date}|${group}` -> row
+  let massimoByKey = new Map(); // `${date}|${service_item_id}` -> row
+  let outletByKey = new Map(); // `${date}|${outlet_name}` -> row
+
+  // outlets list
+  const OUTLETS = [
+    { key:"Lobby Bar", editDept:"F&B" },
+    { key:"Starbucks", editDept:"Outlets" },
+    { key:"Sweet Jesus", editDept:"Outlets" },
+    { key:"Freshii", editDept:"Outlets" },
+  ];
+
+  // ====== UI roots ======
+  const appRoot = $("appRoot");
+  const authRoot = $("authRoot");
+
+  // ====== Tabs ======
+  $("tabDash").onclick = () => {
+    $("tabDash").classList.add("active");
+    $("tabUsers").classList.remove("active");
+    renderDashboard();
+  };
+  $("tabUsers").onclick = () => {
+    $("tabUsers").classList.add("active");
+    $("tabDash").classList.remove("active");
+    renderUsersAdmin();
+  };
+
+  // ====== Header actions ======
+  $("startDate").value = startDate;
+  $("startDate").addEventListener("change", () => {
+    startDate = $("startDate").value || startDate;
+    loadAll().catch(e => showErr(e?.message || String(e)));
+  });
+  $("btnToday").onclick = () => {
+    startDate = toISODate(new Date());
+    $("startDate").value = startDate;
+    loadAll().catch(e => showErr(e?.message || String(e)));
+  };
+  $("btnRefresh").onclick = () => loadAll().catch(e => showErr(e?.message || String(e)));
+  $("btnPdf").onclick = () => openPdfSnapshot();
+
+  // ====== Auth buttons ======
+  $("btnLogin").onclick = async () => {
+    clearErr();
+    const email = $("loginEmail").value.trim();
+    const password = $("loginPass").value;
+    if(!email || !password) return showErr("Enter email + password.");
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) return showErr(error.message);
+    await onAuthChanged();
+  };
+
+  $("btnForgot").onclick = async () => {
+    clearErr();
+    const email = $("loginEmail").value.trim();
+    if(!email) return showErr("Enter your email first.");
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href.split("#")[0]
+    });
+    if(error) return showErr(error.message);
+    showErr("Reset email sent. Use the link, then set your new password below.");
+  };
+
+  $("btnComplete").onclick = async () => {
+    clearErr();
+    const name = $("setupName").value.trim();
+    const pass = $("setupPass").value;
+    if(!name || !pass) return showErr("Enter full name + new password.");
+    const { data: u } = await sb.auth.getUser();
+    if(!u?.user) return showErr("You must open the invite/reset link first (it signs you in).");
+    const { error: e1 } = await sb.auth.updateUser({ password: pass });
+    if(e1) return showErr(e1.message);
+
+    // Upsert profile name (email from auth)
+    const user_id = u.user.id;
+    const email = u.user.email;
+    const { error: e2 } = await sb.from("profiles").upsert({
+      user_id,
+      email,
+      name,
+      // keep existing role/department if already set; if not, default to viewer
+      role: "viewer",
+      is_active: true
+    }, { onConflict: "user_id" });
+    if(e2) return showErr(e2.message);
+
+    showErr("Saved. You can sign in now.");
+  };
+
+  $("btnLogout").onclick = async () => {
+    await sb.auth.signOut();
+    await onAuthChanged();
+  };
+
+  // ====== Modals ======
+  let occEditDate = null;
+  $("occClose").onclick = () => closeOccModal();
+  $("occCancel").onclick = () => closeOccModal();
+  $("occSave").onclick = async () => {
+    clearErr();
+    if(!occEditDate) return;
+    if(!canEditOccupancy(profile)) return showErr("You don’t have permission to edit occupancy.");
+
+    const pctRaw = $("occPct").value.trim();
+    const pct = pctRaw ? Number(pctRaw) : null;
+    if(pctRaw && (Number.isNaN(pct) || pct < 0 || pct > 100)) return showErr("Occupancy must be 0–100.");
+
+    const payload = {
+      date: occEditDate,                 // IMPORTANT: always send date
+      occupancy_pct: pct,
+      notes_short: $("occShort").value.trim() || null,
+      notes_long: $("occLong").value.trim() || null,
+      updated_by: currentUser.id,
+      updated_at: new Date().toISOString()
     };
-    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-    function toISODateToronto(d=new Date()){
-      // Format as YYYY-MM-DD in Toronto time
-      const parts = new Intl.DateTimeFormat("en-CA", {
-        timeZone: TIMEZONE, year:"numeric", month:"2-digit", day:"2-digit"
-      }).formatToParts(d);
-      const y = parts.find(p=>p.type==="year").value;
-      const m = parts.find(p=>p.type==="month").value;
-      const da = parts.find(p=>p.type==="day").value;
-      return `${y}-${m}-${da}`;
+    const { error } = await sb.from("daily_forecast").upsert(payload, { onConflict: "date" });
+    if(error) return showErr(error.message);
+
+    closeOccModal();
+    await loadAll();
+  };
+
+  function openOccModal(dateStr){
+    occEditDate = dateStr;
+    $("occModalTitle").textContent = "Edit occupancy — " + dateStr;
+
+    const row = forecastByDate.get(dateStr) || {};
+    $("occPct").value = (row.occupancy_pct ?? "") === null ? "" : (row.occupancy_pct ?? "");
+    $("occShort").value = row.notes_short ?? "";
+    $("occLong").value = row.notes_long ?? "";
+
+    $("occModalBack").classList.add("show");
+  }
+  function closeOccModal(){
+    occEditDate = null;
+    $("occModalBack").classList.remove("show");
+  }
+
+  // ====== Data loading ======
+  async function loadProfile(){
+    const { data } = await sb.auth.getUser();
+    currentUser = data?.user || null;
+    if(!currentUser) return null;
+
+    const { data: p, error } = await sb.from("profiles")
+      .select("user_id,email,name,role,department,is_active")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if(error) throw error;
+    return p || null;
+  }
+
+  async function loadAll(){
+    clearErr();
+    if(!sb) return showErr("Supabase client not found. Make sure supabase.js is in the repo root.");
+
+    profile = await loadProfile();
+
+    $("pillRole").textContent = "Role: " + (profile?.role || "—");
+    $("pillDept").textContent = "Dept: " + (profile?.department || "—");
+    $("pillUser").textContent = "User: " + (profile?.name || currentUser?.email || "—");
+
+    // Tabs / buttons
+    $("btnLogout").style.display = currentUser ? "inline-flex" : "none";
+    $("tabUsers").style.display = (profile?.role === "admin") ? "inline-flex" : "none";
+
+    // Build 7-day window
+    const dates = [];
+    for(let i=0;i<DAYS;i++) dates.push(addDays(startDate, i));
+
+    // Service items
+    {
+      const { data, error } = await sb.from("service_items")
+        .select("id,name,group_name,sort_order")
+        .order("group_name", { ascending:true })
+        .order("sort_order", { ascending:true });
+
+      if(error) throw error;
+      serviceItems = data || [];
     }
 
-    function fmtDay(yyyy_mm_dd){
-      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
-      const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
-      return new Intl.DateTimeFormat("en-CA", {
-        timeZone: TIMEZONE, weekday:"short", month:"short", day:"2-digit"
-      }).format(dt);
+    // Forecast
+    {
+      const { data, error } = await sb.from("daily_forecast")
+        .select("date,occupancy_pct,notes_short,notes_long,updated_at,updated_by_name")
+        .in("date", dates);
+
+      if(error) throw error;
+      forecastByDate = new Map((data || []).map(r => [r.date, r]));
     }
 
-    function fmtTsToronto(ts){
-      if (!ts) return "";
-      const dt = new Date(ts);
-      return new Intl.DateTimeFormat("en-CA", {
-        timeZone: TIMEZONE,
-        year:"numeric", month:"short", day:"2-digit",
-        hour:"2-digit", minute:"2-digit"
-      }).format(dt);
+    // Restaurant selections (breakfast/lunch/dinner)
+    {
+      const { data, error } = await sb.from("daily_service_selection")
+        .select("date,group_name,service_item_id,updated_at,updated_by_name")
+        .in("date", dates);
+
+      if(error) throw error;
+      selectionByKey = new Map((data || []).map(r => [`${r.date}|${r.group_name}`, r]));
     }
 
-    function addDays(yyyy_mm_dd, n){
-      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
-      const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
-      dt.setUTCDate(dt.getUTCDate() + n);
-      const yy = dt.getUTCFullYear();
-      const mm = String(dt.getUTCMonth()+1).padStart(2,"0");
-      const dd = String(dt.getUTCDate()).padStart(2,"0");
-      return `${yy}-${mm}-${dd}`;
+    // Massimo status
+    {
+      const { data, error } = await sb.from("daily_massimo_status")
+        .select("date,service_item_id,is_active,updated_at,updated_by_name")
+        .in("date", dates);
+
+      if(error) throw error;
+      massimoByKey = new Map((data || []).map(r => [`${r.date}|${r.service_item_id}`, r]));
     }
 
-    function fmtTime12(timeStr){
-      if (!timeStr) return "";
-      const parts = String(timeStr).split(":");
-      if (parts.length < 2) return "";
-      let hh = parseInt(parts[0],10);
-      const mm = parts[1].padStart(2,"0");
-      const ap = hh >= 12 ? "PM" : "AM";
-      hh = hh % 12; if (hh===0) hh=12;
-      return `${hh}:${mm} ${ap}`;
+    // Outlets hours
+    {
+      const { data, error } = await sb.from("daily_outlet_hours")
+        .select("date,outlet_name,is_open,open_time,close_time,updated_at,updated_by_name")
+        .in("date", dates);
+
+      if(error) throw error;
+      outletByKey = new Map((data || []).map(r => [`${r.date}|${r.outlet_name}`, r]));
     }
 
-    /********************
-     * SUPABASE INIT
-     ********************/
-    const globalMsg = $("globalMsg");
-    if (!window.supabase || !window.supabase.createClient){
-      showMsg(globalMsg,
-        "Supabase library not found. Make sure supabase.js is in the repo root (same folder as index.html).",
-        "err"
-      );
+    // Render correct tab
+    if($("tabUsers").classList.contains("active") && profile?.role === "admin"){
+      renderUsersAdmin();
+    } else {
+      $("tabDash").classList.add("active");
+      $("tabUsers").classList.remove("active");
+      renderDashboard();
     }
-    const sb = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_KEY);
+  }
 
-    /********************
-     * STATE
-     ********************/
-    let session = null;
-    let me = { user_id:null, role:"viewer", department:null, name:"", email:"" };
+  // ====== Render Dashboard ======
+  function renderDashboard(){
+    const dates = [];
+    for(let i=0;i<DAYS;i++) dates.push(addDays(startDate, i));
 
-    let dash = null;
-    let days = []; // array of YYYY-MM-DD
-    let serviceItems = []; // from RPC
-    let serviceById = new Map(); // uuid -> item
-    let itemsByGroup = { breakfast:[], lunch:[], dinner:[], massimo:[] };
+    appRoot.innerHTML = `
+      <div class="grid">
+        <div class="card">
+          <h3 class="sectionTitle">7-Day Occupancy Forecast</h3>
+          <div class="subtle">Click a day to edit (Guest Service or Admin).</div>
+          <div class="occRow" id="occRow"></div>
+        </div>
 
-    // daily maps
-    let forecastByDate = new Map(); // date -> row
-    let selByKey = new Map(); // `${date}|${group}` -> row
-    let massimoByKey = new Map(); // `${date}|${service_item_id}` -> row
-    let outletByKey = new Map(); // `${date}|${outlet}` -> row
-    let profiles = []; // from RPC
-    let profileById = new Map(); // uuid -> profile
+        <div class="card">
+          <h3 class="sectionTitle">Restaurant Status</h3>
+          <div class="subtle">Dark green = active. Dark red = inactive. (F&B or Admin can edit.)</div>
+          <div class="tableWrap" style="margin-top:10px">
+            <table id="svcTable"></table>
+          </div>
+          <div class="hint">Tip: Double-click a green box to clear it (all red for that day/group). Massimo can have multiple greens.</div>
+        </div>
 
-    // modals
-    let occEditDate = null;
-    let outEdit = { date:null, outlet:null };
-    let outWeekDraft = []; // for week editor
+        <div class="card">
+          <h3 class="sectionTitle">Lobby Bar & Outlets</h3>
+          <div class="subtle">Open/Closed + hours (Lobby Bar = F&B. Others = Outlets. Admin can edit all.)</div>
+          <div class="tableWrap" style="margin-top:10px">
+            <table id="outletTable"></table>
+          </div>
+        </div>
+      </div>
+    `;
 
-    /********************
-     * PERMISSIONS
-     ********************/
-    function canAdmin(){ return me.role === "admin"; }
-    function canViewUsers(){ return canAdmin(); }
-
-    function canEditForecast(){
-      return canAdmin() || (me.role==="user" && me.department==="Guest Service");
-    }
-    function canEditRestaurants(){
-      return canAdmin() || (me.role==="user" && me.department==="F&B");
-    }
-    function canEditLobbyBar(){
-      return canAdmin() || (me.role==="user" && me.department==="F&B");
-    }
-    function canEditOutlets(){
-      return canAdmin() || (me.role==="user" && me.department==="Outlets");
-    }
-
-    /********************
-     * VIEWS
-     ********************/
-    const viewAuth = $("viewAuth");
-    const viewApp = $("viewApp");
-    const navBtns = $("navBtns");
-    const userBadges = $("userBadges");
-    const btnUsers = $("btnUsers");
-    const viewDashboard = $("viewDashboard");
-    const viewUsers = $("viewUsers");
-
-    function showAuth(mode="signin"){
-      viewApp.style.display = "none";
-      navBtns.style.display = "none";
-      userBadges.style.display = "none";
-      viewAuth.style.display = "flex";
-
-      $("authFormSignin").style.display = (mode==="signin") ? "grid" : "none";
-      $("authFormReset").style.display = (mode==="reset") ? "grid" : "none";
-      $("authFormSetPassword").style.display = (mode==="setpass") ? "grid" : "none";
-
-      showMsg($("authMsg"), "", "info");
-
-      if (mode==="signin"){
-        $("authTitle").textContent = "Sign in";
-        $("authSub").textContent = "Use your work email and password.";
-      }
-      if (mode==="reset"){
-        $("authTitle").textContent = "Reset password";
-        $("authSub").textContent = "We’ll email you a reset link.";
-      }
-      if (mode==="setpass"){
-        $("authTitle").textContent = "Set your password";
-        $("authSub").textContent = "Finish setup to access the dashboard.";
-      }
-    }
-
-    function showApp(){
-      viewAuth.style.display = "none";
-      viewApp.style.display = "block";
-      navBtns.style.display = "flex";
-      userBadges.style.display = "flex";
-
-      $("bRole").textContent = me.role || "viewer";
-      $("bDept").textContent = me.department || "—";
-      $("bName").textContent = me.name || me.email || "—";
-
-      btnUsers.style.display = canViewUsers() ? "inline-flex" : "none";
-      showDashboard();
-    }
-
-    function showDashboard(){
-      viewDashboard.style.display = "grid";
-      viewUsers.style.display = "none";
-    }
-    function showUsers(){
-      viewDashboard.style.display = "none";
-      viewUsers.style.display = "grid";
-    }
-
-    /********************
-     * AUTH HANDLING
-     ********************/
-    async function handleAuthLinksIfAny(){
-      // Support code-based links: ?code=... (invite/reset)
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get("code");
-      const type = url.searchParams.get("type"); // invite / recovery / magiclink etc
-
-      if (sb && code){
-        try{
-          showMsg(globalMsg, "Finishing sign-in link…", "info");
-          const { data, error } = await sb.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-
-          // Clean URL (remove code)
-          url.searchParams.delete("code");
-          url.searchParams.delete("type");
-          window.history.replaceState({}, document.title, url.toString());
-
-          // If invite or recovery, show set password UI
-          if (type === "invite" || type === "recovery"){
-            showAuth("setpass");
-            return true;
-          }
-        }catch(e){
-          showMsg(globalMsg, e?.message || String(e), "err");
-        }
-      }
-      return false;
-    }
-
-    async function loadSession(){
-      if (!sb) return;
-      const { data } = await sb.auth.getSession();
-      session = data?.session || null;
-    }
-
-    async function signIn(email, password){
-      const authMsg = $("authMsg");
-      try{
-        showMsg(authMsg, "Signing in…", "info");
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        session = data.session;
-        showMsg(authMsg, "Signed in.", "ok");
-        await initAfterLogin();
-      }catch(e){
-        showMsg(authMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function sendReset(email){
-      const authMsg = $("authMsg");
-      try{
-        showMsg(authMsg, "Sending reset link…", "info");
-        const redirectTo = window.location.origin + window.location.pathname; // same page
-        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
-        if (error) throw error;
-        showMsg(authMsg, "Reset email sent. Check your inbox.", "ok");
-      }catch(e){
-        showMsg(authMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function setPasswordAndProfile(fullName, pass1, pass2){
-      const authMsg = $("authMsg");
-      try{
-        if (!pass1 || pass1.length < 8) throw new Error("Password must be at least 8 characters.");
-        if (pass1 !== pass2) throw new Error("Passwords do not match.");
-
-        showMsg(authMsg, "Saving…", "info");
-
-        // Update password
-        const { error: e1 } = await sb.auth.updateUser({ password: pass1 });
-        if (e1) throw e1;
-
-        // Update profile name (best effort)
-        const { data: sessData } = await sb.auth.getSession();
-        const uid = sessData?.session?.user?.id;
-        const email = sessData?.session?.user?.email;
-
-        if (uid){
-          // Try update by user_id column
-          await sb.from("profiles").upsert({
-            user_id: uid,
-            email: email || null,
-            name: fullName || null,
-            is_active: true
-          }, { onConflict: "user_id" });
-        }
-
-        showMsg(authMsg, "Done. You can now use the dashboard.", "ok");
-        await initAfterLogin();
-      }catch(e){
-        showMsg(authMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function logout(){
-      try{
-        await sb.auth.signOut();
-      }catch{}
-      session = null;
-      me = { user_id:null, role:"viewer", department:null, name:"", email:"" };
-      showAuth("signin");
-    }
-
-    /********************
-     * DASHBOARD LOAD
-     ********************/
-    function hydrateFromRpc(json){
-      dash = json;
-
-      // days
-      const startDate = $("startDate").value;
-      days = Array.from({ length: DAYS }, (_,i)=> addDays(startDate, i));
-
-      // profiles
-      profiles = Array.isArray(json.profiles) ? json.profiles : [];
-      profileById = new Map(profiles.map(p => [String(p.user_id), p]));
-
-      // service items
-      serviceItems = Array.isArray(json.service_items) ? json.service_items : [];
-      serviceById = new Map(serviceItems.map(si => [String(si.id), si]));
-
-      itemsByGroup = { breakfast:[], lunch:[], dinner:[], massimo:[] };
-      for (const si of serviceItems){
-        if (!itemsByGroup[si.group_name]) continue;
-        itemsByGroup[si.group_name].push(si);
-      }
-      // sort by sort_order if present else by name
-      for (const g of Object.keys(itemsByGroup)){
-        itemsByGroup[g].sort((a,b)=>{
-          const ao = (a.sort_order ?? 9999), bo = (b.sort_order ?? 9999);
-          if (ao !== bo) return ao - bo;
-          return String(a.name).localeCompare(String(b.name));
-        });
-      }
-
-      // forecast
-      forecastByDate = new Map();
-      for (const r of (json.daily_forecast || [])){
-        forecastByDate.set(r.date, r);
-      }
-
-      // selections
-      selByKey = new Map();
-      for (const r of (json.daily_service_selection || [])){
-        selByKey.set(`${r.date}|${r.group_name}`, r);
-      }
-
-      // massimo
-      massimoByKey = new Map();
-      for (const r of (json.daily_massimo_status || [])){
-        massimoByKey.set(`${r.date}|${String(r.service_item_id)}`, r);
-      }
-
-      // outlets
-      outletByKey = new Map();
-      for (const r of (json.daily_outlet_hours || [])){
-        outletByKey.set(`${r.date}|${r.outlet_name}`, r);
-      }
-
-      // me
-      if (session?.user?.id){
-        const p = profileById.get(String(session.user.id));
-        me.user_id = String(session.user.id);
-        me.email = session.user.email || "";
-        me.name = p?.name || me.email || "";
-        me.role = p?.role || "viewer";
-        me.department = p?.department || null;
-      }
-    }
-
-    async function loadDashboard(){
-      const appMsg = $("appMsg");
-      try{
-        showMsg(appMsg, "Loading dashboard…", "info");
-        const startDate = $("startDate").value;
-        const { data, error } = await sb.rpc("get_dashboard", { p_start_date: startDate, p_days: DAYS });
-        if (error) throw error;
-
-        hydrateFromRpc(data);
-        renderAll();
-        showMsg(appMsg, "Loaded.", "ok");
-      }catch(e){
-        showMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function initAfterLogin(){
-      await loadSession();
-      if (!session){
-        showAuth("signin");
-        return;
-      }
-      // Ensure start date is set
-      if (!$("startDate").value) $("startDate").value = toISODateToronto();
-      await loadDashboard();
-      showApp();
-    }
-
-    /********************
-     * RENDER
-     ********************/
-    function renderAll(){
-      // badges
-      $("bRole").textContent = me.role || "viewer";
-      $("bDept").textContent = me.department || "—";
-      $("bName").textContent = me.name || me.email || "—";
-      btnUsers.style.display = canViewUsers() ? "inline-flex" : "none";
-
-      renderOcc();
-      renderRestaurantTables();
-      renderOutletTables();
-      if (canViewUsers()) renderUsersAdmin();
-    }
-
-    function renderOcc(){
-      const row = $("occRow");
-      row.innerHTML = "";
-
-      for (const d of days){
-        const r = forecastByDate.get(d) || {};
-        const pct = (r.occupancy_percent ?? r.occupancy ?? null);
-        const notesShort = (r.notes ?? r.note ?? r.notes_short ?? "").trim?.() ?? "";
-        const who = r.updated_by ? (profileById.get(String(r.updated_by))?.name || profileById.get(String(r.updated_by))?.email || "Unknown") : "—";
-        const when = r.updated_at ? fmtTsToronto(r.updated_at) : "";
-
-        const tile = document.createElement("div");
-        tile.className = "occ-tile";
-        tile.title = canEditForecast() ? "Tap to edit" : "View only";
-        tile.addEventListener("click", ()=>{
-          if (!canEditForecast()) return;
-          openOccModal(d);
-        });
-
-        tile.innerHTML = `
-          <div class="occ-top">
+    // Occupancy row
+    const occRow = $("occRow");
+    occRow.innerHTML = dates.map(d => {
+      const row = forecastByDate.get(d);
+      const pct = row?.occupancy_pct;
+      const pctText = (pct === null || pct === undefined) ? "—" : (Number(pct).toFixed(1) + "%");
+      const meta = row?.updated_at ? `${row.updated_by_name || "—"} • ${fmtToronto(row.updated_at)}` : "—";
+      return `
+        <div class="occTile" data-date="${d}">
+          <div class="occTop">
             <div>
-              <div class="occ-day">${esc(fmtDay(d))}</div>
-              <div class="occ-date">${esc(d)}</div>
+              <div class="occDay">${dayLabel(d)}</div>
+              <div class="occDate">${d}</div>
             </div>
           </div>
-          <div>
-            <div class="occ-val">${pct==null ? "—" : esc(Number(pct).toFixed(1) + "%")}</div>
-            <div class="occ-meta">
-              ${notesShort ? ("Note: " + esc(notesShort) + "<br>") : ""}
-              Last update: ${esc(who)}${when ? (" • " + esc(when)) : ""}
-            </div>
-          </div>
-        `;
-        row.appendChild(tile);
-      }
-    }
+          <div class="occPct">${pctText}</div>
+          <div class="occMeta">Last update: ${meta}</div>
+        </div>
+      `;
+    }).join("");
 
-    function renderRestaurantTables(){
-      // headers
-      const head = $("restHeadRow");
-      head.innerHTML = `<th class="col-service">Service</th>` + days.map(d => `
-        <th>
-          ${esc(fmtDay(d))}
-          <div style="font-size:10px;color:#64748b;margin-top:2px;">${esc(d)}</div>
-        </th>
-      `).join("");
+    [...occRow.querySelectorAll(".occTile")].forEach(el => {
+      el.addEventListener("click", () => {
+        if(!canEditOccupancy(profile)) return showErr("No permission to edit occupancy.");
+        openOccModal(el.getAttribute("data-date"));
+      });
+    });
 
-      const body = $("restBody");
-      body.innerHTML = "";
+    // Service table
+    const svcTable = $("svcTable");
+    const svcDatesHeader = dates.map(d => `<th>${dayLabel(d)}<div class="subtle">${d}</div></th>`).join("");
 
-      // Section helper
-      const addSection = (title) => {
-        const tr = document.createElement("tr");
-        tr.className = "section-row";
-        tr.innerHTML = `<td class="col-service" colspan="${1 + days.length}">${esc(title)}</td>`;
-        body.appendChild(tr);
-      };
+    const groups = [
+      { key:"breakfast", title:"BREAKFAST", mode:"single" },
+      { key:"lunch", title:"LUNCH", mode:"single" },
+      { key:"dinner", title:"DINNER", mode:"single" },
+      { key:"massimo", title:"MASSIMO", mode:"multi" },
+    ];
 
-      const addItemRowSinglePick = (groupName, item) => {
-        const tr = document.createElement("tr");
-        const nameTd = document.createElement("td");
-        nameTd.className = "col-service";
-        nameTd.innerHTML = `<strong>${esc(item.name)}</strong>`;
-        tr.appendChild(nameTd);
+    const rowsHtml = groups.map(g => {
+      const items = serviceItems.filter(x => x.group_name === g.key).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
 
-        for (const d of days){
-          const td = document.createElement("td");
-          td.className = "cell";
-          const key = `${d}|${groupName}`;
-          const sel = selByKey.get(key);
-          const selectedId = sel?.service_item_id ? String(sel.service_item_id) : null;
-          const isGreen = selectedId && selectedId === String(item.id);
+      const headerRow = `
+        <tr class="groupHeader">
+          <td colspan="${1+dates.length}">${g.title}</td>
+        </tr>
+      `;
 
-          const who = sel?.updated_by ? (profileById.get(String(sel.updated_by))?.name || profileById.get(String(sel.updated_by))?.email || "Unknown") : "";
-          const when = sel?.updated_at ? fmtTsToronto(sel.updated_at) : "";
-          const meta = (who || when) ? `${who}${when ? (" • " + when) : ""}` : "";
-
-          const box = document.createElement("div");
-          box.className = "status-box " + (isGreen ? "green" : "red") + (canEditRestaurants() ? "" : " disabled");
-          box.title = meta || (canEditRestaurants() ? "Click to select. Double-click green to clear." : "View only");
-          if (meta){
-            const mini = document.createElement("div");
-            mini.className = "mini";
-            mini.textContent = meta;
-            box.appendChild(mini);
-          }
-
-          // click: select this item (UUID only)
-          box.addEventListener("click", async (ev)=>{
-            ev.preventDefault();
-            if (!canEditRestaurants()) return;
-            await setSelection(groupName, d, String(item.id));
-          });
-
-          // double click: if this is selected (green), clear (closed)
-          box.addEventListener("dblclick", async (ev)=>{
-            ev.preventDefault();
-            if (!canEditRestaurants()) return;
-            if (isGreen){
-              await setSelection(groupName, d, null);
-            }
-          });
-
-          td.appendChild(box);
-          tr.appendChild(td);
-        }
-
-        body.appendChild(tr);
-      };
-
-      const addItemRowMassimoToggle = (item) => {
-        const tr = document.createElement("tr");
-        const nameTd = document.createElement("td");
-        nameTd.className = "col-service";
-        nameTd.innerHTML = `<strong>${esc(item.name)}</strong>`;
-        tr.appendChild(nameTd);
-
-        for (const d of days){
-          const td = document.createElement("td");
-          td.className = "cell";
-          const k = `${d}|${String(item.id)}`;
-          const r = massimoByKey.get(k);
-          const isOn = !!r?.is_active;
-
-          const who = r?.updated_by ? (profileById.get(String(r.updated_by))?.name || profileById.get(String(r.updated_by))?.email || "Unknown") : (r?.updated_by_name || "");
-          const when = r?.updated_at ? fmtTsToronto(r.updated_at) : "";
-          const meta = (who || when) ? `${who}${when ? (" • " + when) : ""}` : "";
-
-          const box = document.createElement("div");
-          box.className = "status-box " + (isOn ? "green" : "red") + (canEditRestaurants() ? "" : " disabled");
-          box.title = meta || (canEditRestaurants() ? "Click to toggle" : "View only");
-
-          const mini = document.createElement("div");
-          mini.className = "mini";
-          mini.textContent = meta;
-          box.appendChild(mini);
-
-          box.addEventListener("click", async (ev)=>{
-            ev.preventDefault();
-            if (!canEditRestaurants()) return;
-            await setMassimo(d, String(item.id), !isOn);
-          });
-
-          td.appendChild(box);
-          tr.appendChild(td);
-        }
-
-        body.appendChild(tr);
-      };
-
-      // Build groups
-      addSection("BREAKFAST");
-      for (const item of itemsByGroup.breakfast) addItemRowSinglePick("breakfast", item);
-
-      addSection("LUNCH");
-      for (const item of itemsByGroup.lunch) addItemRowSinglePick("lunch", item);
-
-      addSection("DINNER");
-      for (const item of itemsByGroup.dinner) addItemRowSinglePick("dinner", item);
-
-      addSection("MASSIMO");
-      for (const item of itemsByGroup.massimo) addItemRowMassimoToggle(item);
-    }
-
-    function renderOutletTables(){
-      // headers
-      const head = $("outHeadRow");
-      head.innerHTML = `<th class="col-service">Outlet</th>` + days.map(d => `
-        <th>
-          ${esc(fmtDay(d))}
-          <div style="font-size:10px;color:#64748b;margin-top:2px;">${esc(d)}</div>
-        </th>
-      `).join("");
-
-      const body = $("outBody");
-      body.innerHTML = "";
-
-      const addSection = (title) => {
-        const tr = document.createElement("tr");
-        tr.className = "section-row";
-        tr.innerHTML = `<td class="col-service" colspan="${1 + days.length}">${esc(title)}</td>`;
-        body.appendChild(tr);
-      };
-
-      const outletRow = (label, outletName, canEditFn) => {
-        const tr = document.createElement("tr");
-        const td0 = document.createElement("td");
-        td0.className = "col-service";
-        td0.innerHTML = `<strong>${esc(label)}</strong>`;
-        tr.appendChild(td0);
-
-        for (const d of days){
-          const td = document.createElement("td");
-          td.className = "cell";
-
-          const r = outletByKey.get(`${d}|${outletName}`) || {};
-          const isOpen = !!r.is_open;
-          const ot = fmtTime12(r.open_time);
-          const ct = fmtTime12(r.close_time);
-          const mainText = isOpen ? (ot && ct ? `${ot}–${ct}` : "Open") : "Closed";
-
-          const who = r.updated_by ? (profileById.get(String(r.updated_by))?.name || profileById.get(String(r.updated_by))?.email || "Unknown") : "";
-          const when = r.updated_at ? fmtTsToronto(r.updated_at) : "";
-          const meta = (who || when) ? `${who}${when ? (" • " + when) : ""}` : "";
-
-          const box = document.createElement("div");
-          box.className = "status-box outlet " + (isOpen ? "green" : "red") + (canEditFn() ? "" : " disabled");
-          box.title = meta || (canEditFn() ? "Click to edit" : "View only");
-
-          box.innerHTML = `
-            <div class="otxt">${esc(isOpen ? "Open" : "Closed")}</div>
-            <div class="otxt" style="font-size:11px;opacity:.95;">${esc(mainText)}</div>
-            <div class="mini">${esc(meta || "")}</div>
+      const itemRows = items.map(item => {
+        const cells = dates.map(d => {
+          const updated = getServiceUpdatedInfo(d, g.key, item.id);
+          const isGreen = isServiceGreen(d, g.key, item.id);
+          const cls = isGreen ? "green" : "red";
+          const infoLeft = updated.name || "—";
+          const infoRight = updated.at ? fmtToronto(updated.at) : "—";
+          return `
+            <td>
+              <div class="tile ${cls}" data-group="${g.key}" data-mode="${g.mode}" data-date="${d}" data-item="${item.id}">
+                <div class="tileInfo">
+                  <span>${infoLeft}</span>
+                  <span>${infoRight}</span>
+                </div>
+              </div>
+            </td>
           `;
+        }).join("");
 
-          box.addEventListener("click", ()=>{
-            if (!canEditFn()) return;
-            openOutletModal(d, outletName, label);
-          });
-
-          td.appendChild(box);
-          tr.appendChild(td);
-        }
-
-        body.appendChild(tr);
-      };
-
-      addSection("LOBBY BAR");
-      outletRow("Lobby Bar", "LOBBY BAR", canEditLobbyBar);
-
-      addSection("OUTLETS");
-      outletRow("Starbucks", "STARBUCKS", canEditOutlets);
-      outletRow("Sweet Jesus", "SWEET JESUS", canEditOutlets);
-      outletRow("Freshii", "FRESHII", canEditOutlets);
-
-      // Outlets week edit button
-      $("btnEditOutletWeek").style.display = canEditOutlets() ? "inline-flex" : "none";
-    }
-
-    /********************
-     * USERS ADMIN
-     ********************/
-    function renderUsersAdmin(){
-      const sel = $("selUser");
-      const tb = $("usersTableBody");
-      sel.innerHTML = "";
-      tb.innerHTML = "";
-
-      // dropdown
-      const sorted = [...profiles].sort((a,b)=> String(a.email||"").localeCompare(String(b.email||"")));
-      for (const p of sorted){
-        const opt = document.createElement("option");
-        const label = `${p.name || p.email || "(no name)"} — ${p.email || ""}`;
-        opt.value = String(p.user_id);
-        opt.textContent = label;
-        sel.appendChild(opt);
-      }
-
-      // table list
-      for (const p of sorted){
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="col-service">${esc(p.name || "")}</td>
-          <td>${esc(p.email || "")}</td>
-          <td>${esc(p.role || "")}</td>
-          <td>${esc(p.department || "")}</td>
-          <td>${esc(String(!!p.is_active))}</td>
+        return `
+          <tr>
+            <td class="svcName">${item.name}</td>
+            ${cells}
+          </tr>
         `;
-        tb.appendChild(tr);
-      }
+      }).join("");
 
-      // select first + fill
-      if (sorted.length){
-        sel.value = String(sorted[0].user_id);
-        fillUserEditor(sorted[0]);
-      }
+      return headerRow + itemRows;
+    }).join("");
+
+    svcTable.innerHTML = `
+      <thead>
+        <tr>
+          <th style="min-width:280px">Service</th>
+          ${svcDatesHeader}
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    `;
+
+    // Click handlers for service tiles
+    [...svcTable.querySelectorAll(".tile")].forEach(tile => {
+      let clickTimer = null;
+      tile.addEventListener("click", (e) => {
+        // single click = set green (or toggle for massimo)
+        if(clickTimer) return;
+        clickTimer = setTimeout(async () => {
+          clickTimer = null;
+          await onServiceClick(tile, false);
+        }, 200);
+      });
+      tile.addEventListener("dblclick", async () => {
+        // double click = clear (turn all red for that day/group)
+        if(clickTimer){ clearTimeout(clickTimer); clickTimer=null; }
+        await onServiceClick(tile, true);
+      });
+    });
+
+    // Outlet table
+    const outletTable = $("outletTable");
+    outletTable.innerHTML = `
+      <thead>
+        <tr>
+          <th style="min-width:240px">Outlet</th>
+          ${svcDatesHeader}
+        </tr>
+      </thead>
+      <tbody>
+        ${OUTLETS.map(o => {
+          const cells = dates.map(d => {
+            const row = outletByKey.get(`${d}|${o.key}`);
+            const isOpen = !!row?.is_open;
+            const cls = isOpen ? "green" : "red";
+
+            const infoLeft = row?.updated_by_name || "—";
+            const infoRight = row?.updated_at ? fmtToronto(row.updated_at) : "—";
+            const hours = isOpen ? `${row?.open_time || "?"}–${row?.close_time || "?"}` : "Closed";
+
+            return `
+              <td>
+                <div class="tile ${cls}" data-outlet="${o.key}" data-date="${d}">
+                  <div class="tileInfo">
+                    <span>${hours}</span>
+                    <span>${infoRight}</span>
+                  </div>
+                </div>
+                <div class="subtle" style="margin-top:6px">${infoLeft}</div>
+              </td>
+            `;
+          }).join("");
+
+          return `
+            <tr>
+              <td class="svcName">${o.key} <span class="subtle">(${o.editDept})</span></td>
+              ${cells}
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    `;
+
+    [...outletTable.querySelectorAll(".tile")].forEach(tile => {
+      tile.addEventListener("click", async () => {
+        const outlet = tile.getAttribute("data-outlet");
+        const date = tile.getAttribute("data-date");
+        await editOutletDay(outlet, date);
+      });
+    });
+  }
+
+  function getServiceUpdatedInfo(date, group, itemId){
+    if(group === "massimo"){
+      const r = massimoByKey.get(`${date}|${itemId}`);
+      return { name: r?.updated_by_name || "—", at: r?.updated_at || null };
     }
+    const sel = selectionByKey.get(`${date}|${group}`);
+    // show who/when on every tile in that group (since only one selection per day)
+    return { name: sel?.updated_by_name || "—", at: sel?.updated_at || null };
+  }
 
-    function fillUserEditor(p){
-      $("uEmail").value = p.email || "";
-      $("uName").value = p.name || "";
-      $("uRole").value = p.role || "viewer";
-      $("uDept").value = p.department || "";
-      $("uActive").value = String(!!p.is_active);
+  function isServiceGreen(date, group, itemId){
+    if(group === "massimo"){
+      const r = massimoByKey.get(`${date}|${itemId}`);
+      return !!r?.is_active;
     }
+    const sel = selectionByKey.get(`${date}|${group}`);
+    return sel?.service_item_id === itemId;
+  }
 
-    async function saveUserChanges(){
-      const usersMsg = $("usersMsg");
-      try{
-        const uid = $("selUser").value;
-        if (!uid) throw new Error("Select a user first.");
+  async function onServiceClick(tile, isDouble){
+    clearErr();
+    if(!canEditRestaurants(profile)) return showErr("No permission to edit restaurant status.");
 
-        const payload = {
-          user_id: uid,
-          name: $("uName").value.trim() || null,
-          role: $("uRole").value,
-          department: $("uDept").value || null,
-          is_active: $("uActive").value === "true"
-        };
+    const date = tile.getAttribute("data-date");
+    const group = tile.getAttribute("data-group");
+    const mode = tile.getAttribute("data-mode");
+    const itemId = tile.getAttribute("data-item");
 
-        showMsg(usersMsg, "Saving…", "info");
-        const { error } = await sb.from("profiles").upsert(payload, { onConflict: "user_id" });
-        if (error) throw error;
+    // Massimo: multi select (toggle)
+    if(mode === "multi"){
+      const key = `${date}|${itemId}`;
+      const current = massimoByKey.get(key);
+      const next = isDouble ? false : !current?.is_active;
 
-        showMsg(usersMsg, "Saved.", "ok");
-        await loadDashboard(); // refresh lists
-      }catch(e){
-        showMsg(usersMsg, e?.message || String(e), "err");
-      }
-    }
-
-    /********************
-     * WRITE ACTIONS (UUID ONLY)
-     ********************/
-    async function setSelection(groupName, date, serviceItemIdOrNull){
-      const appMsg = $("appMsg");
-      try{
-        showMsg(appMsg, "Saving…", "info");
-
-        const payload = {
-          date,
-          group_name: groupName,
-          service_item_id: serviceItemIdOrNull, // uuid or null
-          updated_by: me.user_id,
-          updated_at: new Date().toISOString()
-        };
-
-        const { error } = await sb.from("daily_service_selection")
-          .upsert(payload, { onConflict: "date,group_name" });
-
-        if (error) throw error;
-
-        await loadDashboard();
-      }catch(e){
-        showMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function setMassimo(date, serviceItemId, isActive){
-      const appMsg = $("appMsg");
-      try{
-        showMsg(appMsg, "Saving…", "info");
-
-        const payload = {
-          date,
-          service_item_id: serviceItemId, // uuid
-          is_active: !!isActive,
-          updated_by: me.user_id,
-          updated_at: new Date().toISOString()
-        };
-
-        const { error } = await sb.from("daily_massimo_status")
-          .upsert(payload, { onConflict: "date,service_item_id" });
-
-        if (error) throw error;
-
-        await loadDashboard();
-      }catch(e){
-        showMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
-    async function saveForecast(date, pct, notes, notesLong){
-      const appMsg = $("appMsg");
-      const payloadBase = {
-        date,
-        occupancy_percent: pct,
-        notes: notes || null,
-        updated_by: me.user_id,
+      const payload = {
+        date,                     // IMPORTANT: always send date
+        service_item_id: itemId,  // IMPORTANT
+        is_active: next,
+        updated_by: currentUser.id,
         updated_at: new Date().toISOString()
       };
 
-      // Try with notes_long first; if column doesn't exist, retry without it
-      try{
-        showMsg(appMsg, "Saving…", "info");
+      const { error } = await sb.from("daily_massimo_status")
+        .upsert(payload, { onConflict:"date,service_item_id" });
 
-        let payload = { ...payloadBase, notes_long: notesLong || null };
-        let res = await sb.from("daily_forecast").upsert(payload, { onConflict: "date" });
-        if (res.error){
-          // Retry without notes_long
-          payload = { ...payloadBase };
-          res = await sb.from("daily_forecast").upsert(payload, { onConflict: "date" });
-          if (res.error) throw res.error;
-        }
-
-        await loadDashboard();
-      }catch(e){
-        showMsg(appMsg, e?.message || String(e), "err");
-      }
+      if(error) return showErr(error.message);
+      await loadAll();
+      return;
     }
 
-    async function saveOutlet(date, outletName, isOpen, openTime, closeTime){
-      const appMsg = $("appMsg");
-      try{
-        showMsg(appMsg, "Saving…", "info");
+    // Breakfast/Lunch/Dinner: single selection per day
+    if(isDouble){
+      // clear = delete selection row for that day/group
+      const { error } = await sb.from("daily_service_selection")
+        .delete()
+        .eq("date", date)
+        .eq("group_name", group);
 
-        const payload = {
-          date,
-          outlet_name: outletName,
-          is_open: !!isOpen,
-          open_time: isOpen ? (openTime || null) : null,
-          close_time: isOpen ? (closeTime || null) : null,
-          updated_by: me.user_id,
-          updated_at: new Date().toISOString()
-        };
+      if(error) return showErr(error.message);
+      await loadAll();
+      return;
+    } else {
+      // set selection
+      const payload = {
+        date,                 // IMPORTANT
+        group_name: group,
+        service_item_id: itemId,
+        updated_by: currentUser.id,
+        updated_at: new Date().toISOString()
+      };
 
-        const { error } = await sb.from("daily_outlet_hours")
-          .upsert(payload, { onConflict: "date,outlet_name" });
+      const { error } = await sb.from("daily_service_selection")
+        .upsert(payload, { onConflict:"date,group_name" });
 
-        if (error) throw error;
+      if(error) return showErr(error.message);
+      await loadAll();
+    }
+  }
 
-        await loadDashboard();
-      }catch(e){
-        showMsg(appMsg, e?.message || String(e), "err");
-      }
+  async function editOutletDay(outletName, date){
+    clearErr();
+
+    // permission: lobby bar is F&B, others outlets, admin all
+    const outletDef = OUTLETS.find(x => x.key === outletName);
+    const deptNeeded = outletDef?.editDept;
+
+    const allowed = (profile?.role === "admin")
+      || (profile?.role === "user" && profile?.department === deptNeeded);
+
+    if(!allowed) return showErr("No permission to edit this outlet.");
+
+    const existing = outletByKey.get(`${date}|${outletName}`) || null;
+
+    const isOpen = confirm(`${outletName} on ${date}\n\nOK = Open\nCancel = Closed`);
+    let open_time = null, close_time = null;
+
+    if(isOpen){
+      open_time = prompt("Open time (e.g., 07:00 or 7:00 AM)", existing?.open_time || "");
+      if(!open_time) return showErr("If open, you must enter open time.");
+      close_time = prompt("Close time (e.g., 22:00 or 10:00 PM)", existing?.close_time || "");
+      if(!close_time) return showErr("If open, you must enter close time.");
     }
 
-    /********************
-     * MODALS
-     ********************/
-    function openOccModal(date){
-      occEditDate = date;
-      const r = forecastByDate.get(date) || {};
+    const payload = {
+      date,                 // IMPORTANT
+      outlet_name: outletName,
+      is_open: isOpen,
+      open_time,
+      close_time,
+      updated_by: currentUser.id,
+      updated_at: new Date().toISOString()
+    };
 
-      const pct = (r.occupancy_percent ?? r.occupancy ?? "");
-      const notes = (r.notes ?? r.note ?? r.notes_short ?? "");
-      const notesLong = (r.notes_long ?? r.notesLong ?? r.long_notes ?? "");
+    const { error } = await sb.from("daily_outlet_hours")
+      .upsert(payload, { onConflict:"date,outlet_name" });
 
-      $("occTitle").textContent = `Edit occupancy — ${date}`;
-      $("occPct").value = (pct === null || pct === undefined) ? "" : Number(pct);
-      $("occNote").value = notes || "";
-      $("occLong").value = notesLong || "";
+    if(error) return showErr(error.message);
+    await loadAll();
+  }
 
-      $("occOverlay").classList.add("show");
+  // ====== Users Admin ======
+  async function renderUsersAdmin(){
+    if(profile?.role !== "admin"){
+      $("tabDash").click();
+      return;
     }
+    clearErr();
 
-    function closeOccModal(){
-      $("occOverlay").classList.remove("show");
-      occEditDate = null;
-    }
+    const { data: users, error } = await sb.from("profiles")
+      .select("user_id,email,name,role,department,is_active")
+      .order("name", { ascending:true });
 
-    function openOutletModal(date, outletName, label){
-      outEdit = { date, outlet: outletName, label };
-      const r = outletByKey.get(`${date}|${outletName}`) || {};
-      $("outTitle").textContent = `Edit ${label} — ${date}`;
-      $("outOpen").value = String(!!r.is_open);
-      $("outTimeOpen").value = r.open_time ? String(r.open_time).slice(0,5) : "";
-      $("outTimeClose").value = r.close_time ? String(r.close_time).slice(0,5) : "";
-      $("outOverlay").classList.add("show");
-    }
+    if(error) return showErr(error.message);
 
-    function closeOutletModal(){
-      $("outOverlay").classList.remove("show");
-      outEdit = { date:null, outlet:null, label:null };
-    }
+    appRoot.innerHTML = `
+      <div class="grid">
+        <div class="card">
+          <h3 class="sectionTitle">Admin – Users</h3>
+          <div class="subtle">Select a user, then update name / role / department. (No UID shown.)</div>
 
-    function openOutletWeekModal(){
-      // only for Outlets dept/admin
-      const tbody = $("outWeekBody");
-      tbody.innerHTML = "";
-      outWeekDraft = [];
-
-      for (const d of days){
-        const mkCell = (outletName) => {
-          const r = outletByKey.get(`${d}|${outletName}`) || {};
-          const isOpen = !!r.is_open;
-          const ot = r.open_time ? String(r.open_time).slice(0,5) : "";
-          const ct = r.close_time ? String(r.close_time).slice(0,5) : "";
-          return { date:d, outlet: outletName, isOpen, ot, ct };
-        };
-
-        const star = mkCell("STARBUCKS");
-        const sj = mkCell("SWEET JESUS");
-        const fr = mkCell("FRESHII");
-
-        outWeekDraft.push(star, sj, fr);
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="col-service"><strong>${esc(fmtDay(d))}</strong><div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(d)}</div></td>
-          ${weekEditorCellHtml(star)}
-          ${weekEditorCellHtml(sj)}
-          ${weekEditorCellHtml(fr)}
-        `;
-        tbody.appendChild(tr);
-      }
-
-      $("outWeekOverlay").classList.add("show");
-    }
-
-    function weekEditorCellHtml(obj){
-      const key = `${obj.date}|${obj.outlet}`;
-      const s = `
-        <td>
-          <div style="display:grid; gap:8px;">
-            <div class="field" style="padding:8px 10px; border-radius:12px;">
-              <label>Status</label>
-              <select data-week="status" data-key="${esc(key)}">
-                <option value="false" ${obj.isOpen? "":"selected"}>Closed</option>
-                <option value="true" ${obj.isOpen? "selected":""}>Open</option>
+          <div style="margin-top:12px" class="row">
+            <div style="flex: 2 1 320px">
+              <label>Select user</label>
+              <select id="userPick">
+                <option value="">— choose —</option>
+                ${(users||[]).map(u => `<option value="${u.user_id}">${(u.name||u.email)} — ${u.email}</option>`).join("")}
               </select>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <div class="field" style="padding:8px 10px; border-radius:12px;">
-                <label>Open</label>
-                <input data-week="open" data-key="${esc(key)}" type="time" value="${esc(obj.ot)}" />
-              </div>
-              <div class="field" style="padding:8px 10px; border-radius:12px;">
-                <label>Close</label>
-                <input data-week="close" data-key="${esc(key)}" type="time" value="${esc(obj.ct)}" />
-              </div>
+            <div>
+              <label>Role</label>
+              <select id="uRole">
+                <option value="admin">admin</option>
+                <option value="user">user</option>
+                <option value="viewer">viewer</option>
+              </select>
+            </div>
+            <div>
+              <label>Department</label>
+              <select id="uDept">
+                <option value="">(none)</option>
+                <option value="Guest Service">Guest Service</option>
+                <option value="F&B">F&amp;B</option>
+                <option value="Outlets">Outlets</option>
+              </select>
             </div>
           </div>
-        </td>
-      `;
-      return s;
+
+          <div style="margin-top:10px" class="row">
+            <div style="flex:2 1 320px">
+              <label>Full name</label>
+              <input id="uName" type="text" placeholder="Full name" />
+            </div>
+            <div>
+              <label>Active</label>
+              <select id="uActive">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
+            <button class="btn" id="btnUserSave">Save changes</button>
+            <button class="btn secondary" id="btnUserReload">Reload list</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="sectionTitle">Current users</h3>
+          <div class="tableWrap" style="margin-top:10px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(users||[]).map(u => `
+                  <tr>
+                    <td>${u.name || "—"}</td>
+                    <td>${u.email || "—"}</td>
+                    <td>${u.role || "—"}</td>
+                    <td>${u.department || "—"}</td>
+                    <td>${String(u.is_active)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const userPick = $("userPick");
+    function fill(u){
+      $("uName").value = u?.name || "";
+      $("uRole").value = u?.role || "viewer";
+      $("uDept").value = u?.department || "";
+      $("uActive").value = String(!!u?.is_active);
     }
 
-    function closeOutletWeekModal(){
-      $("outWeekOverlay").classList.remove("show");
-      outWeekDraft = [];
-    }
+    userPick.addEventListener("change", () => {
+      const uid = userPick.value;
+      const u = (users||[]).find(x => x.user_id === uid);
+      fill(u);
+    });
 
-    async function saveOutletWeek(){
-      const appMsg = $("appMsg");
-      try{
-        // read values from DOM
-        const statusEls = document.querySelectorAll("[data-week='status']");
-        const openEls = document.querySelectorAll("[data-week='open']");
-        const closeEls = document.querySelectorAll("[data-week='close']");
+    $("btnUserReload").onclick = () => loadAll().catch(e => showErr(e?.message || String(e)));
 
-        const statusMap = new Map();
-        statusEls.forEach(el => statusMap.set(el.getAttribute("data-key"), el.value === "true"));
-        const openMap = new Map();
-        openEls.forEach(el => openMap.set(el.getAttribute("data-key"), el.value || ""));
-        const closeMap = new Map();
-        closeEls.forEach(el => closeMap.set(el.getAttribute("data-key"), el.value || ""));
+    $("btnUserSave").onclick = async () => {
+      clearErr();
+      const uid = userPick.value;
+      if(!uid) return showErr("Pick a user first.");
 
-        // Build payloads for outlets only
-        const payloads = [];
-        for (const d of days){
-          for (const outletName of ["STARBUCKS","SWEET JESUS","FRESHII"]){
-            const key = `${d}|${outletName}`;
-            const isOpen = statusMap.get(key) || false;
-            const ot = openMap.get(key) || "";
-            const ct = closeMap.get(key) || "";
+      const payload = {
+        user_id: uid,
+        name: $("uName").value.trim() || null,
+        role: $("uRole").value,
+        department: $("uDept").value || null,
+        is_active: $("uActive").value === "true",
+        updated_at: new Date().toISOString()
+      };
 
-            // If user set open, require times
-            if (isOpen && (!ot || !ct)){
-              throw new Error(`Hours required when Open: ${outletName} on ${d}`);
-            }
+      const { error } = await sb.from("profiles").upsert(payload, { onConflict:"user_id" });
+      if(error) return showErr(error.message);
 
-            // Only save rows the user touched OR any explicit open/closed choice.
-            // We’ll always upsert so it’s consistent.
-            payloads.push({
-              date: d,
-              outlet_name: outletName,
-              is_open: isOpen,
-              open_time: isOpen ? ot : null,
-              close_time: isOpen ? ct : null,
-              updated_by: me.user_id,
-              updated_at: new Date().toISOString()
-            });
-          }
+      await loadAll();
+      $("tabUsers").click();
+    };
+  }
+
+  // ====== PDF Snapshot (print window) ======
+  function openPdfSnapshot(){
+    clearErr();
+    const dates = [];
+    for(let i=0;i<DAYS;i++) dates.push(addDays(startDate, i));
+
+    function pickSingleGroup(groupKey, title){
+      const items = serviceItems.filter(x => x.group_name === groupKey).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+      return dates.map(d => {
+        const sel = selectionByKey.get(`${d}|${groupKey}`);
+        if(!sel?.service_item_id){
+          return `<tr><td>${d}</td><td><b>${title} closed</b></td></tr>`;
         }
-
-        showMsg(appMsg, "Saving week…", "info");
-        const { error } = await sb.from("daily_outlet_hours").upsert(payloads, { onConflict:"date,outlet_name" });
-        if (error) throw error;
-
-        closeOutletWeekModal();
-        await loadDashboard();
-      }catch(e){
-        showMsg(appMsg, e?.message || String(e), "err");
-      }
+        const chosen = items.find(i => i.id === sel.service_item_id);
+        return `<tr><td>${d}</td><td>${chosen?.name || "—"}</td></tr>`;
+      }).join("");
     }
 
-    /********************
-     * PDF SNAPSHOT (simple, no libs)
-     ********************/
-    function pdfEscape(s){
-      return String(s ?? "")
-        .replace(/\\/g, "\\\\")
-        .replace(/\(/g, "\\(")
-        .replace(/\)/g, "\\)")
-        .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "?");
+    function pickMassimo(){
+      const items = serviceItems.filter(x => x.group_name === "massimo").sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+      return dates.map(d => {
+        const actives = items.filter(i => massimoByKey.get(`${d}|${i.id}`)?.is_active);
+        const text = actives.length ? actives.map(a => a.name).join(", ") : "Massimo closed";
+        return `<tr><td>${d}</td><td>${text}</td></tr>`;
+      }).join("");
     }
 
-    function buildSimplePdfFromLines(lines){
-      const pageW = 612, pageH = 792;
-      const marginL = 48, marginT = 56;
-      const lineH = 14;
-      const maxLinesPerPage = Math.floor((pageH - marginT - 48) / lineH);
-
-      const pages = [];
-      for (let i=0; i<lines.length; i+=maxLinesPerPage) pages.push(lines.slice(i, i+maxLinesPerPage));
-
-      const objs = [];
-      const add = (s)=>{ objs.push(s); return objs.length; };
-
-      add(`<< /Type /Catalog /Pages 2 0 R >>`);
-      add(`<< >>`); // pages placeholder
-      const fontId = add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
-
-      const contentIds = [];
-      const pageIds = [];
-
-      for (let p=0; p<pages.length; p++){
-        const pageLines = pages[p];
-
-        const content = [];
-        content.push("BT");
-        content.push(`/F1 11 Tf`);
-        content.push(`${marginL} ${pageH - marginT} Td`);
-        for (let i=0; i<pageLines.length; i++){
-          const t = pdfEscape(pageLines[i]);
-          if (i===0) content.push(`(${t}) Tj`);
-          else content.push(`0 -${lineH} Td (${t}) Tj`);
-        }
-        content.push("ET");
-        const cs = content.join("\n");
-        const cid = add(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
-        contentIds.push(cid);
-
-        const pid = add(
-          `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] ` +
-          `/Resources << /Font << /F1 ${fontId} 0 R >> >> ` +
-          `/Contents ${cid} 0 R >>`
-        );
-        pageIds.push(pid);
-      }
-
-      objs[1] = `<< /Type /Pages /Kids [${pageIds.map(id=>`${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
-
-      let pdf = `%PDF-1.4\n`;
-      const xref = [];
-      xref.push("0000000000 65535 f \n");
-
-      for (let i=0; i<objs.length; i++){
-        const offset = pdf.length;
-        xref.push(String(offset).padStart(10,"0") + " 00000 n \n");
-        pdf += `${i+1} 0 obj\n${objs[i]}\nendobj\n`;
-      }
-
-      const xrefOffset = pdf.length;
-      pdf += `xref\n0 ${objs.length+1}\n` + xref.join("") +
-             `trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-
-      return new Uint8Array(Array.from(pdf).map(ch => ch.charCodeAt(0)));
+    function outletLines(){
+      return OUTLETS.map(o => {
+        const lines = dates.map(d => {
+          const r = outletByKey.get(`${d}|${o.key}`);
+          const open = !!r?.is_open;
+          const txt = open ? `Open (${r?.open_time || "?"}–${r?.close_time || "?"})` : "Closed";
+          return `<tr><td>${d}</td><td>${txt}</td></tr>`;
+        }).join("");
+        return `
+          <h3>${o.key}</h3>
+          <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${lines}</tbody></table>
+        `;
+      }).join("");
     }
 
-    function serviceSelectedName(date, group){
-      const r = selByKey.get(`${date}|${group}`);
-      const id = r?.service_item_id ? String(r.service_item_id) : null;
-      if (!id) return null;
-      return serviceById.get(id)?.name || null;
+    const occLines = dates.map(d => {
+      const r = forecastByDate.get(d);
+      const pct = (r?.occupancy_pct === null || r?.occupancy_pct === undefined) ? "—" : (Number(r.occupancy_pct).toFixed(1) + "%");
+      const ns = r?.notes_short ? ` — ${escapeHtml(r.notes_short)}` : "";
+      return `<tr><td>${d}</td><td>${pct}${ns}</td></tr>`;
+    }).join("");
+
+    const html = `
+      <!doctype html>
+      <html><head>
+        <meta charset="utf-8">
+        <title>7-Day Snapshot</title>
+        <style>
+          body{font-family:Arial, sans-serif; padding:18px}
+          h1{margin:0 0 6px 0}
+          .sub{color:#555; margin:0 0 16px 0}
+          table{border-collapse:collapse; width:100%; margin:8px 0 18px 0}
+          th,td{border:1px solid #ccc; padding:8px; text-align:left; font-size:12px}
+          th{background:#f2f2f2}
+          h2{margin:18px 0 6px 0}
+          h3{margin:14px 0 6px 0}
+        </style>
+      </head>
+      <body>
+        <h1>Sheraton Niagara Falls – 7-Day Snapshot</h1>
+        <p class="sub">Start date: ${startDate} • Generated: ${new Date().toLocaleString("en-CA",{timeZone:TZ})} (Toronto time)</p>
+
+        <h2>Occupancy</h2>
+        <table><thead><tr><th>Date</th><th>Forecast</th></tr></thead><tbody>${occLines}</tbody></table>
+
+        <h2>Restaurants</h2>
+        <h3>Breakfast</h3>
+        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickSingleGroup("breakfast","Breakfast")}</tbody></table>
+
+        <h3>Lunch</h3>
+        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickSingleGroup("lunch","Lunch")}</tbody></table>
+
+        <h3>Dinner</h3>
+        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickSingleGroup("dinner","Dinner")}</tbody></table>
+
+        <h3>Massimo</h3>
+        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickMassimo()}</tbody></table>
+
+        <h2>Lobby Bar & Outlets</h2>
+        ${outletLines()}
+
+        <script>
+          window.onload = () => setTimeout(() => window.print(), 200);
+        </script>
+      </body></html>
+    `;
+
+    const w = window.open("", "_blank");
+    if(!w) return showErr("Pop-up blocked. Allow pop-ups for this site.");
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ====== Boot ======
+  async function onAuthChanged(){
+    clearErr();
+    const { data } = await sb.auth.getUser();
+    const user = data?.user || null;
+
+    if(!user){
+      authRoot.style.display = "flex";
+      appRoot.style.display = "none";
+      return;
     }
+    authRoot.style.display = "none";
+    appRoot.style.display = "block";
 
-    function massimoActiveNames(date){
-      const out = [];
-      for (const item of itemsByGroup.massimo){
-        const r = massimoByKey.get(`${date}|${String(item.id)}`);
-        if (r?.is_active) out.push(item.name.replace("MASSIMO ",""));
-      }
-      return out;
-    }
+    startDate = $("startDate").value || startDate;
+    await loadAll();
+  }
 
-    function outletSummary(date, outletName){
-      const r = outletByKey.get(`${date}|${outletName}`);
-      if (!r) return "Closed";
-      if (!r.is_open) return "Closed";
-      const ot = fmtTime12(r.open_time);
-      const ct = fmtTime12(r.close_time);
-      return (ot && ct) ? `Open ${ot}–${ct}` : "Open";
-    }
+  // Guard: no supabase
+  if(!sb){
+    authRoot.style.display = "flex";
+    appRoot.style.display = "none";
+    showErr("Supabase client not found. Make sure supabase.js is in the repo root.");
+    return;
+  }
 
-    function downloadPdf(){
-      const start = $("startDate").value;
-      const now = fmtTsToronto(new Date().toISOString());
-
-      const lines = [];
-      lines.push("Sheraton Niagara Falls – 7-Day Snapshot");
-      lines.push(`Start date: ${start}`);
-      lines.push(`Generated: ${now} (Toronto time)`);
-      lines.push("");
-
-      for (const d of days){
-        const bf = serviceSelectedName(d,"breakfast") || "Breakfast closed";
-        const lu = serviceSelectedName(d,"lunch") || "Lunch closed";
-        const di = serviceSelectedName(d,"dinner") || "Dinner closed";
-        const ma = massimoActiveNames(d);
-        const maLine = ma.length ? ("Massimo: " + ma.join(", ")) : "Massimo closed";
-
-        lines.push(`${fmtDay(d)}  [${d}]`);
-        lines.push(`  Breakfast: ${bf}`);
-        lines.push(`  Lunch: ${lu}`);
-        lines.push(`  Dinner: ${di}`);
-        lines.push(`  ${maLine}`);
-        lines.push(`  Lobby Bar: ${outletSummary(d,"LOBBY BAR")}`);
-        lines.push(`  Starbucks: ${outletSummary(d,"STARBUCKS")}`);
-        lines.push(`  Sweet Jesus: ${outletSummary(d,"SWEET JESUS")}`);
-        lines.push(`  Freshii: ${outletSummary(d,"FRESHII")}`);
-        lines.push("");
-      }
-
-      const bytes = buildSimplePdfFromLines(lines);
-      const blob = new Blob([bytes], { type:"application/pdf" });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Sheraton_7Day_Snapshot_${start}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      setTimeout(()=>URL.revokeObjectURL(url), 4000);
-    }
-
-    /********************
-     * EVENTS
-     ********************/
-    $("btnSignin").addEventListener("click", ()=>{
-      const email = $("inEmail").value.trim();
-      const pass = $("inPass").value;
-      signIn(email, pass);
-    });
-
-    $("btnForgot").addEventListener("click", ()=>{
-      $("resetEmail").value = $("inEmail").value.trim();
-      showAuth("reset");
-    });
-
-    $("btnBackSignin").addEventListener("click", ()=> showAuth("signin"));
-    $("btnSendReset").addEventListener("click", ()=>{
-      const email = $("resetEmail").value.trim();
-      sendReset(email);
-    });
-
-    $("btnSetCancel").addEventListener("click", ()=> showAuth("signin"));
-    $("btnSetSave").addEventListener("click", ()=>{
-      setPasswordAndProfile(
-        $("setName").value.trim(),
-        $("setPass1").value,
-        $("setPass2").value
-      );
-    });
-
-    $("btnLogout").addEventListener("click", logout);
-    $("btnDash").addEventListener("click", showDashboard);
-    $("btnUsers").addEventListener("click", ()=>{
-      if (!canViewUsers()) return;
-      showUsers();
-      renderUsersAdmin();
-    });
-
-    $("btnRefresh").addEventListener("click", loadDashboard);
-    $("btnToday").addEventListener("click", ()=>{
-      $("startDate").value = toISODateToronto();
-      loadDashboard();
-    });
-    $("btnPdf").addEventListener("click", downloadPdf);
-
-    // Occ modal
-    $("occClose").addEventListener("click", closeOccModal);
-    $("occOverlay").addEventListener("click", (e)=>{ if (e.target.id==="occOverlay") closeOccModal(); });
-    $("occSave").addEventListener("click", ()=>{
-      if (!occEditDate) return;
-      const pctRaw = $("occPct").value;
-      const pct = pctRaw === "" ? null : Number(pctRaw);
-      if (pct !== null && (isNaN(pct) || pct < 0 || pct > 100)){
-        showMsg($("appMsg"), "Occupancy must be between 0 and 100.", "err");
-        return;
-      }
-      closeOccModal();
-      saveForecast(occEditDate, pct, $("occNote").value.trim(), $("occLong").value.trim());
-    });
-
-    // Outlet day modal
-    $("outClose").addEventListener("click", closeOutletModal);
-    $("outOverlay").addEventListener("click", (e)=>{ if (e.target.id==="outOverlay") closeOutletModal(); });
-    $("outSave").addEventListener("click", ()=>{
-      if (!outEdit?.date || !outEdit?.outlet) return;
-
-      const isOpen = $("outOpen").value === "true";
-      const ot = $("outTimeOpen").value || "";
-      const ct = $("outTimeClose").value || "";
-
-      if (isOpen && (!ot || !ct)){
-        showMsg($("appMsg"), "If Open is selected, you must enter open and close times.", "err");
-        return;
-      }
-
-      closeOutletModal();
-      saveOutlet(outEdit.date, outEdit.outlet, isOpen, ot, ct);
-    });
-
-    // Outlet week modal
-    $("btnEditOutletWeek").addEventListener("click", ()=>{
-      if (!canEditOutlets()) return;
-      openOutletWeekModal();
-    });
-    $("outWeekClose").addEventListener("click", closeOutletWeekModal);
-    $("outWeekOverlay").addEventListener("click", (e)=>{ if (e.target.id==="outWeekOverlay") closeOutletWeekModal(); });
-    $("outWeekSave").addEventListener("click", saveOutletWeek);
-
-    // Users admin
-    $("selUser").addEventListener("change", ()=>{
-      const uid = $("selUser").value;
-      const p = profiles.find(x => String(x.user_id) === String(uid));
-      if (p) fillUserEditor(p);
-    });
-    $("btnSaveUser").addEventListener("click", saveUserChanges);
-    $("btnReloadUsers").addEventListener("click", async ()=>{
-      showMsg($("usersMsg"), "Reloading…", "info");
-      await loadDashboard();
-      showMsg($("usersMsg"), "Reloaded.", "ok");
-      renderUsersAdmin();
-    });
-
-    /********************
-     * BOOT
-     ********************/
-    (async function boot(){
-      if (!sb) return;
-
-      // If link-based auth flow, handle it first
-      const usedLink = await handleAuthLinksIfAny();
-
-      await loadSession();
-      if (!session){
-        // start date default
-        $("startDate").value = toISODateToronto();
-        showAuth("signin");
-        return;
-      }
-
-      // If this was an invite/reset link, show set password prompt once
-      if (usedLink){
-        showAuth("setpass");
-        return;
-      }
-
-      $("startDate").value = $("startDate").value || toISODateToronto();
-      await initAfterLogin();
-    })();
-  </script>
+  sb.auth.onAuthStateChange(() => onAuthChanged());
+  onAuthChanged().catch(e => showErr(e?.message || String(e)));
+})();
+</script>
 </body>
 </html>
