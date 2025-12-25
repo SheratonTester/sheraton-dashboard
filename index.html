@@ -78,7 +78,7 @@
       outline:none;
     }
     input[type="date"]{padding:9px 12px}
-    textarea{width:100%;min-height:160px;resize:vertical;line-height:1.3}
+    textarea{width:100%;min-height:170px;resize:vertical;line-height:1.35}
     button{cursor:pointer;transition: all .15s ease}
     button:hover{border-color:#cbd5e1}
     .btnPrimary{
@@ -96,6 +96,11 @@
       box-shadow: 0 10px 18px rgba(239,68,68,.18);
     }
     .btnDanger:hover{filter: brightness(1.03)}
+    .btnSoft{
+      background: rgba(37,99,235,.08);
+      border-color: rgba(37,99,235,.22);
+      color:#1d4ed8;
+    }
 
     .card{
       background: var(--card);
@@ -266,7 +271,7 @@
       z-index: 999999;
     }
     .modal{
-      width:100%; max-width:760px;
+      width:100%; max-width:860px;
       background:#fff;
       border:1px solid rgba(226,232,240,.9);
       border-radius:18px;
@@ -296,6 +301,58 @@
       gap:10px;
     }
 
+    /* Week editor table */
+    .weekWrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:auto;
+      max-height: 64vh;
+      background:#fff;
+    }
+    .weekTable{min-width: 1050px; width:100%; border-collapse:separate; border-spacing:0}
+    .weekTable th,.weekTable td{
+      border-bottom:1px solid var(--line);
+      border-right:1px solid var(--line);
+      padding:10px;
+      vertical-align:top;
+      background:#fff;
+    }
+    .weekTable th{
+      position:sticky; top:0; z-index:3;
+      background: var(--rowHead);
+      font-size:12px; color:var(--muted);
+      text-align:center;
+    }
+    .weekTable td:first-child,.weekTable th:first-child{
+      position:sticky; left:0; z-index:4;
+      background:#fff;
+      text-align:left;
+      min-width:210px;
+      font-weight:800;
+    }
+    .cellBox{
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .cellRow{
+      display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    }
+    .mini{
+      font-size:11px;color:var(--muted);
+      line-height:1.15;
+    }
+    .mini strong{color:#0f172a}
+    .selSmall{
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:13px;
+    }
+    .timeSmall{
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:13px;
+      width:130px;
+    }
+
     @media (max-width: 860px){
       .twoCol{grid-template-columns:1fr}
       .wrap{padding:12px}
@@ -321,6 +378,7 @@
       th,td{padding:8px}
       .statusCell{min-width:96px}
       .statusFill{height:58px}
+      .weekWrap{max-height: 70vh}
     }
   </style>
 </head>
@@ -398,6 +456,7 @@
               <input id="startDate" type="date" />
               <button id="btnToday" class="btnGhost">Today</button>
               <button id="btnRefresh" class="btnPrimary">Refresh</button>
+              <button id="btnPrintSnapshot" class="btnSoft">Print 7-Day Snapshot</button>
             </div>
           </div>
 
@@ -430,7 +489,12 @@
           </table>
         </div>
 
-        <div class="sectionTitle">Lobby Bar</div>
+        <div class="sectionTitle">
+          Lobby Bar
+          <span class="badge">Open/Closed + hours</span>
+          <span class="badge">F&B only</span>
+          <button id="btnEditLobbyWeek" class="btnSoft" style="margin-left:auto;">Edit week</button>
+        </div>
         <div class="tableWrap">
           <table>
             <thead>
@@ -442,7 +506,12 @@
           </table>
         </div>
 
-        <div class="sectionTitle">Outlets</div>
+        <div class="sectionTitle">
+          Outlets
+          <span class="badge">Starbucks / Sweet Jesus / Freshii</span>
+          <span class="badge">Outlets only</span>
+          <button id="btnEditOutletsWeek" class="btnSoft" style="margin-left:auto;">Edit week</button>
+        </div>
         <div class="tableWrap">
           <table>
             <thead>
@@ -553,7 +622,7 @@
           </div>
           <div>
             <label style="margin:0;color:var(--muted);font-size:12px;">Notes</label>
-            <div class="hint">Bigger box so notes are easy to read.</div>
+            <div class="hint">Big box so notes are easy to read.</div>
           </div>
         </div>
 
@@ -569,7 +638,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Outlet/Lobby edit -->
+  <!-- MODAL: Outlet/Lobby single-cell edit -->
   <div id="outletModalBack" class="modalBack">
     <div class="modal">
       <div class="modalHeader">
@@ -609,9 +678,42 @@
     </div>
   </div>
 
+  <!-- MODAL: Week editor -->
+  <div id="weekModalBack" class="modalBack">
+    <div class="modal" style="max-width:1180px;">
+      <div class="modalHeader">
+        <b id="weekModalTitle">Edit week</b>
+        <button id="btnWeekClose" class="btnGhost xBtn">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="hint" style="margin-bottom:10px;">
+          Change as much or as little as you want. Only changed cells are saved.
+          If you set a day to <b>Open</b>, hours are required.
+        </div>
+
+        <div class="weekWrap">
+          <table class="weekTable">
+            <thead>
+              <tr id="weekHead">
+                <th>Outlet</th>
+              </tr>
+            </thead>
+            <tbody id="weekBody"></tbody>
+          </table>
+        </div>
+
+        <div id="weekModalMsg" class="msg"></div>
+      </div>
+      <div class="modalFooter">
+        <button id="btnWeekSave" class="btnPrimary">Save changes</button>
+      </div>
+    </div>
+  </div>
+
   <script src="./supabase.js"></script>
 
   <script>
+    // === CONFIG ===
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -671,6 +773,12 @@
     const outletOpenTime = document.getElementById("outletOpenTime");
     const outletCloseTime = document.getElementById("outletCloseTime");
 
+    const weekModalBack = document.getElementById("weekModalBack");
+    const weekModalTitle = document.getElementById("weekModalTitle");
+    const weekHead = document.getElementById("weekHead");
+    const weekBody = document.getElementById("weekBody");
+    const weekModalMsg = document.getElementById("weekModalMsg");
+
     let currentUser = null;
     let myRole = "viewer";
     let myDept = "";
@@ -679,12 +787,14 @@
     let dashboardDays = [];
     let serviceByName = new Map();
 
-    let dssMeta = new Map();
-    let dmsMeta = new Map();
-    let outletMap = new Map();
+    let dssMeta = new Map(); // pick-one meals
+    let dmsMeta = new Map(); // massimo
+    let outletMap = new Map(); // daily_outlet_hours
 
     let occEditDate = null;
     let outletEdit = { date:null, outlet_name:null };
+
+    let weekEditMode = null; // "lobby" or "outlets"
 
     let adminUsersCache = []; // for dropdown
 
@@ -718,6 +828,7 @@
     const LOBBY_BAR = ["LOBBY BAR"];
     const OUTLETS = ["STARBUCKS","SWEET JESUS","FRESHII"];
 
+    // === HELPERS ===
     function setMsg(el, text, type="") {
       el.className = "msg " + (type === "err" ? "err" : type === "ok" ? "oktxt" : type === "warn" ? "warntxt" : "");
       el.textContent = text || "";
@@ -830,6 +941,15 @@
       return `<div class="stamp">${l1}${l2}${l3}</div>`;
     }
 
+    function normOutletRow(r){
+      // keep it stable for comparisons
+      const is_open = r?.is_open === true;
+      const open_time = r?.open_time || null;
+      const close_time = r?.close_time || null;
+      return JSON.stringify({is_open, open_time, close_time});
+    }
+
+    // === LOAD PROFILE ===
     async function loadMyProfile(){
       const { data, error } = await sb
         .from("profiles")
@@ -847,6 +967,7 @@
       }
     }
 
+    // === DATA LOADERS ===
     async function loadServiceItems(){
       const { data, error } = await sb
         .from("service_items")
@@ -925,6 +1046,7 @@
       }
     }
 
+    // === UI BUILDERS ===
     function buildHeaderRow(rowEl){
       while (rowEl.children.length > 1) rowEl.removeChild(rowEl.lastChild);
       for (const day of dashboardDays){
@@ -934,6 +1056,7 @@
       }
     }
 
+    // === OCCUPANCY MODAL ===
     function openOccModal(day){
       const row = dashboardDays.find(x => x.day === day);
       occEditDate = day;
@@ -986,7 +1109,7 @@
 
         setMsg(occModalMsg,"Saved.","ok");
         renderOccCards();
-        setTimeout(closeOccModal, 200);
+        setTimeout(closeOccModal, 150);
       } catch(e){
         setMsg(occModalMsg, e?.message || String(e), "err");
       }
@@ -1027,6 +1150,7 @@
       }
     }
 
+    // === RESTAURANT LOGIC ===
     function pickOneIsOn(day, serviceName){
       const item = serviceByName.get(serviceName);
       if (!item) return false;
@@ -1187,6 +1311,7 @@
       }
     }
 
+    // === OUTLETS/Lobby single-cell ===
     function outletCellStamp(row){
       const who = row?.updated_by_name || "";
       const when = fmtToronto(row?.updated_at);
@@ -1300,12 +1425,380 @@
         renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
 
         setMsg(outletModalMsg, "Saved.", "ok");
-        setTimeout(closeOutletModal, 200);
+        setTimeout(closeOutletModal, 150);
       } catch(e){
         setMsg(outletModalMsg, e?.message || String(e), "err");
       }
     }
 
+    // === WEEK EDITOR ===
+    function openWeekEditor(mode){
+      // mode: "lobby" or "outlets"
+      weekEditMode = mode;
+
+      if (mode === "lobby"){
+        if (!canEditRestaurantAndLobby()){
+          setMsg(appMsg, "Only F&B (or admin) can edit Lobby Bar.", "err");
+          return;
+        }
+        weekModalTitle.textContent = "Edit week – Lobby Bar";
+      } else {
+        if (!canEditOutlets()){
+          setMsg(appMsg, "Only Outlets (or admin) can edit outlets.", "err");
+          return;
+        }
+        weekModalTitle.textContent = "Edit week – Outlets";
+      }
+
+      setMsg(weekModalMsg, "");
+      renderWeekEditorTable();
+      weekModalBack.style.display = "flex";
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeWeekEditor(){
+      weekModalBack.style.display = "none";
+      weekEditMode = null;
+      weekBody.innerHTML = "";
+      document.body.style.overflow = "";
+    }
+
+    function renderWeekEditorTable(){
+      // head
+      while (weekHead.children.length > 1) weekHead.removeChild(weekHead.lastChild);
+      for (const d of dashboardDays){
+        const th = document.createElement("th");
+        th.textContent = fmtDay(d.day);
+        weekHead.appendChild(th);
+      }
+
+      weekBody.innerHTML = "";
+
+      const names = (weekEditMode === "lobby") ? LOBBY_BAR : OUTLETS;
+
+      for (const outlet_name of names){
+        const tr = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        tdName.textContent = outlet_name;
+        tr.appendChild(tdName);
+
+        for (const d of dashboardDays){
+          const day = d.day;
+          const existing = outletMap.get(keyOutlet(day, outlet_name));
+          const origNorm = normOutletRow(existing);
+
+          const td = document.createElement("td");
+
+          const box = document.createElement("div");
+          box.className = "cellBox";
+
+          const row1 = document.createElement("div");
+          row1.className = "cellRow";
+
+          const sel = document.createElement("select");
+          sel.className = "selSmall";
+          // allow "no change" option
+          // BUT: we prefill with current value so user can edit fast
+          const optOpen = document.createElement("option");
+          optOpen.value = "open"; optOpen.textContent = "Open";
+          const optClosed = document.createElement("option");
+          optClosed.value = "closed"; optClosed.textContent = "Closed";
+
+          sel.appendChild(optOpen);
+          sel.appendChild(optClosed);
+
+          const tOpen = document.createElement("input");
+          tOpen.type = "time";
+          tOpen.className = "timeSmall";
+
+          const tClose = document.createElement("input");
+          tClose.type = "time";
+          tClose.className = "timeSmall";
+
+          // prefill
+          const isOpen = !!existing?.is_open;
+          sel.value = isOpen ? "open" : "closed";
+          tOpen.value = isOpen ? (existing?.open_time || "") : "";
+          tClose.value = isOpen ? (existing?.close_time || "") : "";
+
+          // store original + identity on elements
+          sel.dataset.day = day;
+          sel.dataset.outlet = outlet_name;
+          sel.dataset.orig = origNorm;
+
+          tOpen.dataset.day = day;
+          tOpen.dataset.outlet = outlet_name;
+
+          tClose.dataset.day = day;
+          tClose.dataset.outlet = outlet_name;
+
+          function sync(){
+            const open = (sel.value === "open");
+            tOpen.disabled = !open;
+            tClose.disabled = !open;
+          }
+          sel.addEventListener("change", sync);
+          sync();
+
+          row1.appendChild(sel);
+          row1.appendChild(tOpen);
+          row1.appendChild(tClose);
+
+          const meta = document.createElement("div");
+          meta.className = "mini";
+          const who = existing?.updated_by_name || "";
+          const when = fmtToronto(existing?.updated_at);
+          meta.innerHTML = existing
+            ? `<div><strong>Last:</strong> ${escapeHtml(who || "—")}</div><div>${escapeHtml(when || "")}</div>`
+            : `<div><strong>Last:</strong> —</div><div></div>`;
+
+          box.appendChild(row1);
+          box.appendChild(meta);
+
+          td.appendChild(box);
+          tr.appendChild(td);
+        }
+
+        weekBody.appendChild(tr);
+      }
+    }
+
+    async function saveWeekEditor(){
+      try{
+        setMsg(weekModalMsg, "Saving…");
+
+        const names = (weekEditMode === "lobby") ? LOBBY_BAR : OUTLETS;
+
+        // collect all controls
+        const selects = Array.from(weekBody.querySelectorAll("select.selSmall"));
+        const opens = Array.from(weekBody.querySelectorAll("input[type='time']")).filter(x => x.previousSibling && x.previousSibling.tagName !== "INPUT"); // not used, just keep simple
+
+        let changedCount = 0;
+
+        for (const sel of selects){
+          const day = sel.dataset.day;
+          const outlet_name = sel.dataset.outlet;
+          if (!day || !outlet_name) continue;
+          if (!names.includes(outlet_name)) continue;
+
+          // find corresponding time inputs
+          const cell = sel.closest("td");
+          const inputs = Array.from(cell.querySelectorAll("input[type='time']"));
+          const tOpen = inputs[0];
+          const tClose = inputs[1];
+
+          const is_open = (sel.value === "open");
+          let open_time = null;
+          let close_time = null;
+
+          if (is_open){
+            open_time = String(tOpen.value || "").trim();
+            close_time = String(tClose.value || "").trim();
+            if (!open_time || !close_time){
+              setMsg(weekModalMsg, `Missing hours: ${outlet_name} on ${day}. If Open, you must set both times.`, "err");
+              return;
+            }
+          }
+
+          const newNorm = JSON.stringify({is_open, open_time, close_time});
+          const origNorm = sel.dataset.orig || JSON.stringify({is_open:false, open_time:null, close_time:null});
+
+          if (newNorm === origNorm){
+            continue; // no change
+          }
+
+          // permission check by mode
+          if (weekEditMode === "lobby"){
+            if (!canEditRestaurantAndLobby()){
+              setMsg(weekModalMsg, "Only F&B (or admin) can edit Lobby Bar.", "err");
+              return;
+            }
+          } else {
+            if (!canEditOutlets()){
+              setMsg(weekModalMsg, "Only Outlets (or admin) can edit outlets.", "err");
+              return;
+            }
+          }
+
+          const { error } = await sb
+            .from("daily_outlet_hours")
+            .upsert({ date: day, outlet_name, is_open, open_time, close_time }, { onConflict: "date,outlet_name" });
+
+          if (error) throw error;
+
+          changedCount++;
+        }
+
+        await fetchOutletHours();
+        renderOutletTable(lobbyHead, lobbyBody, LOBBY_BAR, () => canEditRestaurantAndLobby());
+        renderOutletTable(outletsHead, outletsBody, OUTLETS, () => canEditOutlets());
+
+        if (changedCount === 0){
+          setMsg(weekModalMsg, "No changes to save.", "ok");
+        } else {
+          setMsg(weekModalMsg, `Saved ${changedCount} change(s).`, "ok");
+        }
+
+        setTimeout(closeWeekEditor, 200);
+      } catch(e){
+        setMsg(weekModalMsg, e?.message || String(e), "err");
+      }
+    }
+
+    // === SNAPSHOT / PDF PRINT ===
+    function getSelectedServiceName(day, groupName){
+      const meta = dssMeta.get(keyDss(day, groupName));
+      if (!meta?.selected) return null;
+      // find by id
+      const id = String(meta.selected);
+      for (const [name, item] of serviceByName.entries()){
+        if (String(item.id) === id) return name;
+      }
+      return null;
+    }
+
+    function getMassimoActiveNames(day){
+      const names = ["MASSIMO BREAKFAST","MASSIMO LUNCH","MASSIMO DINNER"];
+      const active = [];
+      for (const n of names){
+        if (massimoIsOn(day, n)) active.push(n.replace("MASSIMO ",""));
+      }
+      return active;
+    }
+
+    function outletSummary(day, outlet_name){
+      const row = outletMap.get(keyOutlet(day, outlet_name));
+      if (!row) return "—";
+      if (!row.is_open) return "Closed";
+      const ot = fmtTime12(row.open_time);
+      const ct = fmtTime12(row.close_time);
+      if (!ot || !ct) return "Open (hours missing)";
+      return `Open ${ot}–${ct}`;
+    }
+
+    function buildSnapshotHtml(){
+      const startDate = startDateEl.value;
+      const title = `Sheraton Niagara Falls – 7-Day Snapshot (${startDate})`;
+
+      const dayCols = dashboardDays.map(d => ({
+        day: d.day,
+        label: fmtDay(d.day)
+      }));
+
+      function rowHtml(label, cells){
+        return `
+          <tr>
+            <td class="label">${escapeHtml(label)}</td>
+            ${cells.map(c => `<td>${c}</td>`).join("")}
+          </tr>
+        `;
+      }
+
+      // Occupancy rows
+      const occCells = dashboardDays.map(d => {
+        if (d.occupancy_percent == null) return "—";
+        return `<b>${Number(d.occupancy_percent).toFixed(1)}%</b>`;
+      });
+
+      const noteCells = dashboardDays.map(d => {
+        const n = (d.notes || "").trim();
+        return n ? `<div class="notes">${escapeHtml(n)}</div>` : "—";
+      });
+
+      // Restaurants: only show what is selected; otherwise Closed
+      const breakfastCells = dashboardDays.map(d => escapeHtml(getSelectedServiceName(d.day, "breakfast") || "Breakfast closed"));
+      const lunchCells = dashboardDays.map(d => escapeHtml(getSelectedServiceName(d.day, "lunch") || "Lunch closed"));
+      const dinnerCells = dashboardDays.map(d => escapeHtml(getSelectedServiceName(d.day, "dinner") || "Dinner closed"));
+
+      // Massimo can have multiple green
+      const massimoCells = dashboardDays.map(d => {
+        const a = getMassimoActiveNames(d.day);
+        return a.length ? escapeHtml(a.join(", ")) : "Massimo closed";
+      });
+
+      // Lobby/Outlets
+      const lobbyCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "LOBBY BAR")));
+      const starCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "STARBUCKS")));
+      const sjCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "SWEET JESUS")));
+      const freshCells = dashboardDays.map(d => escapeHtml(outletSummary(d.day, "FRESHII")));
+
+      // Build HTML
+      const html = `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body{font-family:Arial, sans-serif; margin:22px; color:#111827;}
+    h1{font-size:18px; margin:0 0 10px;}
+    .sub{color:#475569; font-size:12px; margin-bottom:14px;}
+    table{border-collapse:collapse; width:100%; table-layout:fixed;}
+    th,td{border:1px solid #cbd5e1; padding:8px; vertical-align:top; font-size:12px;}
+    th{background:#f1f5f9; color:#334155;}
+    td.label{font-weight:800; width:170px; background:#fbfdff;}
+    .notes{white-space:pre-wrap; line-height:1.25;}
+    @media print {
+      body{margin:10mm;}
+      h1{page-break-after:avoid;}
+      table{page-break-inside:avoid;}
+    }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <div class="sub">Generated by Sheraton Dashboard • Times shown in America/Toronto where applicable</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Section</th>
+        ${dayCols.map(d => `<th>${escapeHtml(d.label)}<div style="font-size:10px;color:#64748b;margin-top:2px;">${escapeHtml(d.day)}</div></th>`).join("")}
+      </tr>
+    </thead>
+    <tbody>
+      ${rowHtml("Occupancy %", occCells)}
+      ${rowHtml("Notes", noteCells)}
+      ${rowHtml("Breakfast", breakfastCells)}
+      ${rowHtml("Lunch", lunchCells)}
+      ${rowHtml("Dinner", dinnerCells)}
+      ${rowHtml("Massimo", massimoCells)}
+      ${rowHtml("Lobby Bar", lobbyCells)}
+      ${rowHtml("Starbucks", starCells)}
+      ${rowHtml("Sweet Jesus", sjCells)}
+      ${rowHtml("Freshii", freshCells)}
+    </tbody>
+  </table>
+</body>
+</html>
+      `.trim();
+
+      return html;
+    }
+
+    function printSnapshot(){
+      try{
+        const html = buildSnapshotHtml();
+        const w = window.open("", "_blank", "noopener,noreferrer");
+        if (!w){
+          setMsg(appMsg, "Popup blocked. Allow popups for this site, then try again.", "err");
+          return;
+        }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        // give it a moment to render
+        setTimeout(() => {
+          w.print();
+        }, 350);
+      } catch(e){
+        setMsg(appMsg, e?.message || String(e), "err");
+      }
+    }
+
+    // === USERS (admin) ===
     function buildUsersDropdown(){
       userSelect.innerHTML = "";
       const opt0 = document.createElement("option");
@@ -1407,6 +1900,7 @@
       }
     }
 
+    // === MAIN REFRESH ===
     async function refreshAll(){
       try{
         setMsg(appMsg, "Loading…");
@@ -1453,7 +1947,7 @@
       if (isAdmin()) await loadUsers();
     }
 
-    // IMPORTANT: Invite links now open this setup screen too
+    // === RECOVERY / INVITE ===
     async function handleRecoveryFromUrl(){
       const isPwFlow = (t) => t === "recovery" || t === "invite";
 
@@ -1518,11 +2012,10 @@
       const { data } = await sb.auth.getSession();
       const email = data?.session?.user?.email || "";
       if (email) setupEmail.value = email;
-      // name stays blank so they must enter it (as you wanted)
       setupName.value = setupName.value || "";
     }
 
-    // UI actions
+    // === EVENTS ===
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
@@ -1571,18 +2064,15 @@
       try{
         setMsg(recoveryMsg, "Saving…");
 
-        // must have a session from invite/reset link
         const { data: sessData } = await sb.auth.getSession();
         if (!sessData?.session){
           setMsg(recoveryMsg, "No session found. Open the invite/reset link again.", "err");
           return;
         }
 
-        // 1) set password
         const { error: e1 } = await sb.auth.updateUser({ password: p1 });
         if (e1) throw e1;
 
-        // 2) save name + email into profiles using safe RPC
         const { error: e2 } = await sb.rpc("self_update_profile", {
           p_full_name: fullName,
           p_email: email
@@ -1622,6 +2112,8 @@
       refreshAll();
     });
 
+    document.getElementById("btnPrintSnapshot").addEventListener("click", printSnapshot);
+
     document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
     document.getElementById("btnOccSave").addEventListener("click", saveOccModal);
     occModalBack.addEventListener("click", (e) => { if (e.target === occModalBack) closeOccModal(); });
@@ -1631,10 +2123,19 @@
     outletModalBack.addEventListener("click", (e) => { if (e.target === outletModalBack) closeOutletModal(); });
     outletIsOpen.addEventListener("change", syncOutletTimeEnabled);
 
+    // Week edit buttons
+    document.getElementById("btnEditLobbyWeek").addEventListener("click", () => openWeekEditor("lobby"));
+    document.getElementById("btnEditOutletsWeek").addEventListener("click", () => openWeekEditor("outlets"));
+    document.getElementById("btnWeekClose").addEventListener("click", closeWeekEditor);
+    document.getElementById("btnWeekSave").addEventListener("click", saveWeekEditor);
+    weekModalBack.addEventListener("click", (e) => { if (e.target === weekModalBack) closeWeekEditor(); });
+
+    // Users
     document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
     document.getElementById("btnSaveUser").addEventListener("click", saveSelectedUser);
     userSelect.addEventListener("change", () => fillUserEditorByEmail(userSelect.value));
 
+    // === STARTUP ===
     (async () => {
       const didRecovery = await handleRecoveryFromUrl();
       if (didRecovery) return;
