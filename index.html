@@ -256,7 +256,7 @@
       max-width:100%;
     }
 
-    .loginBox{max-width:520px;margin:40px auto}
+    .loginBox{max-width:560px;margin:40px auto}
 
     .modalBack{
       position:fixed; inset:0;
@@ -296,15 +296,6 @@
       gap:10px;
     }
 
-    /* PRINT: we show only the snapshot section */
-    #printArea{display:none}
-    @media print{
-      body{background:#fff}
-      .wrap{max-width:none;padding:0}
-      #appView, #loginView, #recoveryView{display:none !important}
-      #printArea{display:block !important; padding: 12mm}
-    }
-
     @media (max-width: 860px){
       .twoCol{grid-template-columns:1fr}
       .wrap{padding:12px}
@@ -337,6 +328,7 @@
 <body>
   <div class="wrap">
 
+    <!-- LOGIN -->
     <div id="loginView" class="loginBox card" style="display:none;">
       <h2 style="margin:0 0 8px;font-size:18px;">Sheraton Dashboard</h2>
       <div class="hint">Sign in to view / update occupancy and restaurant status.</div>
@@ -355,9 +347,16 @@
       <div id="loginMsg" class="msg"></div>
     </div>
 
+    <!-- INVITE / RESET PASSWORD -->
     <div id="recoveryView" class="loginBox card" style="display:none;">
-      <h2 style="margin:0 0 8px;font-size:18px;">Set your password</h2>
-      <div class="hint">This page opened from an invite or reset link.</div>
+      <h2 style="margin:0 0 8px;font-size:18px;">Finish setup</h2>
+      <div class="hint">Enter your name, confirm your email, and set your password.</div>
+
+      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Full name</label>
+      <input id="setupName" type="text" placeholder="Your full name" />
+
+      <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">Email</label>
+      <input id="setupEmail" type="email" placeholder="name@niagarafallshotels.com" />
 
       <label style="display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;">New password</label>
       <input id="newPass" type="password" placeholder="New password" />
@@ -366,13 +365,14 @@
       <input id="newPass2" type="password" placeholder="Confirm new password" />
 
       <div class="row" style="margin-top:12px;">
-        <button id="btnSetPass" class="btnPrimary">Update password</button>
+        <button id="btnSetPass" class="btnPrimary">Save and continue</button>
         <button id="btnCancelRecovery" class="btnGhost">Cancel</button>
       </div>
 
       <div id="recoveryMsg" class="msg"></div>
     </div>
 
+    <!-- APP -->
     <div id="appView" style="display:none;">
       <div class="topbar">
         <div class="titleRow">
@@ -380,17 +380,16 @@
           <span id="rolePill" class="pill">Role: …</span>
           <span id="deptPill" class="pill">Dept: …</span>
           <span id="userPill" class="pill">User: …</span>
-          <span id="rtPill" class="pill">Realtime: off</span>
         </div>
 
         <div class="tabs">
           <button id="tabDashboard" class="tabBtn active">Dashboard</button>
           <button id="tabUsers" class="tabBtn" style="display:none;">Users</button>
-          <button id="btnPrint" class="tabBtn btnGhost">Print 7-Day Snapshot</button>
           <button id="btnLogout" class="tabBtn btnDanger">Logout</button>
         </div>
       </div>
 
+      <!-- DASHBOARD -->
       <div id="panelDashboard">
         <div class="card">
           <div class="row" style="justify-content:space-between;">
@@ -409,7 +408,7 @@
         <div class="card">
           <div id="occCards" class="gridDays"></div>
           <div class="hint" style="margin-top:10px;">
-            Tap a day card to edit (if you have permission). It will prefill the last saved percent + notes.
+            Click a day to edit (if you have permission). It will prefill the last saved percent + notes.
           </div>
         </div>
 
@@ -458,38 +457,41 @@
         <div id="appMsg" class="msg"></div>
       </div>
 
+      <!-- USERS -->
       <div id="panelUsers" style="display:none;">
-        <div class="sectionTitle">Admin – Users & Permissions</div>
+        <div class="sectionTitle">Admin – Users</div>
 
         <div class="card">
           <div class="hint" style="margin-bottom:10px;">
-            Add Auth users in Supabase (Authentication → Users). Then set Role/Department here.
+            Use Supabase to invite/create Auth users. Then select them here and set name/role/department.
           </div>
 
-          <div class="twoCol">
+          <label style="display:block;font-size:12px;color:var(--muted);margin:6px 0;">Select user</label>
+          <select id="userSelect" style="width:min(720px,100%);"></select>
+
+          <div class="twoCol" style="margin-top:10px;">
             <div>
-              <label style="margin:0;color:var(--muted);font-size:12px;">Email</label>
-              <input id="newUserEmail" placeholder="e.g. person@niagarafallshotels.com" />
+              <label style="margin:0;color:var(--muted);font-size:12px;">Full name</label>
+              <input id="editUserName" placeholder="Full name" />
             </div>
             <div>
-              <label style="margin:0;color:var(--muted);font-size:12px;">Name</label>
-              <input id="newUserName" placeholder="e.g. Eric" />
+              <label style="margin:0;color:var(--muted);font-size:12px;">Email (read only)</label>
+              <input id="editUserEmail" disabled />
             </div>
           </div>
 
           <div class="twoCol" style="margin-top:10px;">
             <div>
               <label style="margin:0;color:var(--muted);font-size:12px;">Role</label>
-              <select id="newUserRole">
+              <select id="editUserRole">
                 <option value="viewer">viewer</option>
-                <option value="editor">editor</option>
-                <option value="outlets_lead">outlets_lead</option>
+                <option value="user">user</option>
                 <option value="admin">admin</option>
               </select>
             </div>
             <div>
               <label style="margin:0;color:var(--muted);font-size:12px;">Department</label>
-              <select id="newUserDept">
+              <select id="editUserDept">
                 <option value="Guest Service">Guest Service</option>
                 <option value="F&B">F&amp;B</option>
                 <option value="Outlets">Outlets</option>
@@ -499,14 +501,14 @@
 
           <div class="row" style="margin-top:10px;">
             <label style="margin:0;color:var(--muted);font-size:12px;">Active</label>
-            <select id="newUserActive" style="width:160px;">
+            <select id="editUserActive" style="width:160px;">
               <option value="true">true</option>
               <option value="false">false</option>
             </select>
           </div>
 
           <div class="row" style="margin-top:10px;">
-            <button id="btnUpsertUser" class="btnPrimary">Save user</button>
+            <button id="btnSaveUser" class="btnPrimary">Save changes</button>
             <button id="btnReloadUsers" class="btnGhost">Reload list</button>
           </div>
 
@@ -533,8 +535,6 @@
       </div>
 
     </div>
-
-    <div id="printArea"></div>
 
   </div>
 
@@ -630,7 +630,6 @@
     const rolePill = document.getElementById("rolePill");
     const deptPill = document.getElementById("deptPill");
     const userPill = document.getElementById("userPill");
-    const rtPill = document.getElementById("rtPill");
     const permHint = document.getElementById("permHint");
 
     const startDateEl = document.getElementById("startDate");
@@ -647,15 +646,17 @@
     const loginMsg = document.getElementById("loginMsg");
     const recoveryMsg = document.getElementById("recoveryMsg");
 
+    const setupName = document.getElementById("setupName");
+    const setupEmail = document.getElementById("setupEmail");
+
     const usersMsg = document.getElementById("usersMsg");
     const usersTable = document.getElementById("usersTable");
-    const newUserEmail = document.getElementById("newUserEmail");
-    const newUserName = document.getElementById("newUserName");
-    const newUserRole = document.getElementById("newUserRole");
-    const newUserDept = document.getElementById("newUserDept");
-    const newUserActive = document.getElementById("newUserActive");
-
-    const printArea = document.getElementById("printArea");
+    const userSelect = document.getElementById("userSelect");
+    const editUserName = document.getElementById("editUserName");
+    const editUserEmail = document.getElementById("editUserEmail");
+    const editUserRole = document.getElementById("editUserRole");
+    const editUserDept = document.getElementById("editUserDept");
+    const editUserActive = document.getElementById("editUserActive");
 
     const occModalBack = document.getElementById("occModalBack");
     const occModalTitle = document.getElementById("occModalTitle");
@@ -677,7 +678,6 @@
 
     let dashboardDays = [];
     let serviceByName = new Map();
-    let serviceById = new Map();
 
     let dssMeta = new Map();
     let dmsMeta = new Map();
@@ -685,6 +685,8 @@
 
     let occEditDate = null;
     let outletEdit = { date:null, outlet_name:null };
+
+    let adminUsersCache = []; // for dropdown
 
     const GROUPS = [
       { title: "Breakfast", groupName: "breakfast", items: [
@@ -728,17 +730,16 @@
     }
 
     function isAdmin(){ return myRole === "admin"; }
+    function isUser(){ return myRole === "user"; }
+
     function canEditOcc(){
-      if (isAdmin()) return true;
-      return myRole === "editor" && (myDept || "").toLowerCase() === "guest service";
+      return isAdmin() || (isUser() && (myDept || "") === "Guest Service");
     }
     function canEditRestaurantAndLobby(){
-      if (isAdmin()) return true;
-      return myRole === "editor" && (myDept || "").toLowerCase() === "f&b";
+      return isAdmin() || (isUser() && (myDept || "") === "F&B");
     }
     function canEditOutlets(){
-      if (isAdmin()) return true;
-      return myRole === "outlets_lead";
+      return isAdmin() || (isUser() && (myDept || "") === "Outlets");
     }
 
     function switchTab(which){
@@ -853,7 +854,6 @@
         .order("sort_order", { ascending: true });
       if (error) throw error;
       serviceByName = new Map((data || []).map(x => [x.name, x]));
-      serviceById = new Map((data || []).map(x => [String(x.id), x]));
     }
 
     async function fetchDashboard(startDate){
@@ -1265,12 +1265,12 @@
         if (!date || !outlet_name) return;
 
         const isLobby = (outlet_name === "LOBBY BAR");
-        if (isLobby && !canEditRestaurantAndLobby() && !isAdmin()){
+        if (isLobby && !canEditRestaurantAndLobby()){
           setMsg(outletModalMsg, "Only F&B (or admin) can edit Lobby Bar.", "err");
           return;
         }
-        if (!isLobby && !canEditOutlets() && !isAdmin()){
-          setMsg(outletModalMsg, "Only Outlets Lead (or admin) can edit outlets.", "err");
+        if (!isLobby && !canEditOutlets()){
+          setMsg(outletModalMsg, "Only Outlets (or admin) can edit outlets.", "err");
           return;
         }
 
@@ -1306,6 +1306,39 @@
       }
     }
 
+    function buildUsersDropdown(){
+      userSelect.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "Select a user…";
+      userSelect.appendChild(opt0);
+
+      for (const u of adminUsersCache){
+        const opt = document.createElement("option");
+        opt.value = u.email || "";
+        const labelName = (u.full_name || "(no name)");
+        opt.textContent = `${labelName} — ${u.email || ""}`;
+        userSelect.appendChild(opt);
+      }
+    }
+
+    function fillUserEditorByEmail(email){
+      const u = adminUsersCache.find(x => (x.email || "") === email);
+      if (!u){
+        editUserName.value = "";
+        editUserEmail.value = "";
+        editUserRole.value = "viewer";
+        editUserDept.value = "Guest Service";
+        editUserActive.value = "true";
+        return;
+      }
+      editUserName.value = u.full_name || "";
+      editUserEmail.value = u.email || "";
+      editUserRole.value = (u.role || "viewer");
+      editUserDept.value = (u.department || "Guest Service");
+      editUserActive.value = String(!!u.is_active);
+    }
+
     async function loadUsers(){
       if (!isAdmin()){
         setMsg(usersMsg, "Not authorized (admin only).", "err");
@@ -1316,8 +1349,13 @@
         const { data, error } = await sb.rpc("admin_list_profiles");
         if (error) throw error;
 
+        adminUsersCache = (data || []).slice().sort((a,b) => (a.full_name || "").localeCompare((b.full_name || "")));
+
+        buildUsersDropdown();
+        fillUserEditorByEmail(userSelect.value);
+
         usersTable.innerHTML = "";
-        for (const r of (data || [])){
+        for (const r of adminUsersCache){
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td style="text-align:left;">${escapeHtml(r.full_name || "")}</td>
@@ -1334,19 +1372,19 @@
       }
     }
 
-    async function upsertUser(){
+    async function saveSelectedUser(){
       if (!isAdmin()){
         setMsg(usersMsg, "Not authorized (admin only).", "err");
         return;
       }
 
-      const email = String(newUserEmail.value || "").trim();
-      const name = String(newUserName.value || "").trim();
-      const role = String(newUserRole.value || "").trim();
-      const dept = String(newUserDept.value || "").trim();
-      const active = (String(newUserActive.value) === "true");
+      const email = String(editUserEmail.value || "").trim();
+      const name = String(editUserName.value || "").trim();
+      const role = String(editUserRole.value || "").trim().toLowerCase();
+      const dept = String(editUserDept.value || "").trim();
+      const active = (String(editUserActive.value) === "true");
 
-      if (!email) return setMsg(usersMsg, "Email is required.", "err");
+      if (!email) return setMsg(usersMsg, "Select a user first.", "err");
       if (!name) return setMsg(usersMsg, "Name is required.", "err");
 
       try{
@@ -1362,71 +1400,11 @@
 
         setMsg(usersMsg, "Saved.", "ok");
         await loadUsers();
+        userSelect.value = email;
+        fillUserEditorByEmail(email);
       } catch(e){
         setMsg(usersMsg, e?.message || String(e), "err");
       }
-    }
-
-    // ✅ THIS IS THE IMPORTANT CHANGE:
-    // Invite links (type=invite) now go to the same "Set password" screen as recovery.
-    async function handleRecoveryFromUrl(){
-      const isPwFlow = (t) => t === "recovery" || t === "invite";
-
-      // 1) HASH style: #type=invite&access_token=...&refresh_token=...
-      const hp = parseHashParams();
-      if (hp.error){
-        setMsg(loginMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
-        cleanUrlAll();
-        show(loginView);
-        return true;
-      }
-      if (isPwFlow(hp.type) && hp.access_token && hp.refresh_token){
-        const { error } = await sb.auth.setSession({
-          access_token: hp.access_token,
-          refresh_token: hp.refresh_token
-        });
-        cleanUrlAll();
-        if (error){
-          setMsg(recoveryMsg, "Link error: " + error.message, "err");
-          show(loginView);
-        } else {
-          show(recoveryView);
-        }
-        return true;
-      }
-
-      // 2) QUERY style: ?type=invite&code=...
-      const sp = new URLSearchParams(window.location.search);
-      const type = sp.get("type");
-      const code = sp.get("code");
-      const tokenHash = sp.get("token_hash") || sp.get("token"); // supports older formats too
-
-      if (isPwFlow(type) && code){
-        const { error } = await sb.auth.exchangeCodeForSession(code);
-        cleanUrlAll();
-        if (error){
-          setMsg(recoveryMsg, "Link error: " + error.message, "err");
-          show(loginView);
-        } else {
-          show(recoveryView);
-        }
-        return true;
-      }
-
-      // 3) TOKEN HASH style: ?type=invite&token_hash=...
-      if (isPwFlow(type) && tokenHash){
-        const { error } = await sb.auth.verifyOtp({ type, token_hash: tokenHash });
-        cleanUrlAll();
-        if (error){
-          setMsg(recoveryMsg, "Link error: " + error.message, "err");
-          show(loginView);
-        } else {
-          show(recoveryView);
-        }
-        return true;
-      }
-
-      return false;
     }
 
     async function refreshAll(){
@@ -1452,42 +1430,12 @@
       }
     }
 
-    function buildPrintArea(){
-      printArea.innerHTML = "";
-      const start = startDateEl.value;
-      const end = dashboardDays[dashboardDays.length - 1]?.day || "";
-      const printedAt = fmtToronto(new Date().toISOString());
-
-      const h1 = document.createElement("h2");
-      h1.textContent = "Sheraton Niagara Falls – 7-Day Snapshot";
-      h1.style.margin = "0 0 6px";
-      h1.style.fontSize = "18px";
-      printArea.appendChild(h1);
-
-      const sub = document.createElement("div");
-      sub.textContent = `Range: ${start} → ${end} • Printed: ${printedAt} (Toronto time)`;
-      sub.style.color = "#475569";
-      sub.style.fontSize = "12px";
-      sub.style.marginBottom = "12px";
-      printArea.appendChild(sub);
-    }
-
-    function doPrint(){
-      try{
-        buildPrintArea();
-        window.print();
-      } catch(e){
-        setMsg(appMsg, e?.message || String(e), "err");
-      }
-    }
-
     async function showApp(){
       show(appView);
 
       rolePill.textContent = `Role: ${myRole}`;
       deptPill.textContent = `Dept: ${myDept || "—"}`;
       userPill.textContent = `User: ${myName ? myName : (currentUser?.email || "")}`;
-      rtPill.textContent = "Realtime: off";
 
       tabUsers.style.display = isAdmin() ? "inline-flex" : "none";
 
@@ -1503,6 +1451,75 @@
       switchTab("dashboard");
       await refreshAll();
       if (isAdmin()) await loadUsers();
+    }
+
+    // IMPORTANT: Invite links now open this setup screen too
+    async function handleRecoveryFromUrl(){
+      const isPwFlow = (t) => t === "recovery" || t === "invite";
+
+      const hp = parseHashParams();
+      if (hp.error){
+        setMsg(loginMsg, "Auth link error: " + (hp.error_description || hp.error), "err");
+        cleanUrlAll();
+        show(loginView);
+        return true;
+      }
+      if (isPwFlow(hp.type) && hp.access_token && hp.refresh_token){
+        const { error } = await sb.auth.setSession({
+          access_token: hp.access_token,
+          refresh_token: hp.refresh_token
+        });
+        cleanUrlAll();
+        if (error){
+          setMsg(recoveryMsg, "Link error: " + error.message, "err");
+          show(loginView);
+        } else {
+          await prefillSetupFields();
+          show(recoveryView);
+        }
+        return true;
+      }
+
+      const sp = new URLSearchParams(window.location.search);
+      const type = sp.get("type");
+      const code = sp.get("code");
+      const tokenHash = sp.get("token_hash") || sp.get("token");
+
+      if (isPwFlow(type) && code){
+        const { error } = await sb.auth.exchangeCodeForSession(code);
+        cleanUrlAll();
+        if (error){
+          setMsg(recoveryMsg, "Link error: " + error.message, "err");
+          show(loginView);
+        } else {
+          await prefillSetupFields();
+          show(recoveryView);
+        }
+        return true;
+      }
+
+      if (isPwFlow(type) && tokenHash){
+        const { error } = await sb.auth.verifyOtp({ type, token_hash: tokenHash });
+        cleanUrlAll();
+        if (error){
+          setMsg(recoveryMsg, "Link error: " + error.message, "err");
+          show(loginView);
+        } else {
+          await prefillSetupFields();
+          show(recoveryView);
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    async function prefillSetupFields(){
+      const { data } = await sb.auth.getSession();
+      const email = data?.session?.user?.email || "";
+      if (email) setupEmail.value = email;
+      // name stays blank so they must enter it (as you wanted)
+      setupName.value = setupName.value || "";
     }
 
     // UI actions
@@ -1541,22 +1558,38 @@
     });
 
     document.getElementById("btnSetPass").addEventListener("click", async () => {
+      const fullName = String(setupName.value || "").trim();
+      const email = String(setupEmail.value || "").trim().toLowerCase();
       const p1 = document.getElementById("newPass").value;
       const p2 = document.getElementById("newPass2").value;
+
+      if (!fullName) return setMsg(recoveryMsg, "Please enter your full name.", "err");
+      if (!email) return setMsg(recoveryMsg, "Please enter your email.", "err");
       if (!p1 || p1.length < 6) return setMsg(recoveryMsg, "Password must be at least 6 characters.", "err");
       if (p1 !== p2) return setMsg(recoveryMsg, "Passwords do not match.", "err");
 
       try{
-        setMsg(recoveryMsg, "Updating…");
+        setMsg(recoveryMsg, "Saving…");
+
+        // must have a session from invite/reset link
         const { data: sessData } = await sb.auth.getSession();
         if (!sessData?.session){
           setMsg(recoveryMsg, "No session found. Open the invite/reset link again.", "err");
           return;
         }
-        const { error } = await sb.auth.updateUser({ password: p1 });
-        if (error) throw error;
 
-        setMsg(recoveryMsg, "Password updated. Please sign in with your new password.", "ok");
+        // 1) set password
+        const { error: e1 } = await sb.auth.updateUser({ password: p1 });
+        if (e1) throw e1;
+
+        // 2) save name + email into profiles using safe RPC
+        const { error: e2 } = await sb.rpc("self_update_profile", {
+          p_full_name: fullName,
+          p_email: email
+        });
+        if (e2) throw e2;
+
+        setMsg(recoveryMsg, "Setup saved. Please sign in with your new password.", "ok");
         await sb.auth.signOut();
         show(loginView);
       } catch(e){
@@ -1576,11 +1609,8 @@
       myRole = "viewer";
       myDept = "";
       myName = "";
-      rtPill.textContent = "Realtime: off";
       show(loginView);
     });
-
-    document.getElementById("btnPrint").addEventListener("click", doPrint);
 
     tabDashboard.addEventListener("click", () => switchTab("dashboard"));
     tabUsers.addEventListener("click", async () => { switchTab("users"); await loadUsers(); });
@@ -1592,9 +1622,6 @@
       refreshAll();
     });
 
-    document.getElementById("btnUpsertUser").addEventListener("click", upsertUser);
-    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
-
     document.getElementById("btnOccClose").addEventListener("click", closeOccModal);
     document.getElementById("btnOccSave").addEventListener("click", saveOccModal);
     occModalBack.addEventListener("click", (e) => { if (e.target === occModalBack) closeOccModal(); });
@@ -1603,6 +1630,10 @@
     document.getElementById("btnOutletSave").addEventListener("click", saveOutletModal);
     outletModalBack.addEventListener("click", (e) => { if (e.target === outletModalBack) closeOutletModal(); });
     outletIsOpen.addEventListener("change", syncOutletTimeEnabled);
+
+    document.getElementById("btnReloadUsers").addEventListener("click", loadUsers);
+    document.getElementById("btnSaveUser").addEventListener("click", saveSelectedUser);
+    userSelect.addEventListener("change", () => fillUserEditorByEmail(userSelect.value));
 
     (async () => {
       const didRecovery = await handleRecoveryFromUrl();
