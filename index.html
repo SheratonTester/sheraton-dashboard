@@ -41,9 +41,7 @@
       padding:12px 16px;
       max-width:1200px; margin:0 auto;
     }
-    .title{
-      display:flex; flex-direction:column; gap:2px;
-    }
+    .title{display:flex; flex-direction:column; gap:2px;}
     .title h1{font-size:16px; margin:0; font-weight:800; letter-spacing:.2px}
     .title .sub{font-size:12px; color:var(--muted)}
     .pills{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
@@ -56,9 +54,7 @@
       box-shadow: 0 2px 10px rgba(2,6,23,.04);
       white-space:nowrap;
     }
-    .nav{
-      display:flex; gap:10px; align-items:center;
-    }
+    .nav{display:flex; gap:10px; align-items:center;}
     .btn{
       border:1px solid var(--line);
       background: #fff;
@@ -69,16 +65,8 @@
       cursor:pointer;
       box-shadow: 0 6px 18px rgba(2,6,23,.06);
     }
-    .btn.primary{
-      background: var(--brand);
-      border-color: transparent;
-      color: #fff;
-    }
-    .btn.danger{
-      background:#ef4444;
-      border-color:transparent;
-      color:#fff;
-    }
+    .btn.primary{background: var(--brand); border-color: transparent; color: #fff;}
+    .btn.danger{background:#ef4444; border-color:transparent; color:#fff;}
     .btn:disabled{opacity:.55; cursor:not-allowed}
     .grid{display:grid; gap:14px}
     .card{
@@ -112,7 +100,7 @@
     }
     textarea{
       width:100%;
-      min-height:120px;
+      min-height:140px;
       border:1px solid var(--line);
       border-radius: 12px;
       padding:10px;
@@ -130,7 +118,6 @@
     .msg.err{border-color:#fecaca; background:#fff1f2; color:#7f1d1d}
     .msg.ok{border-color:#bbf7d0; background:#ecfdf5; color:#064e3b}
 
-    /* Occupancy cards */
     .occ-wrap{
       display:flex; gap:10px;
       overflow:auto;
@@ -153,12 +140,7 @@
     .occ .meta{font-size:11px; color:var(--muted); margin-top:8px; line-height:1.25}
     .occ.disabled{opacity:.6; cursor:not-allowed}
 
-    /* Matrix */
-    .matrix-wrap{
-      overflow:auto;
-      border-radius: 14px;
-      border:1px solid var(--line);
-    }
+    .matrix-wrap{overflow:auto; border-radius: 14px; border:1px solid var(--line);}
     table.matrix{
       width:100%;
       border-collapse:separate;
@@ -179,9 +161,7 @@
       font-weight:900;
       text-align:center;
     }
-    .matrix th:first-child{
-      left:0; z-index:3; text-align:left;
-    }
+    .matrix th:first-child{left:0; z-index:3; text-align:left;}
     .matrix td:first-child, .matrix th:first-child{
       position:sticky; left:0;
       background:#fff;
@@ -220,22 +200,13 @@
       height:44px;
       border-radius:10px;
       cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
       border:1px solid rgba(0,0,0,.05);
     }
     .cell.red{background: var(--red)}
     .cell.green{background: var(--green)}
     .cell.disabled{opacity:.55; cursor:not-allowed}
 
-    /* Outlet grid */
-    .outlet-grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
+    .outlet-grid{display:grid; grid-template-columns: 1fr; gap:12px;}
     .outlet-row{
       display:flex; gap:10px; align-items:center; flex-wrap:wrap;
       padding:12px;
@@ -251,7 +222,7 @@
       max-width:100%;
     }
     .mini{
-      min-width: 150px;
+      min-width: 160px;
       border-radius: 12px;
       border:1px solid var(--line);
       padding:10px;
@@ -263,7 +234,6 @@
     .mini.closed .s{color: var(--red)}
     .mini .m{margin-top:6px; font-size:11px; color:var(--muted); line-height:1.25}
 
-    /* Modal */
     .overlay{
       position:fixed; inset:0;
       background: rgba(2,6,23,.58);
@@ -291,11 +261,8 @@
     }
     .modal-h strong{font-size:14px}
     .modal-b{padding:14px 16px 16px}
-    .formgrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
+    .formgrid{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+    .formgrid.one{grid-template-columns:1fr}
     .fbox{
       border:1px solid var(--line);
       border-radius: 14px;
@@ -304,9 +271,7 @@
     }
     .fbox label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
     .fbox input, .fbox select{width:100%}
-    .formgrid.one{grid-template-columns: 1fr}
 
-    /* Login */
     .login{
       min-height: calc(100vh - 64px);
       display:flex;
@@ -325,7 +290,6 @@
     .loginbox h2{margin:0 0 6px; font-size:16px}
     .loginbox p{margin:0 0 14px; font-size:12px; color:var(--muted)}
     .loginbox .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-    .smalllink{font-size:12px; color:var(--brand); cursor:pointer; font-weight:800}
 
     /* PRINT SNAPSHOT MODE */
     body.printing #appView{display:none !important;}
@@ -339,7 +303,6 @@
 </head>
 
 <body>
-  <!-- Top bar -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="title">
@@ -361,15 +324,12 @@
     </div>
   </div>
 
-  <!-- App view -->
   <div id="appView">
     <div class="wrap">
-
-      <!-- library status -->
       <div id="libMsg" class="msg" style="display:none;"></div>
 
-      <!-- LOGIN -->
-      <div id="loginView" class="login" style="display:none;">
+      <!-- LOGIN (default visible until JS swaps views) -->
+      <div id="loginView" class="login">
         <div class="loginbox">
           <h2>Sign in</h2>
           <p>Sheraton Niagara Falls Dashboard</p>
@@ -381,7 +341,7 @@
 
           <div class="fbox">
             <label>Password</label>
-            <input id="loginPass" type="text" placeholder="••••••••" />
+            <input id="loginPass" type="password" placeholder="••••••••" />
           </div>
 
           <div class="actions">
@@ -393,7 +353,6 @@
         </div>
       </div>
 
-      <!-- DASHBOARD -->
       <div id="dashView" style="display:none;" class="grid">
         <div class="card">
           <div class="card-h">
@@ -460,7 +419,6 @@
         </div>
       </div>
 
-      <!-- USERS -->
       <div id="usersView" style="display:none;" class="grid">
         <div class="card">
           <div class="card-h">
@@ -526,10 +484,8 @@
     </div>
   </div>
 
-  <!-- PRINT SNAPSHOT AREA (hidden until printing) -->
   <div id="printArea"></div>
 
-  <!-- MODALS -->
   <div class="overlay" id="occOverlay">
     <div class="modal">
       <div class="modal-h">
@@ -587,27 +543,16 @@
     </div>
   </div>
 
-  <!-- SUPABASE LIB (LOCAL) -->
-  <!-- IMPORTANT: keep a file named supabase.js in your repo root (same folder as index.html) -->
   <script src="./supabase.js"></script>
 
   <script>
-    /***************
-      CONFIG
-    ***************/
+    // Safety: never get stuck in printing mode
+    document.body.classList.remove("printing");
+
     const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
     const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-
     const TZ = "America/Toronto";
 
-    const GROUPS = [
-      { key: "breakfast", label: "BREAKFAST" },
-      { key: "lunch", label: "LUNCH" },
-      { key: "dinner", label: "DINNER" },
-      { key: "massimo", label: "MASSIMO" }
-    ];
-
-    // Lobby Bar is controlled by F&B only
     const OUTLET_ITEMS = [
       { name: "LOBBY BAR", dept: "F&B" },
       { name: "STARBUCKS", dept: "Outlets" },
@@ -615,16 +560,25 @@
       { name: "FRESHII", dept: "Outlets" },
     ];
 
-    /***************
-      DOM
-    ***************/
     const libMsg = document.getElementById("libMsg");
+    function showLibError(msg){
+      libMsg.style.display = "block";
+      libMsg.className = "msg err";
+      libMsg.textContent = msg;
+    }
+
+    if (!window.supabase || !window.supabase.createClient){
+      showLibError("Supabase library is missing. Confirm supabase.js exists in the repo root beside index.html.");
+    }
+
+    const sb = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
 
     const whoPills = document.getElementById("whoPills");
     const pillRole = document.getElementById("pillRole");
     const pillDept = document.getElementById("pillDept");
     const pillUser = document.getElementById("pillUser");
-
     const navBtns = document.getElementById("navBtns");
     const btnDashboard = document.getElementById("btnDashboard");
     const btnUsers = document.getElementById("btnUsers");
@@ -648,16 +602,12 @@
 
     const occWrap = document.getElementById("occWrap");
     const occPermHint = document.getElementById("occPermHint");
-
     const restTable = document.getElementById("restTable");
     const restMsg = document.getElementById("restMsg");
     const fbPermHint = document.getElementById("fbPermHint");
-
     const outletGrid = document.getElementById("outletGrid");
-    const outletMsg = document.getElementById("outletMsg");
     const outletPermHint = document.getElementById("outletPermHint");
 
-    // occupancy modal
     const occOverlay = document.getElementById("occOverlay");
     const occTitle = document.getElementById("occTitle");
     const occClose = document.getElementById("occClose");
@@ -667,7 +617,6 @@
     const occSave = document.getElementById("occSave");
     const occMsg = document.getElementById("occMsg");
 
-    // outlet modal
     const outOverlay = document.getElementById("outOverlay");
     const outTitle = document.getElementById("outTitle");
     const outClose = document.getElementById("outClose");
@@ -676,7 +625,6 @@
     const outSave = document.getElementById("outSave");
     const outEditMsg = document.getElementById("outEditMsg");
 
-    // users
     const userSelect = document.getElementById("userSelect");
     const userEmail = document.getElementById("userEmail");
     const userName = document.getElementById("userName");
@@ -688,54 +636,17 @@
     const usersMsg = document.getElementById("usersMsg");
     const usersTable = document.getElementById("usersTable");
 
-    /***************
-      SUPABASE INIT
-    ***************/
-    function showLibError(msg){
-      libMsg.style.display = "block";
-      libMsg.className = "msg err";
-      libMsg.textContent = msg;
-    }
-
-    if (!window.supabase || !window.supabase.createClient){
-      showLibError("Supabase library is missing. Make sure supabase.js is in your repo root (same folder as index.html).");
-    }
-
-    const sb = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
-
-    /***************
-      STATE
-    ***************/
-    let session = null;
-    let me = null; // {user_id, full_name, email, role, department, active}
-
-    let dashboardDays = []; // [{day, label, occupancy_percent, notes_short, notes_long, updated_at, updated_by_name}]
-    let serviceItems = [];  // from service_items
-    let serviceByName = new Map(); // name -> item
-    let serviceById = new Map();   // id -> item
-    let profilesById = new Map();  // uuid -> profile (full_name/email)
-    let dssMeta = new Map(); // key(day, group) -> {selected, updated_at, updated_by}
-    let massimoMap = new Map(); // key(day, service_item_id) -> {is_active, updated_at, updated_by}
-    let outletMap = new Map();  // key(day,outlet_name) -> {is_open, open_time, close_time, updated_at, updated_by}
-
-    let occEditingDate = null;
-
-    /***************
-      HELPERS
-    ***************/
     function setMsg(el, text, type){
       el.style.display = "block";
       el.className = "msg " + (type || "");
       el.textContent = text;
     }
     function hideMsg(el){ el.style.display = "none"; el.textContent = ""; }
-
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
     function isoToday(){
       const now = new Date();
       const y = now.getFullYear();
@@ -743,7 +654,6 @@
       const d = String(now.getDate()).padStart(2,"0");
       return `${y}-${m}-${d}`;
     }
-
     function addDays(iso, n){
       const [y,m,d] = iso.split("-").map(Number);
       const dt = new Date(Date.UTC(y, m-1, d));
@@ -753,13 +663,10 @@
       const dd = String(dt.getUTCDate()).padStart(2,"0");
       return `${yy}-${mm}-${dd}`;
     }
-
     function fmtDay(iso){
-      // Use Toronto time for labels (safe for day names)
       const dt = new Date(iso+"T12:00:00Z");
       return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, weekday:"short", month:"short", day:"numeric" }).format(dt);
     }
-
     function fmtToronto(ts){
       if (!ts) return "";
       const dt = new Date(ts);
@@ -769,16 +676,8 @@
         hour:"numeric", minute:"2-digit"
       }).format(dt);
     }
-
-    function escapeHtml(s){
-      return String(s ?? "").replace(/[&<>"']/g, c => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[c]));
-    }
-
     function fmtTime12(t){
       if (!t) return "";
-      // expects "HH:MM:SS" or "HH:MM"
       const parts = t.split(":");
       const hh = Number(parts[0]);
       const mm = parts[1] ?? "00";
@@ -787,49 +686,29 @@
       return `${h12}:${mm} ${ampm}`;
     }
 
+    let session = null;
+    let me = null;
+
+    let dashboardDays = [];
+    let serviceItems = [];
+    let serviceById = new Map();
+    let profilesById = new Map();
+    let dssMeta = new Map();
+    let massimoMap = new Map();
+    let outletMap = new Map();
+
+    let occEditingDate = null;
+
     function keyDss(day, group){ return `${day}__${group}`; }
     function keyMassimo(day, id){ return `${day}__${id}`; }
     function keyOutlet(day, name){ return `${day}__${name}`; }
 
-    function canEditOcc(){
-      if (!me) return false;
-      return me.role === "admin" || (me.role === "user" && me.department === "Guest Service");
-    }
-    function canEditRestaurants(){
-      if (!me) return false;
-      return me.role === "admin" || (me.role === "user" && me.department === "F&B");
-    }
-    function canEditLobbyBar(){
-      if (!me) return false;
-      return me.role === "admin" || (me.role === "user" && me.department === "F&B");
-    }
-    function canEditOutlets(){
-      if (!me) return false;
-      return me.role === "admin" || (me.role === "user" && me.department === "Outlets");
-    }
-    function isAdmin(){
-      return me && me.role === "admin";
-    }
+    function canEditOcc(){ return me && (me.role === "admin" || (me.role === "user" && me.department === "Guest Service")); }
+    function canEditRestaurants(){ return me && (me.role === "admin" || (me.role === "user" && me.department === "F&B")); }
+    function canEditLobbyBar(){ return me && (me.role === "admin" || (me.role === "user" && me.department === "F&B")); }
+    function canEditOutlets(){ return me && (me.role === "admin" || (me.role === "user" && me.department === "Outlets")); }
+    function isAdmin(){ return me && me.role === "admin"; }
 
-    function currentRedirectUrl(){
-      // GitHub Pages friendly: use current page without query/hash
-      const u = new URL(window.location.href);
-      u.hash = "";
-      u.search = "";
-      return u.toString();
-    }
-
-    /***************
-      AUTH + ROUTING
-    ***************/
-    function showLogin(){
-      loginView.style.display = "flex";
-      dashView.style.display = "none";
-      usersView.style.display = "none";
-      whoPills.style.display = "none";
-      navBtns.style.display = "none";
-      btnUsers.style.display = "none";
-    }
     function showDashboard(){
       loginView.style.display = "none";
       dashView.style.display = "grid";
@@ -846,7 +725,14 @@
       navBtns.style.display = "flex";
       btnUsers.style.display = isAdmin() ? "inline-block" : "none";
     }
-
+    function showLogin(){
+      loginView.style.display = "flex";
+      dashView.style.display = "none";
+      usersView.style.display = "none";
+      whoPills.style.display = "none";
+      navBtns.style.display = "none";
+      btnUsers.style.display = "none";
+    }
     function setWho(){
       pillRole.textContent = `Role: ${me?.role || "?"}`;
       pillDept.textContent = `Dept: ${me?.department || "(none)"}`;
@@ -857,7 +743,6 @@
     }
 
     async function ensureProfileRow(user){
-      // Try to load profile; if missing, create minimal one (viewer + inactive false)
       const { data, error } = await sb.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
       if (error) throw error;
       if (data) return data;
@@ -876,6 +761,7 @@
     }
 
     async function refreshSession(){
+      document.body.classList.remove("printing"); // safety
       const { data, error } = await sb.auth.getSession();
       if (error) throw error;
       session = data.session;
@@ -891,19 +777,13 @@
       await loadAll();
     }
 
-    /***************
-      LOAD DATA
-    ***************/
     async function loadProfilesMap(){
-      // Pull all profiles so we can show names in tooltips and snapshot
       const { data, error } = await sb.from("profiles")
         .select("user_id, full_name, email, role, department, active")
         .order("full_name", { ascending: true });
       if (error) throw error;
       profilesById.clear();
-      for (const p of (data||[])){
-        profilesById.set(p.user_id, p);
-      }
+      for (const p of (data||[])) profilesById.set(p.user_id, p);
     }
 
     async function loadServiceItems(){
@@ -915,17 +795,12 @@
       if (error) throw error;
 
       serviceItems = data || [];
-      serviceByName.clear();
       serviceById.clear();
-      for (const it of serviceItems){
-        serviceByName.set(it.name, it);
-        serviceById.set(String(it.id), it);
-      }
+      for (const it of serviceItems) serviceById.set(String(it.id), it);
     }
 
     async function loadForecast(days){
-      const from = days[0];
-      const to = days[days.length-1];
+      const from = days[0], to = days[days.length-1];
       const { data, error } = await sb.from("daily_forecast")
         .select("date, occupancy_percent, notes_short, notes_long, updated_at, updated_by")
         .gte("date", from).lte("date", to);
@@ -951,8 +826,7 @@
     }
 
     async function loadDailySelections(days){
-      const from = days[0];
-      const to = days[days.length-1];
+      const from = days[0], to = days[days.length-1];
       const { data, error } = await sb.from("daily_service_selection")
         .select("date, group_name, selected_service_item_id, updated_at, updated_by")
         .gte("date", from).lte("date", to);
@@ -969,8 +843,7 @@
     }
 
     async function loadMassimo(days){
-      const from = days[0];
-      const to = days[days.length-1];
+      const from = days[0], to = days[days.length-1];
       const { data, error } = await sb.from("daily_massimo_status")
         .select("date, service_item_id, is_active, updated_at, updated_by")
         .gte("date", from).lte("date", to);
@@ -987,8 +860,7 @@
     }
 
     async function loadOutlets(days){
-      const from = days[0];
-      const to = days[days.length-1];
+      const from = days[0], to = days[days.length-1];
       const { data, error } = await sb.from("daily_outlet_hours")
         .select("date, outlet_name, is_open, open_time, close_time, updated_at, updated_by")
         .gte("date", from).lte("date", to);
@@ -1026,9 +898,13 @@
       }
     }
 
-    /***************
-      RENDER: OCCUPANCY
-    ***************/
+    function metaText(updated_by, updated_at){
+      if (!updated_at) return "";
+      const p = updated_by ? profilesById.get(updated_by) : null;
+      const name = p?.full_name || p?.email || "Unknown";
+      return `Updated by ${name} • ${fmtToronto(updated_at)}`;
+    }
+
     function renderOcc(){
       occWrap.innerHTML = "";
       const editable = canEditOcc();
@@ -1044,9 +920,7 @@
             ${d.updated_at ? `Last update: ${escapeHtml(d.updated_by_name)} • ${escapeHtml(fmtToronto(d.updated_at))}` : "No update yet"}
           </div>
         `;
-        if (editable){
-          div.addEventListener("click", ()=> openOccEdit(d.day));
-        }
+        if (editable) div.addEventListener("click", ()=> openOccEdit(d.day));
         occWrap.appendChild(div);
       }
     }
@@ -1057,14 +931,12 @@
       const d = dashboardDays.find(x=>x.day===day);
       occTitle.textContent = `Edit occupancy — ${day}`;
 
-      // prefill with last saved values
       occPct.value = d?.occupancy_percent ?? "";
       occShort.value = d?.notes_short ?? "";
       occLong.value = d?.notes_long ?? "";
 
       occOverlay.classList.add("show");
     }
-
     occClose.addEventListener("click", ()=> occOverlay.classList.remove("show"));
 
     occSave.addEventListener("click", async ()=>{
@@ -1099,37 +971,10 @@
       }
     });
 
-    /***************
-      RENDER: RESTAURANTS
-    ***************/
-    function groupItems(groupKey){
-      return serviceItems.filter(x => x.group_name === groupKey);
-    }
-
+    function groupItems(groupKey){ return serviceItems.filter(x => x.group_name === groupKey); }
     function isSelected(day, groupKey, serviceId){
       const meta = dssMeta.get(keyDss(day, groupKey));
       return meta?.selected && String(meta.selected) === String(serviceId);
-    }
-
-    function selectedName(day, groupKey){
-      const meta = dssMeta.get(keyDss(day, groupKey));
-      if (!meta?.selected) return null;
-      const it = serviceById.get(String(meta.selected));
-      return it?.name || null;
-    }
-
-    function massimoIsOn(day, serviceName){
-      const it = serviceByName.get(serviceName);
-      if (!it) return false;
-      const row = massimoMap.get(keyMassimo(day, String(it.id)));
-      return !!row?.is_active;
-    }
-
-    function metaText(updated_by, updated_at){
-      if (!updated_at) return "";
-      const p = updated_by ? profilesById.get(updated_by) : null;
-      const name = p?.full_name || p?.email || "Unknown";
-      return `Updated by ${name} • ${fmtToronto(updated_at)}`;
     }
 
     function renderRestaurantMatrix(){
@@ -1160,21 +1005,10 @@
           const tip = metaText(meta?.updated_by, meta?.updated_at);
           const cls = sel ? "green" : "red";
           const disabled = !canEditRestaurants() ? " disabled" : "";
-          return `
-            <td>
-              <div class="cell ${cls}${disabled}" data-kind="single" data-day="${day}" data-group="${groupKey}" data-id="${item.id}" title="${escapeHtml(tip)}"></div>
-            </td>
-          `;
+          return `<td><div class="cell ${cls}${disabled}" data-kind="single" data-day="${day}" data-group="${groupKey}" data-id="${item.id}" title="${escapeHtml(tip)}"></div></td>`;
         }).join("");
 
-        return `
-          <tr>
-            <td>
-              <div class="svc-name">${escapeHtml(item.name)} <span class="tag">${escapeHtml(tagLabel)}</span></div>
-            </td>
-            ${cells}
-          </tr>
-        `;
+        return `<tr><td><div class="svc-name">${escapeHtml(item.name)} <span class="tag">${escapeHtml(tagLabel)}</span></div></td>${cells}</tr>`;
       }
 
       function rowForMassimoItem(item){
@@ -1184,21 +1018,9 @@
           const tip = metaText(row?.updated_by, row?.updated_at);
           const cls = on ? "green" : "red";
           const disabled = !canEditRestaurants() ? " disabled" : "";
-          return `
-            <td>
-              <div class="cell ${cls}${disabled}" data-kind="massimo" data-day="${day}" data-id="${item.id}" title="${escapeHtml(tip)}"></div>
-            </td>
-          `;
+          return `<td><div class="cell ${cls}${disabled}" data-kind="massimo" data-day="${day}" data-id="${item.id}" title="${escapeHtml(tip)}"></div></td>`;
         }).join("");
-
-        return `
-          <tr>
-            <td>
-              <div class="svc-name">${escapeHtml(item.name)} <span class="tag">Massimo</span></div>
-            </td>
-            ${cells}
-          </tr>
-        `;
+        return `<tr><td><div class="svc-name">${escapeHtml(item.name)} <span class="tag">Massimo</span></div></td>${cells}</tr>`;
       }
 
       const breakfast = groupItems("breakfast");
@@ -1206,25 +1028,19 @@
       const dinner = groupItems("dinner");
       const massimo = groupItems("massimo");
 
-      const body = `
+      restTable.innerHTML = head + `
         <tbody>
           ${sectionRow("BREAKFAST")}
           ${breakfast.map(it => rowForItem(it, "breakfast", "Breakfast")).join("")}
-
           ${sectionRow("LUNCH")}
           ${lunch.map(it => rowForItem(it, "lunch", "Lunch")).join("")}
-
           ${sectionRow("DINNER")}
           ${dinner.map(it => rowForItem(it, "dinner", "Dinner")).join("")}
-
           ${sectionRow("MASSIMO")}
           ${massimo.map(it => rowForMassimoItem(it)).join("")}
         </tbody>
       `;
 
-      restTable.innerHTML = head + body;
-
-      // click handlers
       restTable.querySelectorAll(".cell").forEach(el=>{
         el.addEventListener("click", onCellClick);
         el.addEventListener("dblclick", onCellDblClick);
@@ -1234,7 +1050,6 @@
     async function onCellClick(ev){
       const el = ev.currentTarget;
       if (el.classList.contains("disabled")) return;
-
       hideMsg(restMsg);
 
       const kind = el.dataset.kind;
@@ -1242,31 +1057,19 @@
 
       try{
         if (kind === "massimo"){
-          // toggle on/off (multi green allowed)
           const service_item_id = String(el.dataset.id);
           const k = keyMassimo(day, service_item_id);
           const prev = massimoMap.get(k);
           const next = !(prev?.is_active);
 
-          const payload = {
-            date: day,
-            service_item_id,
-            is_active: next,
-            updated_by: session.user.id,
-            updated_at: new Date().toISOString()
-          };
-          const { error } = await sb.from("daily_massimo_status")
-            .upsert(payload, { onConflict: "date,service_item_id" });
+          const payload = { date: day, service_item_id, is_active: next, updated_by: session.user.id, updated_at: new Date().toISOString() };
+          const { error } = await sb.from("daily_massimo_status").upsert(payload, { onConflict: "date,service_item_id" });
           if (error) throw error;
 
           await loadAll();
-          const it = serviceById.get(service_item_id);
-          const name = it?.name || "Massimo item";
-          setMsg(restMsg, `${name} on ${day} updated.`, "ok");
           return;
         }
 
-        // breakfast/lunch/dinner: set selected option (only one green per day)
         if (!canEditRestaurants()){
           setMsg(restMsg, "View only.", "err");
           return;
@@ -1275,21 +1078,11 @@
         const group = el.dataset.group;
         const selected_service_item_id = String(el.dataset.id);
 
-        const payload = {
-          date: day,
-          group_name: group,
-          selected_service_item_id,
-          updated_by: session.user.id,
-          updated_at: new Date().toISOString()
-        };
-
-        const { error } = await sb.from("daily_service_selection")
-          .upsert(payload, { onConflict: "date,group_name" });
+        const payload = { date: day, group_name: group, selected_service_item_id, updated_by: session.user.id, updated_at: new Date().toISOString() };
+        const { error } = await sb.from("daily_service_selection").upsert(payload, { onConflict: "date,group_name" });
         if (error) throw error;
 
         await loadAll();
-        const it = serviceById.get(selected_service_item_id);
-        setMsg(restMsg, `${(group||"").toUpperCase()} set to ${it?.name || "selection"} for ${day}.`, "ok");
       }catch(e){
         setMsg(restMsg, e?.message || String(e), "err");
       }
@@ -1298,7 +1091,6 @@
     async function onCellDblClick(ev){
       const el = ev.currentTarget;
       if (el.classList.contains("disabled")) return;
-
       hideMsg(restMsg);
 
       const kind = el.dataset.kind;
@@ -1306,56 +1098,29 @@
 
       try{
         if (kind === "massimo"){
-          // double click on green -> turn off
           const service_item_id = String(el.dataset.id);
-          const k = keyMassimo(day, service_item_id);
-          const prev = massimoMap.get(k);
-          if (!prev?.is_active) return;
-
-          const payload = {
-            date: day,
-            service_item_id,
-            is_active: false,
-            updated_by: session.user.id,
-            updated_at: new Date().toISOString()
-          };
-          const { error } = await sb.from("daily_massimo_status")
-            .upsert(payload, { onConflict: "date,service_item_id" });
+          const payload = { date: day, service_item_id, is_active: false, updated_by: session.user.id, updated_at: new Date().toISOString() };
+          const { error } = await sb.from("daily_massimo_status").upsert(payload, { onConflict: "date,service_item_id" });
           if (error) throw error;
-
           await loadAll();
-          setMsg(restMsg, `Massimo item cleared for ${day}.`, "ok");
           return;
         }
 
-        // breakfast/lunch/dinner: double click green -> clear selection (all closed)
         const group = el.dataset.group;
         const meta = dssMeta.get(keyDss(day, group));
         const id = String(el.dataset.id);
-        if (!meta?.selected || String(meta.selected) !== id) return; // only clear if this is currently selected
+        if (!meta?.selected || String(meta.selected) !== id) return;
 
-        const payload = {
-          date: day,
-          group_name: group,
-          selected_service_item_id: null,
-          updated_by: session.user.id,
-          updated_at: new Date().toISOString()
-        };
-
-        const { error } = await sb.from("daily_service_selection")
-          .upsert(payload, { onConflict: "date,group_name" });
+        const payload = { date: day, group_name: group, selected_service_item_id: null, updated_by: session.user.id, updated_at: new Date().toISOString() };
+        const { error } = await sb.from("daily_service_selection").upsert(payload, { onConflict: "date,group_name" });
         if (error) throw error;
 
         await loadAll();
-        setMsg(restMsg, `${(group||"").toUpperCase()} cleared for ${day} (closed).`, "ok");
       }catch(e){
         setMsg(restMsg, e?.message || String(e), "err");
       }
     }
 
-    /***************
-      OUTLETS
-    ***************/
     function outletSummary(day, outlet_name){
       const row = outletMap.get(keyOutlet(day, outlet_name));
       if (!row) return { cls:"closed", text:"Closed", meta:"" };
@@ -1368,10 +1133,10 @@
 
     function renderOutlets(){
       outletGrid.innerHTML = "";
+      outOutlet.innerHTML = OUTLET_ITEMS.map(o=>`<option value="${escapeHtml(o.name)}">${escapeHtml(o.name)}</option>`).join("");
 
       for (const outlet of OUTLET_ITEMS){
-        const canEditThis =
-          outlet.name === "LOBBY BAR" ? canEditLobbyBar() : canEditOutlets();
+        const canEditThis = outlet.name === "LOBBY BAR" ? canEditLobbyBar() : canEditOutlets();
 
         const row = document.createElement("div");
         row.className = "outlet-row";
@@ -1380,9 +1145,17 @@
         name.className = "outlet-name";
         name.textContent = outlet.name;
 
+        const actions = document.createElement("div");
+        actions.className = "row";
+        const btn = document.createElement("button");
+        btn.className = "btn primary";
+        btn.textContent = "Edit week";
+        btn.disabled = !canEditThis;
+        btn.addEventListener("click", ()=> openOutletWeek(outlet.name));
+        actions.appendChild(btn);
+
         const miniWrap = document.createElement("div");
         miniWrap.className = "outlet-mini";
-
         for (const d of dashboardDays){
           const s = outletSummary(d.day, outlet.name);
           const mini = document.createElement("div");
@@ -1396,23 +1169,11 @@
           miniWrap.appendChild(mini);
         }
 
-        const actions = document.createElement("div");
-        actions.className = "row";
-        const btn = document.createElement("button");
-        btn.className = "btn primary";
-        btn.textContent = "Edit week";
-        btn.disabled = !canEditThis;
-        btn.addEventListener("click", ()=> openOutletWeek(outlet.name));
-        actions.appendChild(btn);
-
         row.appendChild(name);
         row.appendChild(actions);
         row.appendChild(miniWrap);
         outletGrid.appendChild(row);
       }
-
-      // fill outlet dropdown for modal (but permissions will still control save)
-      outOutlet.innerHTML = OUTLET_ITEMS.map(o=>`<option value="${escapeHtml(o.name)}">${escapeHtml(o.name)}</option>`).join("");
     }
 
     function openOutletWeek(outletName){
@@ -1422,7 +1183,6 @@
       outTitle.textContent = `Edit week — ${outletName}`;
       outOverlay.classList.add("show");
     }
-
     outClose.addEventListener("click", ()=> outOverlay.classList.remove("show"));
     outOutlet.addEventListener("change", ()=> buildOutletWeekTable(outOutlet.value));
 
@@ -1466,14 +1226,9 @@
       hideMsg(outEditMsg);
 
       const outletName = outOutlet.value;
-
-      // permission check
       const outletCfg = OUTLET_ITEMS.find(x=>x.name===outletName);
       const canEditThis = outletCfg?.dept === "F&B" ? canEditLobbyBar() : canEditOutlets();
-      if (!canEditThis){
-        setMsg(outEditMsg, "View only.", "err");
-        return;
-      }
+      if (!canEditThis){ setMsg(outEditMsg, "View only.", "err"); return; }
 
       const rows = Array.from(outWeekTable.querySelectorAll("tbody tr"));
       const updates = [];
@@ -1484,23 +1239,14 @@
         const ot = tr.querySelector(".ow-ot").value || "";
         const ct = tr.querySelector(".ow-ct").value || "";
 
-        // Rule: if open, hours required
-        if (is_open && (!ot || !ct)){
-          setMsg(outEditMsg, `Hours required for ${day} if Open.`, "err");
-          return;
-        }
+        if (is_open && (!ot || !ct)){ setMsg(outEditMsg, `Hours required for ${day} if Open.`, "err"); return; }
 
-        // only save if something changed vs current
         const cur = outletMap.get(keyOutlet(day, outletName));
         const curOpen = !!cur?.is_open;
         const curOt = (cur?.open_time ? String(cur.open_time).slice(0,5) : "");
         const curCt = (cur?.close_time ? String(cur.close_time).slice(0,5) : "");
 
-        const changed =
-          (curOpen !== is_open) ||
-          (String(curOt) !== String(ot)) ||
-          (String(curCt) !== String(ct));
-
+        const changed = (curOpen !== is_open) || (String(curOt) !== String(ot)) || (String(curCt) !== String(ct));
         if (!changed) continue;
 
         updates.push({
@@ -1514,14 +1260,10 @@
         });
       }
 
-      if (updates.length === 0){
-        setMsg(outEditMsg, "No changes to save.", "ok");
-        return;
-      }
+      if (updates.length === 0){ setMsg(outEditMsg, "No changes to save.", "ok"); return; }
 
       try{
-        const { error } = await sb.from("daily_outlet_hours")
-          .upsert(updates, { onConflict: "date,outlet_name" });
+        const { error } = await sb.from("daily_outlet_hours").upsert(updates, { onConflict: "date,outlet_name" });
         if (error) throw error;
 
         setMsg(outEditMsg, "Saved week.", "ok");
@@ -1532,118 +1274,6 @@
       }
     });
 
-    /***************
-      USERS (ADMIN)
-    ***************/
-    async function loadUsersPage(){
-      if (!isAdmin()){
-        setMsg(usersMsg, "Admins only.", "err");
-        return;
-      }
-      hideMsg(usersMsg);
-
-      await loadProfilesMap();
-      renderUsersDropdown();
-      renderUsersTable();
-    }
-
-    function renderUsersDropdown(){
-      const list = Array.from(profilesById.values()).sort((a,b)=>{
-        const aa = (a.full_name || a.email || "").toLowerCase();
-        const bb = (b.full_name || b.email || "").toLowerCase();
-        return aa.localeCompare(bb);
-      });
-
-      userSelect.innerHTML = list.map(p=>{
-        const label = (p.full_name ? `${p.full_name} — ${p.email}` : p.email);
-        return `<option value="${escapeHtml(p.user_id)}">${escapeHtml(label)}</option>`;
-      }).join("");
-
-      if (list.length){
-        userSelect.value = list[0].user_id;
-        fillUserForm(list[0].user_id);
-      }
-    }
-
-    function fillUserForm(uid){
-      const p = profilesById.get(uid);
-      if (!p) return;
-      userEmail.value = p.email || "";
-      userName.value = p.full_name || "";
-      userRole.value = p.role || "viewer";
-      userDept.value = p.department || "";
-      userActive.value = String(p.active ?? true);
-    }
-
-    userSelect.addEventListener("change", ()=> fillUserForm(userSelect.value));
-
-    btnUserReload.addEventListener("click", async ()=>{
-      try{
-        await loadUsersPage();
-        setMsg(usersMsg, "Reloaded.", "ok");
-      }catch(e){
-        setMsg(usersMsg, e?.message || String(e), "err");
-      }
-    });
-
-    btnUserSave.addEventListener("click", async ()=>{
-      hideMsg(usersMsg);
-      const uid = userSelect.value;
-      if (!uid) return;
-
-      const payload = {
-        user_id: uid,
-        full_name: String(userName.value||"").trim(),
-        role: userRole.value,
-        department: userDept.value,
-        active: (userActive.value === "true")
-      };
-
-      try{
-        const { error } = await sb.from("profiles").update(payload).eq("user_id", uid);
-        if (error) throw error;
-
-        await loadUsersPage();
-        setMsg(usersMsg, "Saved.", "ok");
-      }catch(e){
-        setMsg(usersMsg, e?.message || String(e), "err");
-      }
-    });
-
-    function renderUsersTable(){
-      const rows = Array.from(profilesById.values()).sort((a,b)=>{
-        const aa = (a.full_name || a.email || "").toLowerCase();
-        const bb = (b.full_name || b.email || "").toLowerCase();
-        return aa.localeCompare(bb);
-      });
-
-      usersTable.innerHTML = `
-        <thead>
-          <tr>
-            <th style="text-align:left;">Name</th>
-            <th style="text-align:left;">Email</th>
-            <th>Role</th>
-            <th>Department</th>
-            <th>Active</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map(p=>`
-            <tr>
-              <td style="font-weight:900;">${escapeHtml(p.full_name || "")}</td>
-              <td>${escapeHtml(p.email || "")}</td>
-              <td style="text-align:center; font-weight:900;">${escapeHtml(p.role || "")}</td>
-              <td style="text-align:center; font-weight:900;">${escapeHtml(p.department || "")}</td>
-              <td style="text-align:center; font-weight:900;">${escapeHtml(String(p.active ?? true))}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      `;
-    }
-
-    /***************
-      PRINT SNAPSHOT (NO POPUPS)
-    ***************/
     function getSelectedServiceName(day, groupName){
       const meta = dssMeta.get(keyDss(day, groupName));
       if (!meta?.selected) return null;
@@ -1664,10 +1294,7 @@
       const startDate = startDateEl.value;
       const title = `Sheraton Niagara Falls – 7-Day Snapshot (${startDate})`;
 
-      const dayCols = dashboardDays.map(d => ({
-        day: d.day,
-        label: fmtDay(d.day)
-      }));
+      const dayCols = dashboardDays.map(d => ({ day: d.day, label: fmtDay(d.day) }));
 
       function outletSummaryText(day, outlet_name){
         const row = outletMap.get(keyOutlet(day, outlet_name));
@@ -1678,13 +1305,10 @@
         if (!ot || !ct) return "Open (hours missing)";
         return `Open ${ot}–${ct}`;
       }
-
       function rowHtml(label, cells){
         return `
           <tr>
-            <td class="label" style="border:1px solid #cbd5e1; padding:8px; font-weight:900; text-align:left; background:#f8fafc;">
-              ${escapeHtml(label)}
-            </td>
+            <td style="border:1px solid #cbd5e1; padding:8px; font-weight:900; text-align:left; background:#f8fafc;">${escapeHtml(label)}</td>
             ${cells.map(c => `<td style="border:1px solid #cbd5e1; padding:8px; vertical-align:top;">${c}</td>`).join("")}
           </tr>
         `;
@@ -1713,9 +1337,7 @@
       return `
         <div style="font-family:Arial,sans-serif; margin:22px; color:#111827;">
           <h1 style="font-size:18px; margin:0 0 10px;">${escapeHtml(title)}</h1>
-          <div style="color:#475569; font-size:12px; margin-bottom:14px;">
-            Generated by Sheraton Dashboard • Times shown in America/Toronto where applicable
-          </div>
+          <div style="color:#475569; font-size:12px; margin-bottom:14px;">Generated by Sheraton Dashboard • Times shown in America/Toronto</div>
 
           <table style="border-collapse:collapse; width:100%; table-layout:fixed;">
             <thead>
@@ -1755,63 +1377,53 @@
         }
         const area = document.getElementById("printArea");
         area.innerHTML = buildSnapshotInnerHtml();
-
         document.body.classList.add("printing");
 
-        // let DOM render then print
-        setTimeout(()=> window.print(), 50);
+        // Safety timer so it NEVER stays blank
+        const safety = setTimeout(()=>{ document.body.classList.remove("printing"); }, 2000);
+
+        setTimeout(()=>{
+          window.print();
+          clearTimeout(safety);
+        }, 50);
       }catch(e){
         setMsg(appMsg, e?.message || String(e), "err");
+        document.body.classList.remove("printing");
       }
     }
 
     window.addEventListener("afterprint", ()=>{
-      try{
-        document.body.classList.remove("printing");
-        const area = document.getElementById("printArea");
-        if (area) area.innerHTML = "";
-      }catch{}
+      document.body.classList.remove("printing");
+      const area = document.getElementById("printArea");
+      if (area) area.innerHTML = "";
     });
 
-    /***************
-      EVENTS
-    ***************/
-    btnToday.addEventListener("click", ()=>{
-      startDateEl.value = isoToday();
-      loadAll();
-    });
+    btnToday.addEventListener("click", ()=>{ startDateEl.value = isoToday(); loadAll(); });
     btnRefresh.addEventListener("click", loadAll);
     btnPrint.addEventListener("click", printSnapshot);
 
-    btnDashboard.addEventListener("click", ()=>{
-      showDashboard();
-    });
-    btnUsers.addEventListener("click", async ()=>{
-      showUsers();
-      await loadUsersPage();
-    });
+    btnDashboard.addEventListener("click", ()=> showDashboard());
+    btnUsers.addEventListener("click", async ()=>{ showUsers(); /* load users later */ });
 
     btnLogout.addEventListener("click", async ()=>{
-      try{
-        await sb.auth.signOut();
-        showLogin();
-      }catch(e){
-        setMsg(appMsg, e?.message || String(e), "err");
-      }
+      try{ await sb.auth.signOut(); showLogin(); }
+      catch(e){ setMsg(appMsg, e?.message || String(e), "err"); }
     });
+
+    function currentRedirectUrl(){
+      const u = new URL(window.location.href);
+      u.hash = ""; u.search = "";
+      return u.toString();
+    }
 
     btnSignIn.addEventListener("click", async ()=>{
       hideMsg(loginMsg);
       try{
         const email = String(loginEmail.value||"").trim();
         const password = String(loginPass.value||"").trim();
-        if (!email || !password){
-          setMsg(loginMsg, "Enter email and password.", "err");
-          return;
-        }
+        if (!email || !password){ setMsg(loginMsg, "Enter email and password.", "err"); return; }
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        setMsg(loginMsg, "Signed in.", "ok");
         await refreshSession();
       }catch(e){
         setMsg(loginMsg, e?.message || String(e), "err");
@@ -1822,48 +1434,22 @@
       hideMsg(loginMsg);
       try{
         const email = String(loginEmail.value||"").trim();
-        if (!email){
-          setMsg(loginMsg, "Enter the email first.", "err");
-          return;
-        }
-        const { error } = await sb.auth.resetPasswordForEmail(email, {
-          redirectTo: currentRedirectUrl()
-        });
+        if (!email){ setMsg(loginMsg, "Enter the email first.", "err"); return; }
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: currentRedirectUrl() });
         if (error) throw error;
-        setMsg(loginMsg, "Password reset email sent. Use the link, then come back here and sign in.", "ok");
+        setMsg(loginMsg, "Password reset email sent. Use the link, then sign in.", "ok");
       }catch(e){
         setMsg(loginMsg, e?.message || String(e), "err");
       }
     });
 
-    /***************
-      STARTUP
-    ***************/
     (async function init(){
-      // default start date = today
       startDateEl.value = isoToday();
 
-      if (!sb){
-        showLogin();
-        return;
-      }
+      if (!sb){ showLogin(); return; }
 
-      // auth state
-      sb.auth.onAuthStateChange(async (_event, _session)=>{
-        // keep it simple: just refresh on changes
-        try{ await refreshSession(); }catch(e){
-          showLogin();
-          setMsg(loginMsg, e?.message || String(e), "err");
-        }
-      });
-
-      // initial load
-      try{
-        await refreshSession();
-      }catch(e){
-        showLogin();
-        setMsg(loginMsg, e?.message || String(e), "err");
-      }
+      sb.auth.onAuthStateChange(async ()=>{ try{ await refreshSession(); }catch(e){ showLogin(); setMsg(loginMsg, e?.message || String(e), "err"); } });
+      try{ await refreshSession(); }catch(e){ showLogin(); setMsg(loginMsg, e?.message || String(e), "err"); }
     })();
   </script>
 </body>
