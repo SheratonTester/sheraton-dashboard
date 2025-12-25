@@ -1,317 +1,1935 @@
-// =====================
-// 7-DAY PDF SNAPSHOT (no external libs)
-// =====================
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sheraton Niagara Falls – Ops Dashboard</title>
 
-(function attachPdfButton(){
-  const btn = document.getElementById("btnPdfSnapshot");
-  if (btn) btn.addEventListener("click", download7DaySnapshotPdf);
-})();
+  <style>
+    :root{
+      --bg:#f6f8ff;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --brand:#2563eb;
 
-function torontoNowString(){
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Toronto",
-    year: "numeric", month: "short", day: "2-digit",
-    hour: "2-digit", minute: "2-digit"
-  }).format(new Date());
-}
+      --green:#14532d; /* dark green */
+      --red:#7f1d1d;   /* dark red */
 
-function fmtTorontoDayLabel(yyyy_mm_dd){
-  // Treat as date key; show a nice label in Toronto time
-  const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0)); // midday UTC to avoid day shift
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Toronto",
-    weekday: "short", year:"numeric", month:"short", day:"2-digit"
-  }).format(dt);
-}
+      --chip:#eef2ff;
+      --shadow: 0 10px 30px rgba(2,6,23,.10);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      background: radial-gradient(1100px 600px at 20% 0%, #e9f0ff 0%, transparent 55%),
+                  radial-gradient(900px 520px at 85% 15%, #f1eaff 0%, transparent 55%),
+                  var(--bg);
+    }
+    a{color:var(--brand); text-decoration:none}
+    .wrap{max-width:1200px; margin:0 auto; padding:18px}
+    .topbar{
+      background:rgba(255,255,255,.75);
+      backdrop-filter: blur(10px);
+      border:1px solid rgba(226,232,240,.8);
+      border-radius: var(--radius);
+      padding:14px 14px;
+      box-shadow: var(--shadow);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      position:sticky;
+      top:12px;
+      z-index:40;
+    }
+    .title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .title h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+    .sub{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .chips{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    .chip{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--chip);
+      border:1px solid #dbeafe;
+      color:#1e3a8a;
+      white-space:nowrap;
+    }
+    .btns{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+    .btn{
+      border:1px solid var(--line);
+      background:#fff;
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+      color:var(--ink);
+      box-shadow: 0 6px 18px rgba(2,6,23,.06);
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, #3b82f6, #2563eb);
+      color:#fff;
+      border-color:#1d4ed8;
+    }
+    .btn.danger{
+      background: linear-gradient(180deg, #ef4444, #dc2626);
+      color:#fff;
+      border-color:#b91c1c;
+    }
+    .btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
 
-function addDays(yyyy_mm_dd, n){
-  const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
-  dt.setUTCDate(dt.getUTCDate() + n);
-  const yy = dt.getUTCFullYear();
-  const mm = String(dt.getUTCMonth()+1).padStart(2,"0");
-  const dd = String(dt.getUTCDate()).padStart(2,"0");
-  return `${yy}-${mm}-${dd}`;
-}
+    .grid2{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 980px){
+      .grid2{grid-template-columns:1fr}
+    }
 
-function fmtTime12(timeStr){
-  if (!timeStr) return "";
-  // expects "HH:MM" or "HH:MM:SS"
-  const parts = timeStr.split(":");
-  if (parts.length < 2) return "";
-  let hh = parseInt(parts[0],10);
-  const mm = parts[1].padStart(2,"0");
-  const ampm = hh >= 12 ? "PM" : "AM";
-  hh = hh % 12; if (hh === 0) hh = 12;
-  return `${hh}:${mm} ${ampm}`;
-}
+    .card{
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(226,232,240,.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHd{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(226,232,240,.9);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .cardHd h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .cardHd .hint{font-size:12px; color:var(--muted)}
+    .cardBd{padding:12px 14px}
 
-function pdfEscape(s){
-  return String(s ?? "")
-    .replace(/\\/g, "\\\\")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)")
-    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "?");
-}
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .field{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+      font-size:13px; color:var(--muted);
+    }
+    input[type="date"], input[type="email"], input[type="password"], input[type="text"], select, textarea{
+      border:1px solid var(--line);
+      border-radius: 12px;
+      padding:9px 10px;
+      font-size:14px;
+      background:#fff;
+      color:var(--ink);
+      outline:none;
+    }
+    textarea{width:100%; min-height:120px; resize:vertical}
+    .small{font-size:12px; color:var(--muted)}
+    .msg{
+      margin-top:10px;
+      font-size:13px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(226,232,240,.9);
+      background:rgba(255,255,255,.8);
+      color:var(--ink);
+      display:none;
+    }
+    .msg.err{
+      display:block;
+      border-color: rgba(239,68,68,.35);
+      background: rgba(239,68,68,.08);
+      color:#7f1d1d;
+    }
+    .msg.ok{
+      display:block;
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.08);
+      color:#14532d;
+    }
 
-function buildSimplePdfFromLines(lines){
-  // Very small PDF generator: text only, multi-page if needed.
-  const pageW = 612, pageH = 792;
-  const marginL = 48, marginT = 56;
-  const lineH = 14;
-  const maxLinesPerPage = Math.floor((pageH - marginT - 48) / lineH);
+    /* Occupancy cards */
+    .occRow{
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding-bottom:6px;
+      scroll-snap-type:x mandatory;
+    }
+    .dayCard{
+      min-width: 160px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 10px;
+      scroll-snap-align:start;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(2,6,23,.06);
+    }
+    .dayCard .d1{font-size:12px; color:var(--muted); display:flex; justify-content:space-between; gap:8px}
+    .dayCard .pct{font-size:24px; font-weight:900; margin-top:6px}
+    .dayCard .lu{font-size:11px; color:var(--muted); margin-top:6px; line-height:1.3}
+    .dayCard:hover{border-color:#bfdbfe}
 
-  const pages = [];
-  for (let i=0; i<lines.length; i+=maxLinesPerPage){
-    pages.push(lines.slice(i, i+maxLinesPerPage));
-  }
+    /* Restaurant grid */
+    .sectionBar{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:10px 14px;
+      border-top:1px solid rgba(226,232,240,.9);
+      border-bottom:1px solid rgba(226,232,240,.9);
+      background: linear-gradient(180deg, rgba(241,245,249,.8), rgba(248,250,252,.9));
+    }
+    .sectionBar b{font-size:12px; letter-spacing:.6px}
+    .legend{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+      font-size:12px; color:var(--muted);
+    }
+    .dot{width:10px; height:10px; border-radius:999px; display:inline-block}
+    .dot.green{background:var(--green)}
+    .dot.red{background:var(--red)}
 
-  let objects = [];
-  function addObj(str){ objects.push(str); return objects.length; }
+    .gridWrap{
+      overflow:auto;
+      max-height: 520px;
+      border-top:1px solid rgba(226,232,240,.9);
+    }
+    table.matrix{
+      border-collapse:separate;
+      border-spacing:0;
+      min-width: 920px;
+      width:100%;
+    }
+    .matrix th, .matrix td{
+      border-bottom:1px solid rgba(226,232,240,.9);
+      border-right:1px solid rgba(226,232,240,.9);
+      padding:8px;
+      vertical-align:middle;
+      background:#fff;
+    }
+    .matrix th{
+      position:sticky; top:0;
+      z-index:3;
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      white-space:nowrap;
+    }
+    .matrix th:first-child, .matrix td:first-child{
+      position:sticky; left:0;
+      z-index:4;
+      background:#fff;
+      border-right:1px solid rgba(226,232,240,.9);
+      min-width: 260px;
+    }
+    .svcName{
+      font-weight:800;
+      font-size:13px;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .svcTag{
+      font-size:11px;
+      color:#1e3a8a;
+      background:#eef2ff;
+      border:1px solid #dbeafe;
+      border-radius:999px;
+      padding:3px 8px;
+      white-space:nowrap;
+    }
 
-  // 1) Catalog, 2) Pages, 3.. pages, plus font + contents
-  const fontObjId = addObj(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
+    .cell{
+      border-radius:10px;
+      height:56px;
+      width: 100%;
+      position:relative;
+      cursor:pointer;
+      border:1px solid rgba(15,23,42,.10);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .cell.red{background: linear-gradient(180deg, rgba(127,29,29,.95), rgba(127,29,29,.82));}
+    .cell.green{background: linear-gradient(180deg, rgba(20,83,45,.95), rgba(20,83,45,.82));}
+    .cell .meta{
+      position:absolute;
+      left:8px; right:8px; bottom:6px;
+      font-size:10px;
+      color:rgba(255,255,255,.92);
+      line-height:1.15;
+      text-shadow: 0 1px 0 rgba(0,0,0,.25);
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+      pointer-events:none;
+    }
+    .cell:active{transform: translateY(1px)}
+    .groupTitleRow td{
+      background: linear-gradient(180deg, rgba(226,232,240,.7), rgba(241,245,249,.95));
+      font-weight:900;
+      letter-spacing:.6px;
+      color:#0f172a;
+    }
 
-  const pageObjIds = [];
-  const contentObjIds = [];
+    /* Outlets */
+    .miniTable{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:14px;
+      background:#fff;
+    }
+    .miniTable th, .miniTable td{
+      border-bottom:1px solid rgba(226,232,240,.9);
+      border-right:1px solid rgba(226,232,240,.9);
+      padding:10px;
+      font-size:13px;
+      text-align:left;
+    }
+    .miniTable th{
+      background: rgba(248,250,252,.9);
+      color:var(--muted);
+      font-weight:800;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .miniTable td:last-child, .miniTable th:last-child{border-right:none}
+    .miniTable tr:last-child td{border-bottom:none}
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:12px;
+      border:1px solid rgba(226,232,240,.9);
+      background:#fff;
+    }
+    .pill.open{border-color: rgba(34,197,94,.35); color:var(--green)}
+    .pill.closed{border-color: rgba(239,68,68,.35); color:var(--red)}
+    .hours{font-size:12px; color:var(--muted); margin-top:2px}
 
-  for (let p=0; p<pages.length; p++){
-    const pageLines = pages[p];
+    /* Modal */
+    .modalBg{
+      position:fixed;
+      inset:0;
+      background: rgba(2,6,23,.55);
+      z-index:1000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .modal{
+      width:min(980px, 100%);
+      max-height: min(86vh, 900px);
+      overflow:auto;
+      background:#fff;
+      border-radius:18px;
+      border:1px solid rgba(226,232,240,.9);
+      box-shadow: 0 30px 90px rgba(2,6,23,.40);
+    }
+    .modalHd{
+      position:sticky; top:0;
+      background:#fff;
+      border-bottom:1px solid rgba(226,232,240,.9);
+      padding:12px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      z-index:2;
+    }
+    .modalHd b{font-size:14px}
+    .modalBd{padding:12px 14px}
+    .modalGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 860px){
+      .modalGrid{grid-template-columns:1fr}
+    }
+    .kpi{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .kpi label{font-size:12px; color:var(--muted); font-weight:800}
+    .kpi input{width:160px}
+    .kpi .wide{width:100%}
 
-    // Build content stream
-    let content = [];
-    content.push("BT");
-    content.push(`/F1 11 Tf`);
-    // Start near top-left
-    content.push(`${marginL} ${pageH - marginT} Td`);
+    /* Tabs */
+    .tabs{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .tabBtn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(226,232,240,.9);
+      background:#fff;
+      cursor:pointer;
+      font-weight:900;
+      font-size:13px;
+      color:var(--ink);
+    }
+    .tabBtn.active{
+      background: linear-gradient(180deg, #3b82f6, #2563eb);
+      border-color:#1d4ed8;
+      color:#fff;
+    }
 
-    for (let i=0; i<pageLines.length; i++){
-      const t = pdfEscape(pageLines[i]);
-      if (i === 0) {
-        content.push(`(${t}) Tj`);
-      } else {
-        content.push(`0 -${lineH} Td (${t}) Tj`);
+    /* Users table */
+    .tbl{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:14px;
+      background:#fff;
+    }
+    .tbl th,.tbl td{
+      padding:10px;
+      border-bottom:1px solid rgba(226,232,240,.9);
+      font-size:13px;
+      text-align:left;
+    }
+    .tbl th{
+      background: rgba(248,250,252,.9);
+      color:var(--muted);
+      font-weight:900;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .tbl tr:last-child td{border-bottom:none}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="title">
+        <h1>Sheraton Niagara Falls – Ops Dashboard</h1>
+        <div class="sub">Toronto time • 7-day view • Green = active, Red = inactive</div>
+      </div>
+
+      <div class="chips" id="whoChips" style="display:none">
+        <span class="chip" id="chipRole">Role: —</span>
+        <span class="chip" id="chipDept">Dept: —</span>
+        <span class="chip" id="chipUser">User: —</span>
+      </div>
+
+      <div class="btns">
+        <div class="tabs" id="tabs" style="display:none">
+          <button class="tabBtn active" id="tabDashboard">Dashboard</button>
+          <button class="tabBtn" id="tabUsers">Users</button>
+        </div>
+        <button class="btn" id="btnPdfSnapshot" style="display:none">Download 7-Day PDF Snapshot</button>
+        <button class="btn danger" id="btnLogout" style="display:none">Logout</button>
+      </div>
+    </div>
+
+    <!-- AUTH -->
+    <div class="grid2" id="authView">
+      <div class="card">
+        <div class="cardHd">
+          <h2>Sign in</h2>
+          <span class="hint">Use your work email</span>
+        </div>
+        <div class="cardBd">
+          <div class="row">
+            <div class="field">
+              <span>Email</span>
+              <input id="loginEmail" type="email" placeholder="name@niagarafallshotels.com" />
+            </div>
+            <div class="field">
+              <span>Password</span>
+              <input id="loginPass" type="password" placeholder="••••••••" />
+            </div>
+            <button class="btn primary" id="btnLogin">Sign in</button>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div class="field">
+              <span class="small">Forgot password?</span>
+              <button class="btn" id="btnReset">Send reset link</button>
+            </div>
+          </div>
+
+          <div class="msg" id="authMsg"></div>
+
+          <div class="small" style="margin-top:12px;">
+            If your network blocks CDNs, this site uses <b>local supabase.js</b> from the repo root.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHd">
+          <h2>Update password (recovery link)</h2>
+          <span class="hint">Only shows when needed</span>
+        </div>
+        <div class="cardBd">
+          <div class="small" id="recoveryHint">If you clicked a password recovery email, enter a new password here.</div>
+          <div class="row" style="margin-top:10px;">
+            <div class="field">
+              <span>New password</span>
+              <input id="newPass" type="password" placeholder="New password" />
+            </div>
+            <button class="btn primary" id="btnUpdatePass">Update password</button>
+          </div>
+          <div class="msg" id="recoveryMsg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP -->
+    <div id="appView" style="display:none;">
+      <div class="grid2">
+
+        <!-- LEFT: Dashboard -->
+        <div class="card" id="dashCard">
+          <div class="cardHd">
+            <h2>Controls</h2>
+            <span class="hint" id="permHint">—</span>
+          </div>
+          <div class="cardBd">
+            <div class="row">
+              <div class="field">
+                <span>Start date</span>
+                <input type="date" id="startDate" />
+              </div>
+              <button class="btn" id="btnToday">Today</button>
+              <button class="btn primary" id="btnRefresh">Refresh</button>
+            </div>
+            <div class="msg" id="appMsg"></div>
+          </div>
+
+          <div class="cardBd" style="padding-top:0;">
+            <div class="row" style="justify-content:space-between; align-items:flex-end;">
+              <div>
+                <b style="font-size:13px;">7-Day Occupancy Forecast</b>
+                <div class="small">Tap a day to edit (Guest Service / Admin)</div>
+              </div>
+            </div>
+            <div class="occRow" id="occRow"></div>
+          </div>
+
+          <div class="cardBd" style="padding-top:0;">
+            <div class="row" style="justify-content:space-between; align-items:flex-end;">
+              <div>
+                <b style="font-size:13px;">Lobby Bar</b>
+                <div class="small">Open/Closed + hours (F&B / Admin)</div>
+              </div>
+            </div>
+            <div id="lobbyBarRow"></div>
+          </div>
+
+          <div class="cardBd" style="padding-top:0;">
+            <div class="row" style="justify-content:space-between; align-items:flex-end;">
+              <div>
+                <b style="font-size:13px;">Outlets</b>
+                <div class="small">Starbucks / Sweet Jesus / Freshii (Outlets / Admin)</div>
+              </div>
+              <button class="btn" id="btnEditOutletsWeek">Edit week</button>
+            </div>
+            <div id="outletsRow"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Restaurant grid -->
+        <div class="card">
+          <div class="cardHd">
+            <h2>Restaurant Status</h2>
+            <span class="hint">Click to select • Double-click green to clear</span>
+          </div>
+
+          <div class="sectionBar">
+            <b>BREAKFAST / LUNCH / DINNER / MASSIMO</b>
+            <div class="legend">
+              <span><span class="dot green"></span> Active</span>
+              <span><span class="dot red"></span> Inactive</span>
+            </div>
+          </div>
+
+          <div class="gridWrap">
+            <table class="matrix" id="svcTable"></table>
+          </div>
+
+          <div class="cardBd">
+            <div class="small">
+              Each box shows <b>who</b> and <b>Toronto date/time</b> of the last update (when available).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div class="card" id="usersCard" style="margin-top:14px; display:none;">
+        <div class="cardHd">
+          <h2>Admin – Users</h2>
+          <span class="hint">Admins can update name, role, department, active</span>
+        </div>
+        <div class="cardBd">
+          <div class="msg" id="usersMsg"></div>
+
+          <div class="row" style="align-items:flex-end;">
+            <div class="field" style="min-width:320px;">
+              <span>Select user</span>
+              <select id="userSelect" style="min-width:320px;"></select>
+            </div>
+
+            <div class="field" style="min-width:260px;">
+              <span>Full name</span>
+              <input id="userFullName" type="text" placeholder="Full name" />
+            </div>
+
+            <div class="field" style="min-width:260px;">
+              <span>Email (read only)</span>
+              <input id="userEmail" type="text" disabled />
+            </div>
+
+            <div class="field">
+              <span>Role</span>
+              <select id="userRole">
+                <option value="admin">admin</option>
+                <option value="user">user</option>
+                <option value="viewer">viewer</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <span>Department</span>
+              <select id="userDept">
+                <option value="">(none)</option>
+                <option value="Guest Service">Guest Service</option>
+                <option value="F&B">F&B</option>
+                <option value="Outlets">Outlets</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <span>Active</span>
+              <select id="userActive">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+
+            <button class="btn primary" id="btnSaveUser">Save changes</button>
+            <button class="btn" id="btnReloadUsers">Reload list</button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <b style="font-size:13px;">Current users</b>
+            <div class="small">If you can’t see users here, it’s a profiles policy / constraint issue.</div>
+          </div>
+
+          <div style="margin-top:10px; overflow:auto;">
+            <table class="tbl" id="usersTable"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODALS -->
+  <div class="modalBg" id="modalBg">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalHd">
+        <b id="modalTitle">Edit</b>
+        <button class="btn" id="btnModalClose">Close</button>
+      </div>
+      <div class="modalBd" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Local Supabase library (place supabase.js in repo root) -->
+  <script src="./supabase.js"></script>
+
+  <script>
+    /**********************
+     * CONFIG
+     **********************/
+    const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
+
+    // App constants
+    const GROUPS = [
+      { key: "breakfast", title: "BREAKFAST" },
+      { key: "lunch", title: "LUNCH" },
+      { key: "dinner", title: "DINNER" },
+      { key: "massimo", title: "MASSIMO" }
+    ];
+
+    const OUTLETS = ["STARBUCKS", "SWEET JESUS", "FRESHII"];
+    const LOBBY_BAR = "LOBBY BAR";
+
+    /**********************
+     * HELPERS
+     **********************/
+    const $ = (id) => document.getElementById(id);
+
+    function showMsg(el, text, kind){
+      el.className = "msg" + (kind ? (" " + kind) : "");
+      el.textContent = text;
+      el.style.display = "block";
+      if (!text) el.style.display = "none";
+    }
+
+    function torontoFmt(dt){
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Toronto",
+        year:"numeric", month:"short", day:"2-digit",
+        hour:"2-digit", minute:"2-digit"
+      }).format(dt);
+    }
+
+    function torontoDayLabel(yyyy_mm_dd){
+      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
+      const mid = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone:"America/Toronto",
+        weekday:"short", month:"short", day:"2-digit"
+      }).format(mid);
+    }
+
+    function addDays(yyyy_mm_dd, n){
+      const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
+      const mid = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+      mid.setUTCDate(mid.getUTCDate() + n);
+      const yy = mid.getUTCFullYear();
+      const mm = String(mid.getUTCMonth()+1).padStart(2,"0");
+      const dd = String(mid.getUTCDate()).padStart(2,"0");
+      return `${yy}-${mm}-${dd}`;
+    }
+
+    function fmtTime12(t){
+      if (!t) return "";
+      const parts = String(t).split(":");
+      if (parts.length < 2) return "";
+      let hh = parseInt(parts[0],10);
+      const mm = parts[1].padStart(2,"0");
+      const ampm = hh >= 12 ? "PM" : "AM";
+      hh = hh % 12; if (hh === 0) hh = 12;
+      return `${hh}:${mm} ${ampm}`;
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function pdfEscape(s){
+      return String(s ?? "")
+        .replace(/\\/g, "\\\\")
+        .replace(/\(/g, "\\(")
+        .replace(/\)/g, "\\)")
+        .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "?");
+    }
+
+    function buildSimplePdfFromLines(lines){
+      const pageW = 612, pageH = 792;
+      const marginL = 48, marginT = 56;
+      const lineH = 14;
+      const maxLinesPerPage = Math.floor((pageH - marginT - 48) / lineH);
+
+      const pages = [];
+      for (let i=0; i<lines.length; i+=maxLinesPerPage){
+        pages.push(lines.slice(i, i+maxLinesPerPage));
+      }
+
+      const objs = [];
+      const add = (s)=>{ objs.push(s); return objs.length; };
+
+      add(`<< /Type /Catalog /Pages 2 0 R >>`); // 1
+      add(`<< >>`); // 2 placeholder pages
+      const fontId = add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`); // 3
+
+      const contentIds = [];
+      const pageIds = [];
+
+      for (let p=0; p<pages.length; p++){
+        const pageLines = pages[p];
+        const content = [];
+        content.push("BT");
+        content.push(`/F1 11 Tf`);
+        content.push(`${marginL} ${pageH - marginT} Td`);
+        for (let i=0; i<pageLines.length; i++){
+          const t = pdfEscape(pageLines[i]);
+          if (i === 0) content.push(`(${t}) Tj`);
+          else content.push(`0 -${lineH} Td (${t}) Tj`);
+        }
+        content.push("ET");
+        const cs = content.join("\n");
+        contentIds.push(add(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+      }
+
+      for (let p=0; p<pages.length; p++){
+        pageIds.push(add(
+          `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] ` +
+          `/Resources << /Font << /F1 ${fontId} 0 R >> >> ` +
+          `/Contents ${contentIds[p]} 0 R >>`
+        ));
+      }
+
+      objs[1] = `<< /Type /Pages /Kids [${pageIds.map(id=>`${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
+
+      let pdf = `%PDF-1.4\n`;
+      const xref = [];
+      xref.push("0000000000 65535 f \n");
+
+      for (let i=0; i<objs.length; i++){
+        const off = pdf.length;
+        xref.push(String(off).padStart(10,"0") + " 00000 n \n");
+        pdf += `${i+1} 0 obj\n${objs[i]}\nendobj\n`;
+      }
+
+      const xrefOff = pdf.length;
+      pdf += `xref\n0 ${objs.length+1}\n` + xref.join("") +
+        `trailer\n<< /Size ${objs.length+1} /Root 1 0 R >>\nstartxref\n${xrefOff}\n%%EOF`;
+
+      return new Uint8Array(Array.from(pdf).map(ch => ch.charCodeAt(0)));
+    }
+
+    /**********************
+     * SUPABASE INIT
+     **********************/
+    let sb = null;
+    function initSupabase(){
+      if (!window.supabase || typeof window.supabase.createClient !== "function"){
+        showMsg($("authMsg"), "Supabase library not loaded. Make sure supabase.js is in the repo root.", "err");
+        return false;
+      }
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      return true;
+    }
+
+    /**********************
+     * APP STATE
+     **********************/
+    const state = {
+      session: null,
+      me: null,          // profile row
+      profiles: [],      // list (admin)
+      profileMap: new Map(), // user_id -> full_name/email
+      startDate: null,
+      days: [],
+      serviceItems: [],
+      serviceByGroup: new Map(), // group -> items
+      selectionMap: new Map(),   // date|group -> {service_item_id, updated_at, updated_by}
+      massimoMap: new Map(),     // date|service_item_id -> {is_active, updated_at, updated_by}
+      forecastMap: new Map(),    // date -> row
+      outletMap: new Map(),      // date|outlet -> row
+    };
+
+    function k2(a,b){ return `${a}|${b}`; }
+
+    function canEditOccupancy(){
+      return state.me?.role === "admin" || (state.me?.role === "user" && state.me?.department === "Guest Service");
+    }
+    function canEditRestaurant(){
+      return state.me?.role === "admin" || (state.me?.role === "user" && state.me?.department === "F&B");
+    }
+    function canEditLobbyBar(){
+      return canEditRestaurant(); // same rule
+    }
+    function canEditOutlets(){
+      return state.me?.role === "admin" || (state.me?.role === "user" && state.me?.department === "Outlets");
+    }
+    function isAdmin(){ return state.me?.role === "admin"; }
+
+    /**********************
+     * AUTH UI
+     **********************/
+    $("btnLogin").addEventListener("click", async () => {
+      try{
+        showMsg($("authMsg"), "", "");
+        const email = $("loginEmail").value.trim();
+        const pass = $("loginPass").value;
+        if (!email || !pass) return showMsg($("authMsg"), "Enter email + password.", "err");
+        const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+      } catch(e){
+        showMsg($("authMsg"), e.message || String(e), "err");
+      }
+    });
+
+    $("btnReset").addEventListener("click", async () => {
+      try{
+        showMsg($("authMsg"), "", "");
+        const email = $("loginEmail").value.trim();
+        if (!email) return showMsg($("authMsg"), "Enter your email first.", "err");
+        const redirectTo = window.location.origin + window.location.pathname;
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) throw error;
+        showMsg($("authMsg"), "Reset email sent. Check your inbox.", "ok");
+      } catch(e){
+        showMsg($("authMsg"), e.message || String(e), "err");
+      }
+    });
+
+    $("btnUpdatePass").addEventListener("click", async () => {
+      try{
+        showMsg($("recoveryMsg"), "", "");
+        const newPass = $("newPass").value;
+        if (!newPass || newPass.length < 6) return showMsg($("recoveryMsg"), "Use a stronger password (6+ chars).", "err");
+        const { error } = await sb.auth.updateUser({ password: newPass });
+        if (error) throw error;
+        showMsg($("recoveryMsg"), "Password updated. You can sign in now.", "ok");
+      } catch(e){
+        showMsg($("recoveryMsg"), e.message || String(e), "err");
+      }
+    });
+
+    $("btnLogout").addEventListener("click", async () => {
+      await sb.auth.signOut();
+    });
+
+    /**********************
+     * TABS
+     **********************/
+    $("tabDashboard").addEventListener("click", () => {
+      $("tabDashboard").classList.add("active");
+      $("tabUsers").classList.remove("active");
+      $("dashCard").style.display = "";
+      $("usersCard").style.display = "none";
+    });
+    $("tabUsers").addEventListener("click", async () => {
+      $("tabUsers").classList.add("active");
+      $("tabDashboard").classList.remove("active");
+      $("dashCard").style.display = "";
+      $("usersCard").style.display = "";
+      await loadUsersAdmin();
+      renderUsers();
+    });
+
+    /**********************
+     * MODAL
+     **********************/
+    function openModal(title, html){
+      $("modalTitle").textContent = title;
+      $("modalBody").innerHTML = html;
+      $("modalBg").style.display = "flex";
+    }
+    function closeModal(){
+      $("modalBg").style.display = "none";
+      $("modalBody").innerHTML = "";
+    }
+    $("btnModalClose").addEventListener("click", closeModal);
+    $("modalBg").addEventListener("click", (e) => { if (e.target === $("modalBg")) closeModal(); });
+
+    /**********************
+     * LOAD PROFILE
+     **********************/
+    async function loadMyProfile(){
+      // Try profiles by user_id. If missing, create a basic row (viewer).
+      const uid = state.session?.user?.id;
+      if (!uid) return null;
+
+      // Try select existing
+      let { data, error } = await sb
+        .from("profiles")
+        .select("user_id, full_name, role, email, department, is_active, updated_at, created_at")
+        .eq("user_id", uid)
+        .maybeSingle();
+
+      if (error) {
+        // Still let login work; just treat as viewer
+        return { user_id: uid, full_name: state.session.user.email, role: "viewer", email: state.session.user.email, department: "", is_active: true };
+      }
+
+      if (!data){
+        // Create row
+        const row = {
+          user_id: uid,
+          full_name: state.session.user.email,
+          email: state.session.user.email,
+          role: "viewer",
+          department: "",
+          is_active: true
+        };
+        const ins = await sb.from("profiles").insert(row).select("user_id, full_name, role, email, department, is_active").maybeSingle();
+        if (ins.error){
+          // fallback
+          return row;
+        }
+        data = ins.data;
+      }
+
+      return data;
+    }
+
+    /**********************
+     * DATA LOAD
+     **********************/
+    async function loadServiceItems(){
+      const { data, error } = await sb.from("service_items").select("id,name,group_name").order("name", { ascending: true });
+      if (error) throw error;
+      state.serviceItems = data || [];
+      state.serviceByGroup = new Map();
+      for (const g of GROUPS){
+        state.serviceByGroup.set(g.key, state.serviceItems.filter(x => x.group_name === g.key));
       }
     }
-    content.push("ET");
 
-    const contentStream = content.join("\n");
-    const contentObjId = addObj(
-      `<< /Length ${contentStream.length} >>\nstream\n${contentStream}\nendstream`
-    );
-    contentObjIds.push(contentObjId);
-
-    const pageObjId = addObj(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] ` +
-      `/Resources << /Font << /F1 ${fontObjId} 0 R >> >> ` +
-      `/Contents ${contentObjId} 0 R >>`
-    );
-    pageObjIds.push(pageObjId);
-  }
-
-  // Pages object must be #2, so we’ll insert placeholders:
-  // Build final object list carefully:
-  // We'll rebuild in proper order:
-  const fontObj = objects[fontObjId-1];
-
-  // Recreate objects array in correct order:
-  const rebuilt = [];
-  const offsets = [];
-
-  function pushObj(objStr){ rebuilt.push(objStr); }
-
-  // 1 Catalog (points to 2)
-  pushObj(`<< /Type /Catalog /Pages 2 0 R >>`);
-
-  // 2 Pages
-  pushObj(`<< /Type /Pages /Kids [${pageObjIds.map(id=>`${id} 0 R`).join(" ")}] /Count ${pageObjIds.length} >>`);
-
-  // Font object (keep same number? We’ll just append; numbering changes, so rebuild ids)
-  // To keep it simple: rebuild everything with fresh ids.
-  // We'll do a second pass with consistent IDs.
-
-  // ---- Second pass, consistent IDs ----
-  const objs2 = [];
-  const add2 = (s)=>{ objs2.push(s); return objs2.length; };
-
-  const catalogId = add2(`<< /Type /Catalog /Pages 2 0 R >>`);
-  // placeholder pages (#2) after we know kids ids
-  add2(`<< >>`);
-
-  const fontId2 = add2(fontObj);
-
-  const contentIds2 = [];
-  const pageIds2 = [];
-
-  // contents
-  for (let p=0; p<pages.length; p++){
-    const pageLines = pages[p];
-    let content = [];
-    content.push("BT");
-    content.push(`/F1 11 Tf`);
-    content.push(`${marginL} ${pageH - marginT} Td`);
-    for (let i=0; i<pageLines.length; i++){
-      const t = pdfEscape(pageLines[i]);
-      if (i === 0) content.push(`(${t}) Tj`);
-      else content.push(`0 -${lineH} Td (${t}) Tj`);
+    async function loadProfilesMap(){
+      // best effort: load profiles so we can show names in boxes
+      // if RLS blocks, we’ll still show short UID.
+      const { data, error } = await sb.from("profiles").select("user_id, full_name, email").limit(500);
+      if (!error && data){
+        state.profileMap = new Map(data.map(r => [r.user_id, r]));
+      }
     }
-    content.push("ET");
-    const cs = content.join("\n");
-    contentIds2.push(add2(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
-  }
 
-  // pages
-  for (let p=0; p<pages.length; p++){
-    pageIds2.push(add2(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] ` +
-      `/Resources << /Font << /F1 ${fontId2} 0 R >> >> ` +
-      `/Contents ${contentIds2[p]} 0 R >>`
-    ));
-  }
+    async function loadRangeData(){
+      const d0 = state.days[0];
+      const d6 = state.days[6];
 
-  // fill in Pages object (#2)
-  objs2[1] = `<< /Type /Pages /Kids [${pageIds2.map(id=>`${id} 0 R`).join(" ")}] /Count ${pageIds2.length} >>`;
+      // Forecast
+      const f = await sb.from("daily_forecast").select("*").gte("date", d0).lte("date", d6);
+      if (f.error) throw f.error;
+      state.forecastMap = new Map((f.data||[]).map(r => [r.date, r]));
 
-  // Build PDF bytes with xref
-  let pdf = `%PDF-1.4\n`;
-  const xref = [];
-  xref.push("0000000000 65535 f \n");
+      // Selections
+      const s = await sb.from("daily_service_selection")
+        .select("date,group_name,service_item_id,updated_at,updated_by")
+        .gte("date", d0).lte("date", d6);
+      if (s.error) throw s.error;
+      state.selectionMap = new Map((s.data||[]).map(r => [k2(r.date, r.group_name), r]));
 
-  for (let i=0; i<objs2.length; i++){
-    const offset = pdf.length;
-    xref.push(String(offset).padStart(10,"0") + " 00000 n \n");
-    pdf += `${i+1} 0 obj\n${objs2[i]}\nendobj\n`;
-  }
+      // Massimo
+      const m = await sb.from("daily_massimo_status")
+        .select("date,service_item_id,is_active,updated_at,updated_by")
+        .gte("date", d0).lte("date", d6);
+      if (m.error) throw m.error;
+      state.massimoMap = new Map((m.data||[]).map(r => [k2(r.date, r.service_item_id), r]));
 
-  const xrefOffset = pdf.length;
-  pdf += `xref\n0 ${objs2.length+1}\n` + xref.join("") +
-         `trailer\n<< /Size ${objs2.length+1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+      // Outlets (includes Lobby Bar + Outlets)
+      const o = await sb.from("daily_outlet_hours")
+        .select("date,outlet_name,is_open,open_time,close_time,updated_at,updated_by")
+        .gte("date", d0).lte("date", d6);
+      if (o.error) throw o.error;
+      state.outletMap = new Map((o.data||[]).map(r => [k2(r.date, r.outlet_name), r]));
+    }
 
-  return new Uint8Array(Array.from(pdf).map(ch => ch.charCodeAt(0)));
-}
+    /**********************
+     * RENDER
+     **********************/
+    function renderChips(){
+      $("whoChips").style.display = "flex";
+      $("chipRole").textContent = `Role: ${state.me?.role || "—"}`;
+      $("chipDept").textContent = `Dept: ${state.me?.department || "—"}`;
+      $("chipUser").textContent = `User: ${state.me?.full_name || state.session?.user?.email || "—"}`;
 
-async function download7DaySnapshotPdf(){
-  try{
-    // You should already have a supabase client in your file.
-    // This function expects your existing client variable is named `supabase`.
-    if (typeof supabase === "undefined") throw new Error("Supabase client not found.");
+      const canOcc = canEditOccupancy();
+      const canSvc = canEditRestaurant();
+      const canLB = canEditLobbyBar();
+      const canOut = canEditOutlets();
+      const parts = [];
+      parts.push(canOcc ? "Occupancy: edit" : "Occupancy: view");
+      parts.push(canSvc ? "Restaurant: edit" : "Restaurant: view");
+      parts.push(canLB ? "Lobby Bar: edit" : "Lobby Bar: view");
+      parts.push(canOut ? "Outlets: edit" : "Outlets: view");
+      $("permHint").textContent = parts.join(" • ");
 
-    // Start date input: adjust this ID if yours is different
-    const startEl = document.getElementById("startDate");
-    const startDate = startEl?.value || new Date().toISOString().slice(0,10);
+      $("tabs").style.display = "flex";
+      $("btnPdfSnapshot").style.display = "inline-flex";
+      $("btnLogout").style.display = "inline-flex";
 
-    const days = Array.from({length:7}, (_,i)=>addDays(startDate, i));
-    const dayMin = days[0];
-    const dayMax = addDays(startDate, 7); // exclusive upper bound for filtering if needed
+      $("tabUsers").style.display = isAdmin() ? "inline-flex" : "none";
+    }
 
-    // Load service items
-    const { data: serviceItems, error: siErr } = await supabase
-      .from("service_items")
-      .select("id,name,group_name");
-    if (siErr) throw siErr;
+    function nameForUid(uid){
+      if (!uid) return "";
+      const p = state.profileMap.get(uid);
+      if (p?.full_name) return p.full_name;
+      if (p?.email) return p.email;
+      return uid.slice(0,8);
+    }
 
-    const byId = new Map((serviceItems||[]).map(r => [String(r.id), r]));
+    function renderOccupancy(){
+      const el = $("occRow");
+      el.innerHTML = "";
 
-    // Load selections (breakfast/lunch/dinner)
-    const { data: selections, error: selErr } = await supabase
-      .from("daily_service_selection")
-      .select("date,group_name,service_item_id,updated_at")
-      .gte("date", dayMin)
-      .lte("date", days[6]);
-    if (selErr) throw selErr;
+      for (const day of state.days){
+        const row = state.forecastMap.get(day) || {};
+        const pct = row.occupancy_percent ?? row.occupancy ?? null;
+        const notesLong = row.notes_long ?? row.notes ?? "";
+        const updatedAt = row.updated_at ? torontoFmt(new Date(row.updated_at)) : "";
+        const updatedBy = row.updated_by ? nameForUid(row.updated_by) : "";
 
-    // Map: (date|group) -> service_item_id
-    const selMap = new Map();
-    (selections||[]).forEach(r => {
-      selMap.set(`${r.date}|${r.group_name}`, r.service_item_id ? String(r.service_item_id) : null);
+        const card = document.createElement("div");
+        card.className = "dayCard";
+        card.innerHTML = `
+          <div class="d1">
+            <span>${escapeHtml(torontoDayLabel(day))}</span>
+            <span class="small">${escapeHtml(day)}</span>
+          </div>
+          <div class="pct">${pct == null ? "—" : (Number(pct).toFixed(1) + "%")}</div>
+          <div class="lu">${updatedBy ? `Last update: ${escapeHtml(updatedBy)} • ${escapeHtml(updatedAt)}` : " "}</div>
+        `;
+        card.addEventListener("click", () => openOccEdit(day));
+        el.appendChild(card);
+      }
+    }
+
+    function renderLobbyBar(){
+      const wrap = $("lobbyBarRow");
+      const can = canEditLobbyBar();
+      const rows = [];
+
+      rows.push(`<table class="miniTable"><thead><tr>
+        <th style="min-width:180px;">Day</th>
+        <th>Status</th>
+        <th>Hours</th>
+        <th>Last update</th>
+      </tr></thead><tbody>`);
+
+      for (const day of state.days){
+        const key = k2(day, LOBBY_BAR);
+        const r = state.outletMap.get(key);
+        const isOpen = !!r?.is_open;
+        const statusPill = `<span class="pill ${isOpen ? "open":"closed"}">${isOpen ? "Open":"Closed"}</span>`;
+        const hours = isOpen ? `${fmtTime12(r?.open_time)}–${fmtTime12(r?.close_time)}` : "—";
+        const who = r?.updated_by ? nameForUid(r.updated_by) : "";
+        const when = r?.updated_at ? torontoFmt(new Date(r.updated_at)) : "";
+        const last = who ? `${escapeHtml(who)} • ${escapeHtml(when)}` : "—";
+
+        rows.push(`<tr>
+          <td><b>${escapeHtml(torontoDayLabel(day))}</b> <span class="small">${escapeHtml(day)}</span></td>
+          <td>${statusPill}</td>
+          <td>${escapeHtml(hours || "—")}</td>
+          <td class="small">${last}</td>
+        </tr>`);
+      }
+
+      rows.push(`</tbody></table>`);
+      wrap.innerHTML = rows.join("");
+
+      // Click row to edit (only if allowed)
+      if (can){
+        const tbody = wrap.querySelector("tbody");
+        [...tbody.querySelectorAll("tr")].forEach((tr, i) => {
+          tr.style.cursor = "pointer";
+          tr.addEventListener("click", () => openOutletEditSingle(state.days[i], LOBBY_BAR));
+        });
+      }
+    }
+
+    function renderOutlets(){
+      const wrap = $("outletsRow");
+      const can = canEditOutlets();
+      const rows = [];
+
+      rows.push(`<table class="miniTable"><thead><tr>
+        <th style="min-width:180px;">Outlet</th>
+        ${state.days.map(d => `<th>${escapeHtml(torontoDayLabel(d))}<div class="small">${escapeHtml(d)}</div></th>`).join("")}
+      </tr></thead><tbody>`);
+
+      for (const outlet of OUTLETS){
+        rows.push(`<tr><td><b>${escapeHtml(outlet)}</b></td>`);
+        for (const day of state.days){
+          const r = state.outletMap.get(k2(day, outlet));
+          const isOpen = !!r?.is_open;
+          const hours = isOpen ? `${fmtTime12(r?.open_time)}–${fmtTime12(r?.close_time)}` : "";
+          const pill = `<span class="pill ${isOpen ? "open":"closed"}">${isOpen ? "Open":"Closed"}</span>`;
+          const txt = isOpen ? `<div class="hours">${escapeHtml(hours || "hours missing")}</div>` : "";
+          const who = r?.updated_by ? nameForUid(r.updated_by) : "";
+          const when = r?.updated_at ? torontoFmt(new Date(r.updated_at)) : "";
+          const meta = who ? `<div class="small">${escapeHtml(who)} • ${escapeHtml(when)}</div>` : `<div class="small">—</div>`;
+          rows.push(`<td data-day="${day}" data-outlet="${escapeHtml(outlet)}" style="vertical-align:top;">
+            ${pill}${txt}${meta}
+          </td>`);
+        }
+        rows.push(`</tr>`);
+      }
+
+      rows.push(`</tbody></table>`);
+      wrap.innerHTML = rows.join("");
+
+      $("btnEditOutletsWeek").disabled = !can;
+      if (!can) $("btnEditOutletsWeek").title = "Only Outlets dept (or Admin) can edit outlets.";
+
+      if (can){
+        wrap.querySelectorAll("td[data-day]").forEach(td => {
+          td.style.cursor = "pointer";
+          td.addEventListener("click", () => {
+            openOutletEditSingle(td.getAttribute("data-day"), td.getAttribute("data-outlet"));
+          });
+        });
+      }
+    }
+
+    function serviceMetaText(updated_by, updated_at){
+      const who = updated_by ? nameForUid(updated_by) : "";
+      const when = updated_at ? torontoFmt(new Date(updated_at)) : "";
+      if (!who && !when) return "";
+      return `${who || "—"} • ${when || "—"}`;
+    }
+
+    function renderServiceGrid(){
+      const t = $("svcTable");
+      const dayHeads = state.days.map(d => `<th>${escapeHtml(torontoDayLabel(d))}<div class="small">${escapeHtml(d)}</div></th>`).join("");
+
+      let html = `<thead><tr><th style="text-align:left;">Service</th>${dayHeads}</tr></thead><tbody>`;
+
+      // Build each group section
+      for (const g of GROUPS){
+        html += `<tr class="groupTitleRow"><td colspan="${1 + state.days.length}">${escapeHtml(g.title)}</td></tr>`;
+
+        const items = state.serviceByGroup.get(g.key) || [];
+        for (const item of items){
+          html += `<tr><td>
+            <div class="svcName">
+              <span>${escapeHtml(item.name)}</span>
+              <span class="svcTag">${escapeHtml(g.title)}</span>
+            </div>
+          </td>`;
+
+          for (const day of state.days){
+            let isGreen = false;
+            let meta = "";
+
+            if (g.key === "massimo"){
+              const r = state.massimoMap.get(k2(day, item.id));
+              isGreen = !!r?.is_active;
+              meta = serviceMetaText(r?.updated_by, r?.updated_at);
+            } else {
+              const r = state.selectionMap.get(k2(day, g.key));
+              isGreen = (r?.service_item_id && String(r.service_item_id) === String(item.id));
+              meta = serviceMetaText(r?.updated_by, r?.updated_at);
+            }
+
+            const cls = isGreen ? "green" : "red";
+            html += `<td>
+              <div class="cell ${cls}" data-day="${escapeHtml(day)}" data-group="${escapeHtml(g.key)}" data-itemid="${escapeHtml(item.id)}">
+                <div class="meta">${escapeHtml(meta || "")}</div>
+              </div>
+            </td>`;
+          }
+
+          html += `</tr>`;
+        }
+      }
+
+      html += `</tbody>`;
+      t.innerHTML = html;
+
+      // Attach handlers
+      t.querySelectorAll(".cell").forEach(cell => {
+        cell.addEventListener("click", onServiceClick);
+        cell.addEventListener("dblclick", onServiceDblClick);
+      });
+    }
+
+    /**********************
+     * EDIT: OCCUPANCY
+     **********************/
+    async function openOccEdit(day){
+      if (!canEditOccupancy()){
+        showMsg($("appMsg"), "You don’t have permission to edit occupancy.", "err");
+        return;
+      }
+
+      const row = state.forecastMap.get(day) || {};
+      const pct = row.occupancy_percent ?? row.occupancy ?? "";
+      const notesLong = row.notes_long ?? row.notes ?? "";
+      const notesShort = row.notes_short ?? "";
+
+      openModal(`Edit occupancy — ${day}`, `
+        <div class="modalGrid">
+          <div class="kpi">
+            <label>Occupancy % (0–100)</label><br/>
+            <input id="occPct" type="text" value="${escapeHtml(pct)}" placeholder="e.g. 78.5" />
+          </div>
+          <div class="kpi">
+            <label>Notes (short)</label><br/>
+            <input id="occShort" class="wide" type="text" value="${escapeHtml(notesShort)}" placeholder="Optional" />
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label style="font-size:12px; color:var(--muted); font-weight:900;">Notes (long)</label>
+          <textarea id="occLong" placeholder="Write detailed notes here...">${escapeHtml(notesLong)}</textarea>
+        </div>
+
+        <div class="row" style="margin-top:12px; justify-content:flex-end;">
+          <button class="btn primary" id="btnSaveOcc">Save</button>
+        </div>
+
+        <div class="msg" id="occMsg"></div>
+      `);
+
+      $("btnSaveOcc").addEventListener("click", async () => {
+        try{
+          showMsg($("occMsg"), "", "");
+          const v = $("occPct").value.trim();
+          const num = v === "" ? null : Number(v);
+          if (v !== "" && (Number.isNaN(num) || num < 0 || num > 100)){
+            return showMsg($("occMsg"), "Occupancy must be a number 0–100.", "err");
+          }
+          const payload = {
+            date: day,
+            occupancy_percent: num,
+            notes_short: $("occShort").value.trim(),
+            notes_long: $("occLong").value.trim(),
+            updated_by: state.session.user.id,
+            updated_at: new Date().toISOString()
+          };
+
+          const { error } = await sb
+            .from("daily_forecast")
+            .upsert(payload, { onConflict: "date" });
+
+          if (error) throw error;
+
+          showMsg($("occMsg"), "Saved.", "ok");
+          await refreshAll();
+          closeModal();
+        } catch(e){
+          showMsg($("occMsg"), e.message || String(e), "err");
+        }
+      });
+    }
+
+    /**********************
+     * EDIT: SERVICE GRID
+     **********************/
+    async function onServiceClick(e){
+      if (!canEditRestaurant()){
+        showMsg($("appMsg"), "You don’t have permission to edit restaurant status.", "err");
+        return;
+      }
+
+      const day = e.currentTarget.getAttribute("data-day");
+      const group = e.currentTarget.getAttribute("data-group");
+      const itemId = e.currentTarget.getAttribute("data-itemid");
+
+      try{
+        showMsg($("appMsg"), "", "");
+
+        if (group === "massimo"){
+          // Toggle on/off
+          const key = k2(day, itemId);
+          const curr = state.massimoMap.get(key);
+          const nextActive = !(curr && curr.is_active);
+
+          const payload = {
+            date: day,
+            service_item_id: itemId,
+            is_active: nextActive,
+            updated_by: state.session.user.id,
+            updated_at: new Date().toISOString()
+          };
+
+          const { error } = await sb
+            .from("daily_massimo_status")
+            .upsert(payload, { onConflict: "date,service_item_id" });
+
+          if (error) throw error;
+          await refreshAll();
+          return;
+        }
+
+        // Breakfast/Lunch/Dinner: select this option (single green per day per group)
+        const payload = {
+          date: day,
+          group_name: group,
+          service_item_id: itemId,
+          updated_by: state.session.user.id,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb
+          .from("daily_service_selection")
+          .upsert(payload, { onConflict: "date,group_name" });
+
+        if (error) throw error;
+
+        await refreshAll();
+      } catch(err){
+        showMsg($("appMsg"), err.message || String(err), "err");
+      }
+    }
+
+    async function onServiceDblClick(e){
+      // Double click: if it's currently selected (green), clear it to fully closed (no green)
+      if (!canEditRestaurant()) return;
+
+      const day = e.currentTarget.getAttribute("data-day");
+      const group = e.currentTarget.getAttribute("data-group");
+      const itemId = e.currentTarget.getAttribute("data-itemid");
+
+      try{
+        showMsg($("appMsg"), "", "");
+
+        if (group === "massimo"){
+          // For massimo, double click turns it off
+          const payload = {
+            date: day,
+            service_item_id: itemId,
+            is_active: false,
+            updated_by: state.session.user.id,
+            updated_at: new Date().toISOString()
+          };
+          const { error } = await sb
+            .from("daily_massimo_status")
+            .upsert(payload, { onConflict: "date,service_item_id" });
+          if (error) throw error;
+          await refreshAll();
+          return;
+        }
+
+        const current = state.selectionMap.get(k2(day, group));
+        if (!current?.service_item_id) return;
+
+        if (String(current.service_item_id) !== String(itemId)){
+          // Only clear if they double-clicked the green one
+          return;
+        }
+
+        const payload = {
+          date: day,
+          group_name: group,
+          service_item_id: null,
+          updated_by: state.session.user.id,
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb
+          .from("daily_service_selection")
+          .upsert(payload, { onConflict: "date,group_name" });
+
+        if (error) throw error;
+
+        await refreshAll();
+      } catch(err){
+        showMsg($("appMsg"), err.message || String(err), "err");
+      }
+    }
+
+    /**********************
+     * EDIT: OUTLET SINGLE
+     **********************/
+    async function openOutletEditSingle(day, outletName){
+      const can = (outletName === LOBBY_BAR) ? canEditLobbyBar() : canEditOutlets();
+      if (!can){
+        showMsg($("appMsg"), "You don’t have permission to edit this section.", "err");
+        return;
+      }
+
+      const r = state.outletMap.get(k2(day, outletName)) || {};
+      const isOpen = !!r.is_open;
+      const openTime = r.open_time ? String(r.open_time).slice(0,5) : "";
+      const closeTime = r.close_time ? String(r.close_time).slice(0,5) : "";
+
+      openModal(`Edit ${outletName} — ${day}`, `
+        <div class="row" style="align-items:flex-end;">
+          <div class="field">
+            <span>Status</span>
+            <select id="outIsOpen">
+              <option value="false" ${isOpen ? "" : "selected"}>Closed</option>
+              <option value="true" ${isOpen ? "selected" : ""}>Open</option>
+            </select>
+          </div>
+          <div class="field">
+            <span>Open time</span>
+            <input id="outOpenTime" type="text" placeholder="HH:MM" value="${escapeHtml(openTime)}" />
+          </div>
+          <div class="field">
+            <span>Close time</span>
+            <input id="outCloseTime" type="text" placeholder="HH:MM" value="${escapeHtml(closeTime)}" />
+          </div>
+          <button class="btn primary" id="btnSaveOutlet">Save</button>
+        </div>
+
+        <div class="small" style="margin-top:10px;">
+          If status is <b>Open</b>, you must enter both open/close times.
+        </div>
+
+        <div class="msg" id="outMsg"></div>
+      `);
+
+      $("btnSaveOutlet").addEventListener("click", async () => {
+        try{
+          showMsg($("outMsg"), "", "");
+          const open = $("outIsOpen").value === "true";
+          const ot = $("outOpenTime").value.trim();
+          const ct = $("outCloseTime").value.trim();
+
+          if (open){
+            if (!/^\d{2}:\d{2}$/.test(ot) || !/^\d{2}:\d{2}$/.test(ct)){
+              return showMsg($("outMsg"), "Enter times as HH:MM (e.g. 07:00).", "err");
+            }
+          }
+
+          const payload = {
+            date: day,
+            outlet_name: outletName,
+            is_open: open,
+            open_time: open ? ot : null,
+            close_time: open ? ct : null,
+            updated_by: state.session.user.id,
+            updated_at: new Date().toISOString()
+          };
+
+          const { error } = await sb
+            .from("daily_outlet_hours")
+            .upsert(payload, { onConflict: "date,outlet_name" });
+
+          if (error) throw error;
+
+          showMsg($("outMsg"), "Saved.", "ok");
+          await refreshAll();
+          closeModal();
+        } catch(e){
+          showMsg($("outMsg"), e.message || String(e), "err");
+        }
+      });
+    }
+
+    /**********************
+     * EDIT: OUTLETS WEEK
+     **********************/
+    $("btnEditOutletsWeek").addEventListener("click", () => {
+      if (!canEditOutlets()){
+        showMsg($("appMsg"), "Only Outlets dept (or Admin) can edit outlets.", "err");
+        return;
+      }
+      openOutletsWeekEditor();
     });
 
-    // Massimo (multi on)
-    const { data: massimo, error: mErr } = await supabase
-      .from("daily_massimo_status")
-      .select("date,service_item_id,is_active")
-      .gte("date", dayMin)
-      .lte("date", days[6]);
-    if (mErr) throw mErr;
+    function openOutletsWeekEditor(){
+      const headDays = state.days.map(d => `<th>${escapeHtml(torontoDayLabel(d))}<div class="small">${escapeHtml(d)}</div></th>`).join("");
+      let html = `
+        <div class="small">Edit as much as you want. If you set a day to <b>Open</b>, you must set hours.</div>
+        <div style="margin-top:10px; overflow:auto;">
+          <table class="miniTable">
+            <thead>
+              <tr>
+                <th style="min-width:160px;">Outlet</th>
+                ${headDays}
+              </tr>
+            </thead>
+            <tbody>
+      `;
 
-    const massimoOn = new Map(); // date -> [names]
-    (massimo||[]).forEach(r=>{
-      if (!r.is_active) return;
-      const item = byId.get(String(r.service_item_id));
-      if (!item) return;
-      const arr = massimoOn.get(r.date) || [];
-      arr.push(item.name.replace("MASSIMO ",""));
-      massimoOn.set(r.date, arr);
+      for (const outlet of OUTLETS){
+        html += `<tr><td><b>${escapeHtml(outlet)}</b></td>`;
+        for (const day of state.days){
+          const r = state.outletMap.get(k2(day, outlet)) || {};
+          const open = !!r.is_open;
+          const ot = r.open_time ? String(r.open_time).slice(0,5) : "";
+          const ct = r.close_time ? String(r.close_time).slice(0,5) : "";
+          html += `
+            <td>
+              <div class="row" style="gap:6px;">
+                <select data-wk="open" data-day="${escapeHtml(day)}" data-outlet="${escapeHtml(outlet)}">
+                  <option value="false" ${open ? "" : "selected"}>Closed</option>
+                  <option value="true" ${open ? "selected" : ""}>Open</option>
+                </select>
+                <input data-wk="ot" data-day="${escapeHtml(day)}" data-outlet="${escapeHtml(outlet)}" type="text" placeholder="HH:MM" value="${escapeHtml(ot)}" style="width:90px;" />
+                <input data-wk="ct" data-day="${escapeHtml(day)}" data-outlet="${escapeHtml(outlet)}" type="text" placeholder="HH:MM" value="${escapeHtml(ct)}" style="width:90px;" />
+              </div>
+            </td>
+          `;
+        }
+        html += `</tr>`;
+      }
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+
+        <div class="row" style="margin-top:12px; justify-content:flex-end;">
+          <button class="btn primary" id="btnSaveOutletsWeek">Save week</button>
+        </div>
+
+        <div class="msg" id="wkMsg"></div>
+      `;
+
+      openModal("Edit outlets week", html);
+
+      $("btnSaveOutletsWeek").addEventListener("click", async () => {
+        try{
+          showMsg($("wkMsg"), "", "");
+          const changes = [];
+
+          for (const outlet of OUTLETS){
+            for (const day of state.days){
+              const openSel = document.querySelector(`select[data-wk="open"][data-day="${day}"][data-outlet="${CSS.escape(outlet)}"]`);
+              const otInp = document.querySelector(`input[data-wk="ot"][data-day="${day}"][data-outlet="${CSS.escape(outlet)}"]`);
+              const ctInp = document.querySelector(`input[data-wk="ct"][data-day="${day}"][data-outlet="${CSS.escape(outlet)}"]`);
+
+              const open = openSel.value === "true";
+              const ot = otInp.value.trim();
+              const ct = ctInp.value.trim();
+
+              // if user sets open, hours required
+              if (open){
+                if (!/^\d{2}:\d{2}$/.test(ot) || !/^\d{2}:\d{2}$/.test(ct)){
+                  return showMsg($("wkMsg"), `Missing/invalid hours for ${outlet} on ${day}. Use HH:MM.`, "err");
+                }
+              }
+
+              // only save rows where they set something (open OR closed). We save all, it’s fine.
+              changes.push({
+                date: day,
+                outlet_name: outlet,
+                is_open: open,
+                open_time: open ? ot : null,
+                close_time: open ? ct : null,
+                updated_by: state.session.user.id,
+                updated_at: new Date().toISOString()
+              });
+            }
+          }
+
+          const { error } = await sb
+            .from("daily_outlet_hours")
+            .upsert(changes, { onConflict: "date,outlet_name" });
+
+          if (error) throw error;
+
+          showMsg($("wkMsg"), "Saved.", "ok");
+          await refreshAll();
+          closeModal();
+        } catch(e){
+          showMsg($("wkMsg"), e.message || String(e), "err");
+        }
+      });
+    }
+
+    /**********************
+     * PDF SNAPSHOT (7 days)
+     **********************/
+    $("btnPdfSnapshot").addEventListener("click", async () => {
+      try{
+        showMsg($("appMsg"), "", "");
+        const lines = [];
+
+        const start = state.days[0];
+        lines.push("Sheraton Niagara Falls – 7-Day Snapshot");
+        lines.push(`Start date: ${start}`);
+        lines.push(`Generated: ${torontoFmt(new Date())} (Toronto time)`);
+        lines.push("");
+
+        // helper: selected name or closed
+        const svcById = new Map(state.serviceItems.map(x => [String(x.id), x]));
+        function selectedOrClosed(date, group){
+          const r = state.selectionMap.get(k2(date, group));
+          if (!r?.service_item_id) return `${cap(group)} closed`;
+          const item = svcById.get(String(r.service_item_id));
+          return item?.name || `${cap(group)} active`;
+        }
+        function cap(s){ return s ? s[0].toUpperCase()+s.slice(1) : s; }
+
+        function massimoList(date){
+          const act = [];
+          for (const it of (state.serviceByGroup.get("massimo")||[])){
+            const r = state.massimoMap.get(k2(date, it.id));
+            if (r?.is_active) act.push(it.name.replace("MASSIMO ",""));
+          }
+          return act.length ? act.join(", ") : "Massimo closed";
+        }
+
+        function outletStatus(date, outletName){
+          const r = state.outletMap.get(k2(date, outletName));
+          if (!r || !r.is_open) return "Closed";
+          const ot = fmtTime12(r.open_time);
+          const ct = fmtTime12(r.close_time);
+          if (!ot || !ct) return "Open (hours missing)";
+          return `Open ${ot}–${ct}`;
+        }
+
+        for (const d of state.days){
+          lines.push(`${torontoDayLabel(d)}  [${d}]`);
+
+          const f = state.forecastMap.get(d) || {};
+          const pct = f.occupancy_percent ?? f.occupancy ?? null;
+          const notes = (f.notes_long ?? f.notes ?? "").trim();
+
+          lines.push(`  Occupancy: ${pct == null ? "—" : (Number(pct).toFixed(1) + "%")}`);
+          if (notes) lines.push(`  Notes: ${notes.replace(/\s+/g," ").slice(0,220)}`);
+
+          lines.push(`  Breakfast: ${selectedOrClosed(d,"breakfast")}`);
+          lines.push(`  Lunch: ${selectedOrClosed(d,"lunch")}`);
+          lines.push(`  Dinner: ${selectedOrClosed(d,"dinner")}`);
+          lines.push(`  Massimo: ${massimoList(d)}`);
+
+          lines.push(`  Lobby Bar: ${outletStatus(d, LOBBY_BAR)}`);
+          lines.push(`  Starbucks: ${outletStatus(d, "STARBUCKS")}`);
+          lines.push(`  Sweet Jesus: ${outletStatus(d, "SWEET JESUS")}`);
+          lines.push(`  Freshii: ${outletStatus(d, "FRESHII")}`);
+          lines.push("");
+        }
+
+        const bytes = buildSimplePdfFromLines(lines);
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Sheraton_7Day_Snapshot_${start}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(()=>URL.revokeObjectURL(url), 5000);
+      } catch(e){
+        showMsg($("appMsg"), e.message || String(e), "err");
+      }
     });
 
-    // Outlets/Lobby bar hours
-    const { data: outletRows, error: oErr } = await supabase
-      .from("daily_outlet_hours")
-      .select("date,outlet_name,is_open,open_time,close_time")
-      .gte("date", dayMin)
-      .lte("date", days[6]);
-    if (oErr) throw oErr;
+    /**********************
+     * USERS ADMIN
+     **********************/
+    $("btnReloadUsers").addEventListener("click", async () => {
+      await loadUsersAdmin();
+      renderUsers();
+    });
 
-    const outletMap = new Map(); // (date|outlet) -> row
-    (outletRows||[]).forEach(r => outletMap.set(`${r.date}|${r.outlet_name}`, r));
+    $("btnSaveUser").addEventListener("click", async () => {
+      try{
+        showMsg($("usersMsg"), "", "");
+        if (!isAdmin()) return showMsg($("usersMsg"), "Admin only.", "err");
 
-    function selectedOrClosed(date, group){
-      const id = selMap.get(`${date}|${group}`);
-      if (!id) return `${cap(group)} closed`;
-      const item = byId.get(String(id));
-      return item?.name || `${cap(group)} open`;
+        const uid = $("userSelect").value;
+        if (!uid) return showMsg($("usersMsg"), "Select a user.", "err");
+
+        const payload = {
+          user_id: uid,
+          full_name: $("userFullName").value.trim(),
+          role: $("userRole").value,
+          department: $("userDept").value,
+          is_active: $("userActive").value === "true"
+        };
+
+        const { error } = await sb.from("profiles").upsert(payload, { onConflict: "user_id" });
+        if (error) throw error;
+
+        showMsg($("usersMsg"), "Saved.", "ok");
+        await loadUsersAdmin();
+        renderUsers();
+        await loadProfilesMap(); // refresh names for status boxes
+        await refreshAll();
+      } catch(e){
+        showMsg($("usersMsg"), e.message || String(e), "err");
+      }
+    });
+
+    $("userSelect").addEventListener("change", () => fillUserForm());
+
+    async function loadUsersAdmin(){
+      if (!isAdmin()){
+        showMsg($("usersMsg"), "Admin only.", "err");
+        return;
+      }
+
+      showMsg($("usersMsg"), "", "");
+      // Best attempt:
+      // 1) try RPC admin_list_profiles (if you have it)
+      // 2) fallback to direct select profiles
+      let rows = null;
+
+      const rpc = await sb.rpc("admin_list_profiles", {});
+      if (!rpc.error && Array.isArray(rpc.data)){
+        rows = rpc.data;
+      } else {
+        const q = await sb.from("profiles").select("user_id, full_name, email, role, department, is_active").order("email", { ascending: true });
+        if (q.error) {
+          showMsg($("usersMsg"), q.error.message || String(q.error), "err");
+          return;
+        }
+        rows = q.data || [];
+      }
+
+      state.profiles = rows;
     }
 
-    function cap(s){ return s ? s[0].toUpperCase()+s.slice(1) : s; }
+    function fillUserForm(){
+      const uid = $("userSelect").value;
+      const r = state.profiles.find(x => x.user_id === uid);
+      if (!r) return;
 
-    function outletStatus(date, name){
-      const row = outletMap.get(`${date}|${name}`);
-      if (!row) return "Closed";
-      if (!row.is_open) return "Closed";
-      const ot = fmtTime12(row.open_time);
-      const ct = fmtTime12(row.close_time);
-      if (!ot || !ct) return "Open (hours missing)";
-      return `Open ${ot}–${ct}`;
+      $("userFullName").value = r.full_name || "";
+      $("userEmail").value = r.email || "";
+      $("userRole").value = r.role || "viewer";
+      $("userDept").value = r.department || "";
+      $("userActive").value = String(r.is_active ?? true);
     }
 
-    // Build PDF lines
-    const lines = [];
-    lines.push("Sheraton Niagara Falls – 7-Day Snapshot");
-    lines.push(`Start date: ${dayMin}`);
-    lines.push(`Generated: ${torontoNowString()} (Toronto time)`);
-    lines.push(" ");
+    function renderUsers(){
+      if (!isAdmin()){
+        $("usersCard").style.display = "none";
+        return;
+      }
 
-    for (const d of days){
-      lines.push(`${fmtTorontoDayLabel(d)}  [${d}]`);
-      lines.push(`  Breakfast: ${selectedOrClosed(d,"breakfast")}`);
-      lines.push(`  Lunch: ${selectedOrClosed(d,"lunch")}`);
-      lines.push(`  Dinner: ${selectedOrClosed(d,"dinner")}`);
+      // Select dropdown
+      const sel = $("userSelect");
+      sel.innerHTML = `<option value="">Select...</option>` + state.profiles.map(r => {
+        const label = `${r.full_name || r.email || r.user_id} — ${r.email || ""}`;
+        return `<option value="${escapeHtml(r.user_id)}">${escapeHtml(label)}</option>`;
+      }).join("");
 
-      const m = (massimoOn.get(d) || []);
-      lines.push(`  Massimo: ${m.length ? m.join(", ") : "Massimo closed"}`);
+      // Table
+      const t = $("usersTable");
+      let html = `<thead><tr>
+        <th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Active</th>
+      </tr></thead><tbody>`;
 
-      lines.push(`  Lobby Bar: ${outletStatus(d,"LOBBY BAR")}`);
-      lines.push(`  Starbucks: ${outletStatus(d,"STARBUCKS")}`);
-      lines.push(`  Sweet Jesus: ${outletStatus(d,"SWEET JESUS")}`);
-      lines.push(`  Freshii: ${outletStatus(d,"FRESHII")}`);
-      lines.push(" ");
+      for (const r of state.profiles){
+        html += `<tr>
+          <td>${escapeHtml(r.full_name || "")}</td>
+          <td>${escapeHtml(r.email || "")}</td>
+          <td>${escapeHtml(r.role || "")}</td>
+          <td>${escapeHtml(r.department || "")}</td>
+          <td>${escapeHtml(String(r.is_active ?? true))}</td>
+        </tr>`;
+      }
+      html += `</tbody>`;
+      t.innerHTML = html;
+
+      // default select first real user if none chosen
+      if (!sel.value && state.profiles.length){
+        sel.value = state.profiles[0].user_id;
+        fillUserForm();
+      }
     }
 
-    const pdfBytes = buildSimplePdfFromLines(lines);
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
+    /**********************
+     * REFRESH
+     **********************/
+    async function refreshAll(){
+      try{
+        showMsg($("appMsg"), "", "");
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Sheraton_7Day_Snapshot_${dayMin}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+        // start date
+        state.startDate = $("startDate").value;
+        state.days = Array.from({length:7}, (_,i)=>addDays(state.startDate, i));
 
-    setTimeout(()=>URL.revokeObjectURL(url), 5000);
-  } catch (e){
-    console.error(e);
-    alert(e?.message || String(e));
-  }
-}
+        await loadProfilesMap();
+        await loadRangeData();
+
+        renderOccupancy();
+        renderLobbyBar();
+        renderOutlets();
+        renderServiceGrid();
+
+      } catch(e){
+        showMsg($("appMsg"), e.message || String(e), "err");
+      }
+    }
+
+    $("btnRefresh").addEventListener("click", refreshAll);
+    $("btnToday").addEventListener("click", () => {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth()+1).padStart(2,"0");
+      const d = String(today.getDate()).padStart(2,"0");
+      $("startDate").value = `${y}-${m}-${d}`;
+      refreshAll();
+    });
+
+    /**********************
+     * BOOT
+     **********************/
+    async function boot(){
+      if (!initSupabase()) return;
+
+      // default start date = today
+      const today = new Date();
+      $("startDate").value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+
+      // show recovery panel hint if URL has recovery params
+      const u = new URL(window.location.href);
+      const type = u.searchParams.get("type") || "";
+      if (type === "recovery" || type === "invite"){
+        $("recoveryHint").textContent = "Looks like a recovery/invite link. Enter a new password, then sign in.";
+      }
+
+      // Auth state
+      const { data: sess } = await sb.auth.getSession();
+      state.session = sess.session;
+
+      sb.auth.onAuthStateChange(async (_event, session) => {
+        state.session = session;
+        await route();
+      });
+
+      await route();
+    }
+
+    async function route(){
+      if (!state.session){
+        $("authView").style.display = "";
+        $("appView").style.display = "none";
+        $("whoChips").style.display = "none";
+        $("tabs").style.display = "none";
+        $("btnPdfSnapshot").style.display = "none";
+        $("btnLogout").style.display = "none";
+        return;
+      }
+
+      $("authView").style.display = "none";
+      $("appView").style.display = "";
+
+      // Load core
+      try{
+        showMsg($("appMsg"), "", "");
+        await loadServiceItems();
+        state.me = await loadMyProfile();
+
+        // If inactive, block edits
+        if (state.me && state.me.is_active === false){
+          showMsg($("appMsg"), "Your account is inactive. Contact admin.", "err");
+        }
+
+        renderChips();
+
+        // show/hide users tab
+        if (!isAdmin()){
+          $("usersCard").style.display = "none";
+          $("tabDashboard").classList.add("active");
+          $("tabUsers").classList.remove("active");
+        }
+
+        await refreshAll();
+      } catch(e){
+        showMsg($("appMsg"), e.message || String(e), "err");
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>
