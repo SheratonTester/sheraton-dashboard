@@ -5,24 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Onboarding</title>
 
-  <!-- Required (your repo already uses this pattern) -->
+  <!-- Load order matters -->
   <script defer src="vendor/supabase-js.iife.min.js"></script>
   <script defer src="supabase.js"></script>
+  <script defer src="app.js"></script>
 
   <style>
     :root{
-      --bg1:#f6f9ff;
-      --bg2:#ffffff;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:#e2e8f0;
-      --btn:#2563eb;
-      --btn2:#0f172a;
-      --bad:#b91c1c;
-      --good:#15803d;
-      --shadow: 0 10px 30px rgba(2,6,23,.10);
-      --radius: 18px;
+      --bg1:#f6f9ff; --bg2:#ffffff; --card:#fff; --text:#0f172a; --muted:#64748b;
+      --line:#e2e8f0; --btn:#2563eb; --btn2:#0f172a; --bad:#b91c1c; --good:#15803d;
+      --shadow:0 10px 30px rgba(2,6,23,.10); --radius:18px;
     }
     *{box-sizing:border-box}
     body{
@@ -38,7 +30,7 @@
       justify-content:center;
       padding:24px;
     }
-    .wrap{width:100%; max-width:900px;}
+    .wrap{width:100%; max-width:720px;}
     .topbar{
       display:flex; gap:12px; align-items:center; justify-content:space-between;
       margin-bottom:14px;
@@ -68,35 +60,13 @@
     }
     .header h1{margin:0; font-size:22px;}
     .header p{margin:8px 0 0 0; color:var(--muted); font-size:14px; line-height:1.35;}
-    .steps{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
-    .step{
-      font-size:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      color:var(--muted);
-      background:rgba(255,255,255,.7);
-    }
-    .step.done{border-color: rgba(21,128,61,.35); color: var(--good); background: rgba(21,128,61,.06);}
-    .step.active{border-color: rgba(37,99,235,.45); color: var(--btn); background: rgba(37,99,235,.06);}
-
-    .body{
-      padding:18px;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:16px;
-    }
-    @media (max-width: 900px){ .body{grid-template-columns:1fr;} }
-
+    .body{padding:18px;}
     .panel{
       border:1px solid var(--line);
       border-radius:14px;
       padding:14px;
       background:rgba(255,255,255,.7);
     }
-    .panel h2{margin:0 0 10px 0; font-size:16px;}
-    .small{font-size:12px; color:var(--muted); margin-top:6px;}
-
     label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
     input, select{
       width:100%;
@@ -111,23 +81,21 @@
       border-color: rgba(37,99,235,.65);
       box-shadow: 0 0 0 4px rgba(37,99,235,.12);
     }
-
     .row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-    @media (max-width: 900px){ .row{grid-template-columns:1fr;} }
+    @media (max-width: 760px){ .row{grid-template-columns:1fr;} }
 
-    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
     button{
       border:0;
       border-radius:12px;
       padding:11px 14px;
-      font-weight:800;
+      font-weight:900;
       cursor:pointer;
       font-size:14px;
     }
     .btn{background:var(--btn); color:#fff;}
-    .btn2{background:var(--btn2); color:#fff;}
-    .ghost{background:transparent; border:1px solid var(--line); color:var(--text); font-weight:800;}
-    .btn:disabled, .btn2:disabled{opacity:.55; cursor:not-allowed;}
+    .ghost{background:transparent; border:1px solid var(--line); color:var(--text); font-weight:900;}
+    .btn:disabled{opacity:.55; cursor:not-allowed;}
 
     .msg{
       margin-top:10px;
@@ -135,26 +103,20 @@
       border-radius:12px;
       border:1px solid var(--line);
       background:#fff;
-      color:var(--text);
       font-size:13px;
       display:none;
       line-height:1.35;
     }
-    .msg.good{border-color: rgba(21,128,61,.35); background: rgba(21,128,61,.06); color: var(--good);}
     .msg.bad{border-color: rgba(185,28,28,.35); background: rgba(185,28,28,.06); color: var(--bad);}
+    .msg.good{border-color: rgba(21,128,61,.35); background: rgba(21,128,61,.06); color: var(--good);}
 
     .footer{
       padding:14px 18px;
       border-top:1px solid var(--line);
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      color:var(--muted);
-      font-size:12px;
+      display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      color:var(--muted); font-size:12px;
     }
-    a{color:var(--btn); text-decoration:none; font-weight:800;}
+    a{color:var(--btn); text-decoration:none; font-weight:900;}
     a:hover{text-decoration:underline;}
   </style>
 </head>
@@ -168,185 +130,73 @@
 
     <div class="card">
       <div class="header">
-        <h1>Welcome — quick setup</h1>
-        <p>Set a new password and fill in your profile. Then you’ll be sent to the home page.</p>
-
-        <div class="steps">
-          <span id="chipPwd" class="step active">1) Password</span>
-          <span id="chipProfile" class="step">2) Profile</span>
-          <span id="chipDone" class="step">Done</span>
-        </div>
+        <h1>Finish setup</h1>
+        <p>Enter your full name, choose your department, and set your password. Role is set to <b>user</b> automatically.</p>
       </div>
 
       <div class="body">
-        <!-- Password -->
         <div class="panel">
-          <h2>Step 1 — Set a new password</h2>
-          <div class="small">This updates your Supabase Auth password.</div>
+          <label for="fullName">Full name</label>
+          <input id="fullName" type="text" placeholder="First + Last name" />
 
-          <label for="newPwd">New password</label>
-          <input id="newPwd" type="password" autocomplete="new-password" placeholder="Min 8 characters" />
-
-          <label for="newPwd2">Confirm password</label>
-          <input id="newPwd2" type="password" autocomplete="new-password" placeholder="Repeat password" />
-
-          <div class="actions">
-            <button id="btnSetPwd" class="btn">Save Password</button>
-            <button id="btnSignOut" class="ghost" title="Sign out and go back to login">Sign Out</button>
-          </div>
-
-          <div id="msgPwd" class="msg"></div>
-        </div>
-
-        <!-- Profile -->
-        <div class="panel">
-          <h2>Step 2 — Complete your profile</h2>
-          <div class="small">This saves into <b>public.profiles</b> (user_id, full_name, role, department, phone).</div>
+          <label for="department">Department</label>
+          <select id="department">
+            <option value="">Select…</option>
+            <option>Engineering</option>
+            <option>Front Desk</option>
+            <option>Housekeeping</option>
+            <option>Food &amp; Beverage</option>
+            <option>Security</option>
+            <option>Sales</option>
+            <option>Other</option>
+          </select>
 
           <div class="row">
             <div>
-              <label for="fullName">Full name</label>
-              <input id="fullName" type="text" placeholder="First + Last name" />
+              <label for="newPwd">New password</label>
+              <input id="newPwd" type="password" autocomplete="new-password" placeholder="Min 8 characters" />
             </div>
             <div>
-              <label for="phone">Phone (optional)</label>
-              <input id="phone" type="tel" placeholder="(###) ###-####" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label for="role">Role</label>
-              <select id="role">
-                <option value="">Select…</option>
-                <option>Admin</option>
-                <option>Manager</option>
-                <option>Engineer</option>
-                <option>Front Desk</option>
-                <option>F&amp;B</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div>
-              <label for="dept">Department</label>
-              <select id="dept">
-                <option value="">Select…</option>
-                <option>Engineering</option>
-                <option>Front Desk</option>
-                <option>Housekeeping</option>
-                <option>Food &amp; Beverage</option>
-                <option>Security</option>
-                <option>Sales</option>
-                <option>Other</option>
-              </select>
+              <label for="newPwd2">Confirm password</label>
+              <input id="newPwd2" type="password" autocomplete="new-password" placeholder="Repeat password" />
             </div>
           </div>
 
           <div class="actions">
-            <button id="btnSaveProfile" class="btn2" disabled>Save Profile</button>
-            <a class="ghost" style="padding:11px 14px; border-radius:12px; display:inline-block;" href="index.html">Back to Home</a>
+            <button id="btnComplete" class="btn">Complete Setup</button>
+            <button id="btnSignOut" class="ghost" type="button">Sign Out</button>
           </div>
 
-          <div id="msgProfile" class="msg"></div>
+          <div id="msgBox" class="msg"></div>
         </div>
       </div>
 
       <div class="footer">
-        <div>Tip: add <b>onboarding.html</b> to Supabase Auth Redirect URLs.</div>
+        <div>After setup, you’ll be sent back to where you were going.</div>
         <div><a href="index.html">Home</a></div>
       </div>
     </div>
   </div>
 
   <script>
-    // -------------------------
-    // Helpers
-    // -------------------------
     const $ = (id) => document.getElementById(id);
 
-    function showMsg(boxId, text, kind) {
-      const el = $(boxId);
+    function showMsg(text, kind) {
+      const el = $("msgBox");
       el.className = "msg" + (kind ? (" " + kind) : "");
       el.textContent = text;
       el.style.display = "block";
     }
-    function clearMsg(boxId) {
-      const el = $(boxId);
+    function clearMsg() {
+      const el = $("msgBox");
       el.style.display = "none";
       el.textContent = "";
       el.className = "msg";
     }
-
-    function setChips(state) {
-      // state: "pwd" | "profile" | "done"
-      const cPwd = $("chipPwd");
-      const cPro = $("chipProfile");
-      const cDone = $("chipDone");
-
-      cPwd.className = "step";
-      cPro.className = "step";
-      cDone.className = "step";
-
-      if (state === "pwd") cPwd.className = "step active";
-      if (state === "profile") cPro.className = "step active";
-      if (state === "done") cDone.className = "step active";
-    }
-
-    function markDone(chipId) {
-      const el = $(chipId);
-      el.className = "step done";
-    }
-
-    function nowIso() {
-      return new Date().toISOString();
-    }
-
-    // -------------------------
-    // Supabase
-    // -------------------------
-    function getClient() {
-      // Your supabase.js should set window.sb
-      if (!window.sb) throw new Error("Supabase client not found. Make sure supabase.js loads and sets window.sb.");
-      return window.sb;
-    }
-
-    async function getUserOrRedirect(sb) {
-      const { data, error } = await sb.auth.getUser();
-      if (error || !data?.user) {
-        window.location.href = "index.html";
-        return null;
-      }
-      return data.user;
-    }
-
-    async function loadProfile(sb, user) {
-      const { data, error } = await sb
-        .from("profiles")
-        .select("user_id,email,full_name,role,department,is_active,phone,onboarding_completed,password_set_at,profile_completed_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      // If no row yet, that’s fine
-      if (error) {
-        // If table exists but RLS blocks, you’ll see it here
-        console.warn("loadProfile error:", error);
-        return null;
-      }
-      return data || null;
-    }
-
-    async function upsertProfile(sb, row) {
-      // Uses your existing key: user_id
-      return sb
-        .from("profiles")
-        .upsert(row, { onConflict: "user_id" })
-        .select()
-        .single();
-    }
+    function nowIso() { return new Date().toISOString(); }
 
     async function markInviteAcceptedIfExists(sb, user) {
-      // If user_invites table exists, mark the latest pending invite as accepted.
-      // If the table doesn't exist, just ignore.
+      // Optional: only runs if table exists + policies allow it
       try {
         const email = (user.email || "").toLowerCase();
         if (!email) return;
@@ -359,10 +209,7 @@
           .order("invite_sent_at", { ascending: false })
           .limit(1);
 
-        if (sel.error) {
-          // Probably table not there or RLS blocks it
-          return;
-        }
+        if (sel.error) return;
         const inviteId = sel.data?.[0]?.id;
         if (!inviteId) return;
 
@@ -370,165 +217,87 @@
           .from("user_invites")
           .update({ accepted_at: nowIso(), accepted_user_id: user.id })
           .eq("id", inviteId);
-
-      } catch (e) {
-        // ignore
-      }
+      } catch (_) {}
     }
 
-    // -------------------------
-    // Page logic
-    // -------------------------
     (async function init() {
-      let sb;
-      try {
-        sb = getClient();
-      } catch (e) {
-        alert(e.message);
-        return;
-      }
+      clearMsg();
 
-      const user = await getUserOrRedirect(sb);
-      if (!user) return;
+      const sb = window.App.getSB();
+      const user = await window.App.getUser();
 
-      $("whoPill").textContent = user.email ? `Signed in: ${user.email}` : `Signed in`;
-
-      // Load existing profile (if any)
-      const profile = await loadProfile(sb, user);
-
-      // If already onboarded, just go home
-      if (profile?.onboarding_completed) {
+      if (!user) {
         window.location.href = "index.html";
         return;
       }
 
-      // Prefill profile fields if already exists
-      if (profile) {
-        $("fullName").value = profile.full_name || "";
-        $("phone").value = profile.phone || "";
-        $("role").value = profile.role || "";
-        $("dept").value = profile.department || "";
-      }
+      $("whoPill").textContent = user.email ? `Signed in: ${user.email}` : "Signed in";
 
-      // If password was already set earlier, allow profile step
-      if (profile?.password_set_at) {
-        markDone("chipPwd");
-        setChips("profile");
-        $("btnSaveProfile").disabled = false;
-      } else {
-        setChips("pwd");
-      }
+      // Prefill if profile already exists
+      const prof = await window.App.getProfile(user.id);
+      if (prof?.full_name) $("fullName").value = prof.full_name;
+      if (prof?.department) $("department").value = prof.department;
 
-      // Hook buttons
       $("btnSignOut").addEventListener("click", async () => {
         await sb.auth.signOut();
         window.location.href = "index.html";
       });
 
-      $("btnSetPwd").addEventListener("click", async () => {
-        clearMsg("msgPwd");
+      $("btnComplete").addEventListener("click", async () => {
+        clearMsg();
 
+        const full_name = ($("fullName").value || "").trim();
+        const department = ($("department").value || "").trim();
         const p1 = $("newPwd").value || "";
         const p2 = $("newPwd2").value || "";
 
-        if (p1.length < 8) {
-          showMsg("msgPwd", "Password must be at least 8 characters.", "bad");
-          return;
-        }
-        if (p1 !== p2) {
-          showMsg("msgPwd", "Passwords do not match.", "bad");
-          return;
-        }
+        if (!full_name) return showMsg("Please enter your full name.", "bad");
+        if (!department) return showMsg("Please select your department.", "bad");
+        if (p1.length < 8) return showMsg("Password must be at least 8 characters.", "bad");
+        if (p1 !== p2) return showMsg("Passwords do not match.", "bad");
 
-        $("btnSetPwd").disabled = true;
+        $("btnComplete").disabled = true;
 
         try {
-          const res = await sb.auth.updateUser({ password: p1 });
-          if (res.error) throw res.error;
+          // 1) Set password in Auth
+          const pw = await sb.auth.updateUser({ password: p1 });
+          if (pw.error) throw pw.error;
 
-          // Save password_set_at in profiles
-          const row = {
-            user_id: user.id,
-            email: user.email || null,
-            password_set_at: nowIso(),
-            onboarding_completed: false
-          };
-
-          const up = await upsertProfile(sb, row);
-          if (up.error) throw up.error;
-
-          showMsg("msgPwd", "Password saved. Now complete your profile.", "good");
-          markDone("chipPwd");
-          setChips("profile");
-          $("btnSaveProfile").disabled = false;
-
-          // Clear password fields
-          $("newPwd").value = "";
-          $("newPwd2").value = "";
-
-        } catch (e) {
-          console.error(e);
-          showMsg("msgPwd", (e?.message || "Failed to save password."), "bad");
-        } finally {
-          $("btnSetPwd").disabled = false;
-        }
-      });
-
-      $("btnSaveProfile").addEventListener("click", async () => {
-        clearMsg("msgProfile");
-
-        const full_name = ($("fullName").value || "").trim();
-        const phone = ($("phone").value || "").trim();
-        const role = ($("role").value || "").trim();
-        const department = ($("dept").value || "").trim();
-
-        if (!full_name) {
-          showMsg("msgProfile", "Please enter your full name.", "bad");
-          return;
-        }
-        if (!role) {
-          showMsg("msgProfile", "Please select a role.", "bad");
-          return;
-        }
-        if (!department) {
-          showMsg("msgProfile", "Please select a department.", "bad");
-          return;
-        }
-
-        $("btnSaveProfile").disabled = true;
-
-        try {
+          // 2) Save profile (role forced to 'user')
           const row = {
             user_id: user.id,
             email: user.email || null,
             full_name,
-            role,
             department,
-            phone: phone || null,
+            role: "user",
             is_active: true,
+            password_set_at: nowIso(),
             profile_completed_at: nowIso(),
             onboarding_completed: true
           };
 
-          const up = await upsertProfile(sb, row);
+          const up = await sb
+            .from("profiles")
+            .upsert(row, { onConflict: "user_id" })
+            .select()
+            .single();
+
           if (up.error) throw up.error;
 
-          // Invite tracking (if table exists)
+          // Optional: invite accept tracking
           await markInviteAcceptedIfExists(sb, user);
 
-          showMsg("msgProfile", "Profile saved. Sending you to the home page…", "good");
-          markDone("chipProfile");
-          setChips("done");
-          markDone("chipDone");
+          showMsg("Setup complete. Redirecting…", "good");
 
-          setTimeout(() => {
-            window.location.href = "index.html";
-          }, 900);
+          // Send them back to the original page (from the gate), or home
+          const url = new URL(window.location.href);
+          const next = url.searchParams.get("next");
+          window.location.href = next ? next : "index.html";
 
         } catch (e) {
           console.error(e);
-          showMsg("msgProfile", (e?.message || "Failed to save profile."), "bad");
-          $("btnSaveProfile").disabled = false;
+          showMsg(e?.message || "Setup failed.", "bad");
+          $("btnComplete").disabled = false;
         }
       });
     })();
