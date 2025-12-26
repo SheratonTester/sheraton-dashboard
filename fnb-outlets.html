@@ -219,7 +219,7 @@
       background: var(--line);
     }
 
-    /* Outlet modal */
+    /* Modal (shared) */
     .modal-backdrop{
       position:fixed; inset:0;
       background: rgba(15,23,42,.45);
@@ -230,7 +230,7 @@
       z-index:50;
     }
     .modal{
-      width:min(560px, 100%);
+      width:min(760px, 100%);
       background:#fff;
       border-radius:22px;
       border:1px solid rgba(226,232,240,.9);
@@ -258,12 +258,12 @@
     }
     .field{
       display:grid;
-      grid-template-columns: 120px 1fr;
+      grid-template-columns: 140px 1fr;
       gap:10px;
       align-items:center;
       margin-bottom:10px;
     }
-    input[type="time"], textarea{
+    input[type="time"], input[type="number"], textarea{
       border:1px solid var(--line);
       border-radius:12px;
       padding:10px 12px;
@@ -272,7 +272,7 @@
       width:100%;
       background:#fff;
     }
-    textarea{ min-height:70px; resize:vertical; }
+    textarea{ min-height:90px; resize:vertical; }
     .toggleRow{
       display:flex; align-items:center; gap:10px;
       padding:10px 12px;
@@ -306,6 +306,16 @@
     }
     .switch input:checked + .slider:before{ transform: translateX(20px); }
     .hint{ font-size:12px; color:var(--muted); }
+
+    .weekGrid{
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:auto;
+      max-height:55vh;
+      background:#fff;
+    }
+    .weekGrid table{ min-width: 900px; }
+    .weekGrid th{ position:sticky; left:0; background:#fff; z-index:2; }
   </style>
 </head>
 
@@ -316,12 +326,13 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>F&B Outlets</h1>
-        <div class="subtitle">Single click = select. Double click a green cell to clear it back to red. Auto-saves.</div>
+        <div class="subtitle">Meals: click select, double-click green to clear. Outlets: times required when open. Occupancy: edit day or week.</div>
       </div>
     </div>
 
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-      <a class="btnlink small" href="index.html">← Home</a>
+      <!-- cache-busted Home so you don't get old index redirect -->
+      <a class="btnlink small" href="./index.html?v=7">← Home</a>
       <span class="pill" id="whoami">Loading…</span>
       <button class="muted-btn small" id="btnSignOut" style="display:none;">Sign out</button>
     </div>
@@ -335,6 +346,7 @@
       <button class="small" id="btnToday">Today</button>
       <button class="small" id="btnNext">Next 7 →</button>
       <input type="date" id="datePick" />
+      <button class="small" id="btnEditWeekOcc">Edit 7-day occupancy</button>
     </div>
 
     <div class="controls">
@@ -345,6 +357,22 @@
   </div>
 
   <div class="grid2">
+
+    <!-- OCCUPANCY -->
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <strong>Occupancy</strong>
+          <span>Each day has an occupancy % and long notes. Click a day to edit (auto loads existing data).</span>
+        </div>
+        <div class="hint" id="occHint">Guest Service can edit.</div>
+      </div>
+      <div class="error" id="errorBoxOcc"></div>
+      <div style="padding:12px 14px 14px;">
+        <div class="sheet" id="sheetOcc"></div>
+      </div>
+    </section>
+
     <!-- MEALS -->
     <section class="card">
       <div class="card-head">
@@ -390,21 +418,22 @@
         <div class="sheet" id="sheetOutlets"></div>
       </div>
     </section>
+
   </div>
 </div>
 
-<!-- Outlet modal -->
-<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
-  <div class="modal">
+<!-- OUTLET MODAL -->
+<div class="modal-backdrop" id="modalBackdropOutlet" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(560px,100%);">
     <div class="modal-head">
       <div>
-        <strong id="modalTitle">Outlet</strong>
-        <div class="sub" id="modalSub">Date</div>
+        <strong id="modalTitleOutlet">Outlet</strong>
+        <div class="sub" id="modalSubOutlet">Date</div>
       </div>
-      <button class="small" id="btnModalClose">Close</button>
+      <button class="small" id="btnModalCloseOutlet">Close</button>
     </div>
     <div class="modal-body">
-      <div class="error" id="errorBoxModal"></div>
+      <div class="error" id="errorBoxModalOutlet"></div>
 
       <div class="toggleRow">
         <label class="switch">
@@ -431,15 +460,68 @@
       </div>
     </div>
     <div class="modal-foot">
-      <button class="muted-btn" id="btnModalCancel">Cancel</button>
-      <button class="primary" id="btnModalSave">Save</button>
+      <button class="muted-btn" id="btnModalCancelOutlet">Cancel</button>
+      <button class="primary" id="btnModalSaveOutlet">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- OCCUPANCY DAY MODAL -->
+<div class="modal-backdrop" id="modalBackdropOccDay" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(660px,100%);">
+    <div class="modal-head">
+      <div>
+        <strong id="modalTitleOccDay">Occupancy</strong>
+        <div class="sub" id="modalSubOccDay">Date</div>
+      </div>
+      <button class="small" id="btnModalCloseOccDay">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="error" id="errorBoxOccDay"></div>
+
+      <div class="field">
+        <label for="occPctDay">Occupancy %</label>
+        <input type="number" id="occPctDay" min="0" max="100" step="0.01" placeholder="e.g. 74.25" />
+      </div>
+      <div class="field" style="align-items:start;">
+        <label for="occNotesDay" style="padding-top:10px;">Notes</label>
+        <textarea id="occNotesDay" placeholder="Long notes (anything important)"></textarea>
+      </div>
+      <div class="hint" id="occDayHint"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="muted-btn" id="btnModalCancelOccDay">Cancel</button>
+      <button class="primary" id="btnModalSaveOccDay">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- OCCUPANCY WEEK MODAL -->
+<div class="modal-backdrop" id="modalBackdropOccWeek" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <strong>7-day Occupancy Editor</strong>
+        <div class="sub" id="modalSubOccWeek">Week</div>
+      </div>
+      <button class="small" id="btnModalCloseOccWeek">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="error" id="errorBoxOccWeek"></div>
+      <div class="weekGrid" id="occWeekGrid"></div>
+      <div class="hint" id="occWeekHint" style="margin-top:10px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="muted-btn" id="btnModalCancelOccWeek">Cancel</button>
+      <button class="primary" id="btnModalSaveOccWeek">Save week</button>
     </div>
   </div>
 </div>
 
 <!-- Scripts (order matters) -->
-<script src="./vendor/supabase-js.iife.min.js?v=5"></script>
-<script src="./supabase.js?v=5"></script>
+<script src="./vendor/supabase-js.iife.min.js?v=7"></script>
+<script src="./supabase.js?v=7"></script>
+
 <script>
 (() => {
   const TZ = "America/Toronto";
@@ -462,7 +544,6 @@
     const b = $(boxId);
     b.textContent = msg;
     b.style.display = "block";
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function clrErr(boxId){
     const b = $(boxId);
@@ -505,7 +586,6 @@
     const d = parts.find(p=>p.type==="day").value;
     return `${y}-${m}-${d}`;
   }
-
   function normMealGroup(s){
     const t = String(s || "").trim().toLowerCase();
     if(t === "breakfast" || t === "lunch" || t === "dinner") return t;
@@ -522,8 +602,11 @@
     outlets: [],
     svcMap: new Map(),
     outMap: new Map(),
+    occMap: new Map(), // key: occ_date
     saving: 0,
-    modal: null
+    modalOutlet: null,
+    modalOccDay: null,
+    canEditOcc: false
   };
 
   const MEAL_GROUPS = [
@@ -558,7 +641,6 @@
     if(error) throw error;
     return data.session?.user || null;
   }
-
   async function loadProfile(userId){
     const { data, error } = await window.sb
       .from("profiles")
@@ -612,39 +694,48 @@
     }
     return state.svcMap.get(k);
   }
-
   function ensureOut(dateISO, outletId){
     const k = keyOut(dateISO, outletId);
     if(!state.outMap.has(k)){
-      state.outMap.set(k, {
-        outlet_date: dateISO, outlet_item_id: outletId,
-        is_open: false, open_time: null, close_time: null, notes: ""
-      });
+      state.outMap.set(k, { outlet_date: dateISO, outlet_item_id: outletId, is_open: false, open_time: null, close_time: null, notes: "" });
     }
     return state.outMap.get(k);
+  }
+  function ensureOcc(dateISO){
+    if(!state.occMap.has(dateISO)){
+      state.occMap.set(dateISO, { occ_date: dateISO, occupancy_pct: null, notes: "" });
+    }
+    return state.occMap.get(dateISO);
   }
 
   async function loadWeek(){
     clrErr("errorBoxMeals");
     clrErr("errorBoxOutlets");
+    clrErr("errorBoxOcc");
     setBusy("Loading week…");
 
     state.svcMap.clear();
     state.outMap.clear();
+    state.occMap.clear();
 
     const startISO = state.days[0].iso;
     const endISO   = state.days[6].iso;
 
-    const [svcSelRes, outHoursRes] = await Promise.all([
+    const [svcSelRes, outHoursRes, occRes] = await Promise.all([
       window.sb.from("daily_service_selection")
         .select("service_date, meal_group, service_item_id, notes, updated_by, updated_at")
         .gte("service_date", startISO).lte("service_date", endISO),
       window.sb.from("daily_outlet_hours")
         .select("outlet_date, outlet_item_id, is_open, open_time, close_time, notes, updated_by, updated_at")
         .gte("outlet_date", startISO).lte("outlet_date", endISO),
+      window.sb.from("daily_occupancy")
+        .select("occ_date, occupancy_pct, notes, updated_by, updated_at")
+        .gte("occ_date", startISO).lte("occ_date", endISO),
     ]);
+
     if(svcSelRes.error) throw svcSelRes.error;
     if(outHoursRes.error) throw outHoursRes.error;
+    if(occRes.error) throw occRes.error;
 
     for(const r of (svcSelRes.data || [])){
       const mg = normMealGroup(r.meal_group);
@@ -652,6 +743,9 @@
     }
     for(const r of (outHoursRes.data || [])){
       state.outMap.set(keyOut(r.outlet_date, r.outlet_item_id), r);
+    }
+    for(const r of (occRes.data || [])){
+      state.occMap.set(r.occ_date, r);
     }
 
     renderAll();
@@ -682,15 +776,17 @@
     return { table, tbody };
   }
 
-  function cellButton({selected, label, subText, onClick, onDblClick}){
+  function cellButton({selected, label, subText, onClick, onDblClick, forceNeutral=false}){
     const btn = document.createElement("div");
-    btn.className = "cellbtn " + (selected ? "green" : "red");
+    const cls = forceNeutral ? "" : (selected ? "green" : "red");
+    btn.className = "cellbtn " + cls;
     btn.innerHTML = `<div><div>${label || ""}</div>${subText ? `<div class="tiny">${subText}</div>` : ""}</div>`;
     btn.addEventListener("click", (e) => { e.preventDefault(); onClick && onClick(); });
     btn.addEventListener("dblclick", (e) => { e.preventDefault(); onDblClick && onDblClick(); });
     return btn;
   }
 
+  // ---- saves
   async function saveServiceOne(dateISO, mealGroupKey){
     try{
       clrErr("errorBoxMeals");
@@ -745,6 +841,65 @@
     }
   }
 
+  async function saveOccMany(rows){
+    try{
+      clrErr("errorBoxOcc");
+      state.saving++; setSavingUI();
+
+      const payload = rows.map(r => ({
+        occ_date: r.occ_date,
+        occupancy_pct: (r.occupancy_pct === "" || r.occupancy_pct === null || typeof r.occupancy_pct === "undefined") ? null : Number(r.occupancy_pct),
+        notes: r.notes || "",
+        updated_by: state.user.id
+      }));
+
+      const { error } = await window.sb
+        .from("daily_occupancy")
+        .upsert(payload, { onConflict: "occ_date" });
+      if(error) throw error;
+    } catch(e){
+      showErr(errToText(e), "errorBoxOcc");
+    } finally {
+      state.saving = Math.max(0, state.saving - 1);
+      setSavingUI();
+    }
+  }
+
+  // ---- render OCC
+  function renderOccSheet(){
+    const box = $("sheetOcc");
+    box.innerHTML = "";
+
+    const headers = ["Occupancy %", ...state.days.map(d => d.label)];
+    const { table, tbody } = makeTable(headers);
+
+    const tr = document.createElement("tr");
+    const th = document.createElement("th");
+    th.innerHTML = `<div>Occupancy</div><div class="row-sub">% + Notes</div>`;
+    tr.appendChild(th);
+
+    for(const day of state.days){
+      const td = document.createElement("td");
+      const rec = ensureOcc(day.iso);
+      const pct = (rec.occupancy_pct === null || typeof rec.occupancy_pct === "undefined") ? "" : `${Number(rec.occupancy_pct).toFixed(2)}%`;
+      const hasNotes = (rec.notes || "").trim().length > 0;
+
+      td.appendChild(cellButton({
+        selected: true,
+        forceNeutral: true,
+        label: pct || "—",
+        subText: hasNotes ? "Has notes" : "No notes",
+        onClick: () => openOccDay(day),
+        onDblClick: () => openOccDay(day)
+      }));
+      tr.appendChild(td);
+    }
+
+    tbody.appendChild(tr);
+    box.appendChild(table);
+  }
+
+  // ---- render meals/outlets (same as before)
   function renderMealSheet(containerId, group){
     const box = $(containerId);
     box.innerHTML = "";
@@ -888,6 +1043,7 @@
   }
 
   function renderAll(){
+    renderOccSheet();
     renderMealSheet("sheetBreakfast", MEAL_GROUPS[0]);
     renderMealSheet("sheetLunch", MEAL_GROUPS[1]);
     renderMealSheet("sheetDinner", MEAL_GROUPS[2]);
@@ -913,20 +1069,23 @@
     const role = state.profile?.role || "user";
     who.textContent = `${name} (${role})`;
     btnOut.style.display = "inline-flex";
+
+    state.canEditOcc = (state.profile?.role === "admin" || state.profile?.role === "manager" || state.profile?.department === "Guest Service");
+    $("occHint").textContent = state.canEditOcc ? "You can edit occupancy." : "View only (Guest Service can edit).";
   }
 
   async function signOut(){
     await window.sb.auth.signOut();
-    location.href = "index.html";
+    location.href = "./index.html?v=7";
   }
 
-  // Outlet modal
+  // ---------------- OUTLET MODAL ----------------
   function openOutletModal(outlet, day){
-    clrErr("errorBoxModal");
-    state.modal = { outletId: outlet.id, dateISO: day.iso, outletName: outlet.name, dayLabel: day.label };
+    clrErr("errorBoxModalOutlet");
+    state.modalOutlet = { outletId: outlet.id, dateISO: day.iso };
 
-    $("modalTitle").textContent = outlet.name;
-    $("modalSub").textContent = `${day.label} (${day.iso})`;
+    $("modalTitleOutlet").textContent = outlet.name;
+    $("modalSubOutlet").textContent = `${day.label} (${day.iso})`;
 
     const rec = ensureOut(day.iso, outlet.id);
 
@@ -952,13 +1111,10 @@
       }
     };
 
-    $("modalBackdrop").style.display = "flex";
+    $("modalBackdropOutlet").style.display = "flex";
   }
 
-  function closeOutletModal(){
-    $("modalBackdrop").style.display = "none";
-    state.modal = null;
-  }
+  function closeOutletModal(){ $("modalBackdropOutlet").style.display = "none"; state.modalOutlet = null; }
 
   function validateOutlet(open, openTime, closeTime){
     if(!open) return null;
@@ -968,9 +1124,9 @@
   }
 
   async function saveOutletModal(){
-    clrErr("errorBoxModal");
-    const outletId = state.modal?.outletId;
-    const dateISO = state.modal?.dateISO;
+    clrErr("errorBoxModalOutlet");
+    const outletId = state.modalOutlet?.outletId;
+    const dateISO = state.modalOutlet?.dateISO;
     if(!outletId || !dateISO) return;
 
     const open = $("mIsOpen").checked;
@@ -979,10 +1135,7 @@
     const notes = $("mNotes").value || "";
 
     const msg = validateOutlet(open, openTime, closeTime);
-    if(msg){
-      showErr(msg, "errorBoxModal");
-      return;
-    }
+    if(msg){ showErr(msg, "errorBoxModalOutlet"); return; }
 
     const rec = ensureOut(dateISO, outletId);
     rec.is_open = open;
@@ -995,6 +1148,150 @@
     await saveOutletOne(dateISO, outletId);
   }
 
+  // ---------------- OCCUPANCY (DAY) ----------------
+  function openOccDay(day){
+    clrErr("errorBoxOccDay");
+    state.modalOccDay = { dateISO: day.iso, label: day.label };
+
+    const rec = ensureOcc(day.iso);
+
+    $("modalTitleOccDay").textContent = "Occupancy";
+    $("modalSubOccDay").textContent = `${day.label} (${day.iso})`;
+    $("occPctDay").value = (rec.occupancy_pct === null || typeof rec.occupancy_pct === "undefined") ? "" : Number(rec.occupancy_pct);
+    $("occNotesDay").value = rec.notes || "";
+
+    const ro = !state.canEditOcc;
+    $("occPctDay").disabled = ro;
+    $("occNotesDay").disabled = ro;
+    $("btnModalSaveOccDay").disabled = ro;
+    $("occDayHint").textContent = ro ? "View only. Guest Service (or admin/manager) can edit." : "Editing enabled.";
+
+    $("modalBackdropOccDay").style.display = "flex";
+  }
+  function closeOccDay(){ $("modalBackdropOccDay").style.display = "none"; state.modalOccDay = null; }
+
+  async function saveOccDay(){
+    clrErr("errorBoxOccDay");
+    if(!state.canEditOcc){ showErr("You do not have permission to edit occupancy.", "errorBoxOccDay"); return; }
+
+    const dateISO = state.modalOccDay?.dateISO;
+    if(!dateISO) return;
+
+    const pctRaw = $("occPctDay").value;
+    const notes = $("occNotesDay").value || "";
+    const pct = (pctRaw === "" ? null : Number(pctRaw));
+
+    if(pct !== null && (isNaN(pct) || pct < 0 || pct > 100)){
+      showErr("Occupancy % must be between 0 and 100.", "errorBoxOccDay");
+      return;
+    }
+
+    const rec = ensureOcc(dateISO);
+    rec.occupancy_pct = pct;
+    rec.notes = notes;
+
+    closeOccDay();
+    renderOccSheet();
+    await saveOccMany([rec]);
+  }
+
+  // ---------------- OCCUPANCY (WEEK) ----------------
+  function openOccWeek(){
+    clrErr("errorBoxOccWeek");
+    $("modalSubOccWeek").textContent = `${state.days[0].iso} → ${state.days[6].iso}`;
+
+    const ro = !state.canEditOcc;
+    $("btnModalSaveOccWeek").disabled = ro;
+    $("occWeekHint").textContent = ro ? "View only. Guest Service (or admin/manager) can edit." : "Edit each day, then Save week.";
+
+    const headers = ["Day", "Date", "Occupancy %", "Notes"];
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const trh = document.createElement("tr");
+    headers.forEach(h => { const th = document.createElement("th"); th.textContent = h; trh.appendChild(th); });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+    const tbody = document.createElement("tbody");
+
+    for(const day of state.days){
+      const rec = ensureOcc(day.iso);
+
+      const tr = document.createElement("tr");
+      const tdDay = document.createElement("th");
+      tdDay.textContent = day.label;
+      tr.appendChild(tdDay);
+
+      const tdDate = document.createElement("td");
+      tdDate.textContent = day.iso;
+      tr.appendChild(tdDate);
+
+      const tdPct = document.createElement("td");
+      const inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = "0";
+      inp.max = "100";
+      inp.step = "0.01";
+      inp.value = (rec.occupancy_pct === null || typeof rec.occupancy_pct === "undefined") ? "" : Number(rec.occupancy_pct);
+      inp.disabled = ro;
+      inp.dataset.iso = day.iso;
+      inp.className = "occWeekPct";
+      tdPct.appendChild(inp);
+      tr.appendChild(tdPct);
+
+      const tdNotes = document.createElement("td");
+      const ta = document.createElement("textarea");
+      ta.value = rec.notes || "";
+      ta.disabled = ro;
+      ta.dataset.iso = day.iso;
+      ta.className = "occWeekNotes";
+      tdNotes.appendChild(ta);
+      tr.appendChild(tdNotes);
+
+      tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+    const grid = $("occWeekGrid");
+    grid.innerHTML = "";
+    grid.appendChild(table);
+
+    $("modalBackdropOccWeek").style.display = "flex";
+  }
+  function closeOccWeek(){ $("modalBackdropOccWeek").style.display = "none"; }
+
+  async function saveOccWeek(){
+    clrErr("errorBoxOccWeek");
+    if(!state.canEditOcc){ showErr("You do not have permission to edit occupancy.", "errorBoxOccWeek"); return; }
+
+    const pctInputs = Array.from(document.querySelectorAll(".occWeekPct"));
+    const noteInputs = Array.from(document.querySelectorAll(".occWeekNotes"));
+
+    const mapPct = new Map(pctInputs.map(i => [i.dataset.iso, i.value]));
+    const mapNotes = new Map(noteInputs.map(t => [t.dataset.iso, t.value]));
+
+    const rows = [];
+    for(const day of state.days){
+      const pctRaw = mapPct.get(day.iso) ?? "";
+      const notes = mapNotes.get(day.iso) ?? "";
+
+      const pct = (pctRaw === "" ? null : Number(pctRaw));
+      if(pct !== null && (isNaN(pct) || pct < 0 || pct > 100)){
+        showErr(`Invalid occupancy % for ${day.iso}. Must be 0–100.`, "errorBoxOccWeek");
+        return;
+      }
+
+      const rec = ensureOcc(day.iso);
+      rec.occupancy_pct = pct;
+      rec.notes = notes;
+      rows.push(rec);
+    }
+
+    closeOccWeek();
+    renderOccSheet();
+    await saveOccMany(rows);
+  }
+
+  // ---- init
   async function init(){
     try{
       await waitForSB();
@@ -1002,7 +1299,7 @@
 
       state.user = await getSessionUser();
       if(!state.user){
-        location.href = "index.html";
+        location.href = "./index.html?v=7";
         return;
       }
 
@@ -1025,7 +1322,7 @@
     }
   }
 
-  // Events
+  // nav
   $("btnPrev").addEventListener("click", async () => {
     const d = parseISODate(state.startISO);
     state.startISO = toISODateUTC(addDaysUTC(d, -7));
@@ -1052,13 +1349,27 @@
     }
   });
 
+  // buttons
   $("btnSignOut").addEventListener("click", signOut);
-  $("btnModalClose").addEventListener("click", closeOutletModal);
-  $("btnModalCancel").addEventListener("click", closeOutletModal);
-  $("btnModalSave").addEventListener("click", saveOutletModal);
-  $("modalBackdrop").addEventListener("click", (e) => {
-    if(e.target === $("modalBackdrop")) closeOutletModal();
-  });
+  $("btnEditWeekOcc").addEventListener("click", openOccWeek);
+
+  // outlet modal events
+  $("btnModalCloseOutlet").addEventListener("click", closeOutletModal);
+  $("btnModalCancelOutlet").addEventListener("click", closeOutletModal);
+  $("btnModalSaveOutlet").addEventListener("click", saveOutletModal);
+  $("modalBackdropOutlet").addEventListener("click", (e) => { if(e.target === $("modalBackdropOutlet")) closeOutletModal(); });
+
+  // occ day modal events
+  $("btnModalCloseOccDay").addEventListener("click", closeOccDay);
+  $("btnModalCancelOccDay").addEventListener("click", closeOccDay);
+  $("btnModalSaveOccDay").addEventListener("click", saveOccDay);
+  $("modalBackdropOccDay").addEventListener("click", (e) => { if(e.target === $("modalBackdropOccDay")) closeOccDay(); });
+
+  // occ week modal events
+  $("btnModalCloseOccWeek").addEventListener("click", closeOccWeek);
+  $("btnModalCancelOccWeek").addEventListener("click", closeOccWeek);
+  $("btnModalSaveOccWeek").addEventListener("click", saveOccWeek);
+  $("modalBackdropOccWeek").addEventListener("click", (e) => { if(e.target === $("modalBackdropOccWeek")) closeOccWeek(); });
 
   init();
 })();
