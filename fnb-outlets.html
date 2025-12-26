@@ -1,1 +1,1435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>F&B Outlets</title>
+
+  <!-- Bright, modern look -->
+  <style>
+    :root{
+      --bg:#f6f8ff;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --blue:#2563eb;
+      --green:#16a34a;
+      --red:#dc2626;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1100px 700px at 10% 0%, #e9efff 0%, rgba(233,239,255,0) 60%),
+                  radial-gradient(900px 600px at 90% 10%, #e9fff6 0%, rgba(233,255,246,0) 55%),
+                  var(--bg);
+    }
+    header{
+      padding:22px 18px 10px;
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:42px; height:42px;
+      border-radius:14px;
+      background: linear-gradient(135deg, #2563eb, #22c55e);
+      box-shadow: var(--shadow);
+    }
+    h1{
+      font-size:18px;
+      margin:0;
+      line-height:1.2;
+    }
+    .subtitle{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      color:var(--muted);
+    }
+    .wrap{
+      max-width:1320px;
+      margin: 0 auto;
+      padding: 10px 18px 34px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap:14px;
+    }
+    @media (max-width: 1050px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+    .card{
+      background:var(--card);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .card-title strong{ font-size:14px; }
+    .card-title span{ font-size:12px; color:var(--muted); }
+    .controls{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    input[type="date"]{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      outline:none;
+      background:#fff;
+    }
+    button{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+      cursor:pointer;
+      transition: transform .04s ease, background .15s ease, border-color .15s ease;
+    }
+    button:hover{ background:#f8fafc; }
+    button:active{ transform: translateY(1px); }
+    .primary{
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: transparent;
+      color:#fff;
+    }
+    .primary:hover{ background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+    .danger{
+      background: #fff5f5;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+    .muted-btn{
+      color:var(--muted);
+      background:#fff;
+    }
+    .small{
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:12px;
+    }
+    .statusbar{
+      padding:10px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+    .status-left{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background:#94a3b8;
+    }
+    .dot.ok{ background: #22c55e; }
+    .dot.warn{ background: #f59e0b; }
+    .error{
+      display:none;
+      margin:12px 14px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#9f1239;
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+
+    /* Snapshot area for PDF (capture this) */
+    #snapshot{
+      padding:12px 14px 14px;
+    }
+
+    /* Outlet grid table */
+    .table-wrap{
+      overflow:auto;
+      max-height: 66vh;
+      border-top:1px solid var(--line);
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width: 980px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      background:#f8fafc;
+      z-index:2;
+      border-bottom:1px solid var(--line);
+      font-size:12px;
+      color:var(--muted);
+      padding:10px 10px;
+      text-align:left;
+      white-space:nowrap;
+    }
+    th:first-child{
+      position:sticky;
+      left:0;
+      z-index:3;
+      background:#f8fafc;
+    }
+    tbody td{
+      border-bottom:1px solid var(--line);
+      padding:10px 10px;
+      vertical-align:top;
+      background:#fff;
+    }
+    tbody td:first-child{
+      position:sticky;
+      left:0;
+      z-index:1;
+      background:#fff;
+      border-right:1px solid var(--line);
+      min-width: 240px;
+    }
+    .outlet-name{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .outlet-name .name{
+      font-weight:650;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .outlet-name .meta{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .row-actions{
+      margin-top:8px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    /* Cell controls */
+    .cell{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width: 190px;
+    }
+    .rowline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .badge{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      background:#fff;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      user-select:none;
+    }
+    .badge.open{
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.08);
+      color:#166534;
+    }
+    .badge.closed{
+      border-color: rgba(220,38,38,.25);
+      background: rgba(220,38,38,.06);
+      color:#991b1b;
+    }
+    .timebox{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+    }
+    .timebox input[type="time"]{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      outline:none;
+    }
+    textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      outline:none;
+      resize:vertical;
+      min-height: 56px;
+    }
+    .help{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .dirty{
+      outline: 2px solid rgba(37,99,235,.18);
+      outline-offset: 2px;
+      border-radius: 14px;
+      padding: 6px;
+    }
+
+    /* Switch */
+    .switch{
+      position:relative;
+      width:44px;
+      height:24px;
+      display:inline-block;
+      flex:0 0 auto;
+    }
+    .switch input{ display:none; }
+    .slider{
+      position:absolute;
+      inset:0;
+      background:#e2e8f0;
+      border-radius:999px;
+      transition:.15s ease;
+      border:1px solid #cbd5e1;
+    }
+    .slider:before{
+      content:"";
+      position:absolute;
+      height:18px; width:18px;
+      left:3px; top:2px;
+      background:#fff;
+      border-radius:50%;
+      box-shadow: 0 4px 10px rgba(15,23,42,.15);
+      transition:.15s ease;
+    }
+    .switch input:checked + .slider{
+      background: rgba(34,197,94,.25);
+      border-color: rgba(34,197,94,.45);
+    }
+    .switch input:checked + .slider:before{
+      transform: translateX(20px);
+    }
+
+    /* Services card */
+    .services-wrap{
+      padding:12px 14px 14px;
+    }
+    .svc-group{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      margin-bottom:10px;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+    .svc-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .svc-head strong{ font-size:13px; }
+    .svc-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .svc-row{
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap:10px;
+      align-items:start;
+    }
+    .svc-row .daylbl{
+      font-size:12px;
+      color:var(--muted);
+      padding-top:10px;
+      white-space:nowrap;
+    }
+    select{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      outline:none;
+      background:#fff;
+    }
+
+    /* Modal */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(15,23,42,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:50;
+    }
+    .modal{
+      width:min(920px, 100%);
+      max-height: 90vh;
+      overflow:auto;
+      background:#fff;
+      border-radius:22px;
+      border:1px solid rgba(226,232,240,.9);
+      box-shadow: 0 30px 80px rgba(15,23,42,.25);
+    }
+    .modal-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .modal-head strong{ font-size:14px; }
+    .modal-body{ padding:12px 14px 14px; }
+    .modal-foot{
+      padding:12px 14px 14px;
+      border-top:1px solid var(--line);
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+    .wk-table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+    }
+    .wk-table th, .wk-table td{
+      border-bottom:1px solid var(--line);
+      padding:10px 8px;
+      font-size:13px;
+      vertical-align:top;
+    }
+    .wk-table th{ text-align:left; color:var(--muted); font-size:12px; background:#f8fafc; position:sticky; top:0; }
+  </style>
+
+  <!-- Supabase (your repo file) -->
+  <script defer src="vendor/supabase-js.iife.min.js"></script>
+  <script defer src="supabase.js"></script>
+  <script defer src="app.js"></script>
+
+  <!-- PDF snapshot libs -->
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>F&B Outlets</h1>
+        <div class="subtitle">7-day hours + services. Uses Supabase tables you already created.</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <span class="pill" id="whoami">Not signed in</span>
+      <button class="muted-btn small" id="btnSignOut" style="display:none;">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- OUTLETS -->
+    <section class="card" id="outletsCard">
+      <div class="card-head">
+        <div class="card-title">
+          <strong>Outlets & Restaurants</strong>
+          <span>Toggle open/closed. If open, times are required.</span>
+        </div>
+
+        <div class="controls">
+          <button class="small" id="btnPrev">← Prev 7</button>
+          <button class="small" id="btnToday">Today</button>
+          <button class="small" id="btnNext">Next 7 →</button>
+          <input type="date" id="datePick" />
+          <button class="primary" id="btnSave">Save changes</button>
+          <button id="btnPdf" class="small">Download PDF snapshot</button>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <div class="status-left">
+          <span class="dot" id="dotState"></span>
+          <span id="statusText">Loading…</span>
+          <span class="pill" id="unsavedPill" style="display:none;">Unsaved changes</span>
+        </div>
+        <div class="status-left">
+          <span class="help" id="rangeLabel"></span>
+        </div>
+      </div>
+
+      <div class="error" id="errorBox"></div>
+
+      <!-- Snapshot capture area -->
+      <div id="snapshot">
+        <div class="table-wrap" id="tableWrap">
+          <table id="outletTable" aria-label="Outlet hours table"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <aside class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <strong>Services (by meal group)</strong>
+          <span>Uses service_items.category as the meal group.</span>
+        </div>
+        <div class="controls">
+          <button class="small" id="btnSaveServices">Save services</button>
+        </div>
+      </div>
+
+      <div class="error" id="errorBoxSvc"></div>
+      <div class="services-wrap" id="servicesWrap"></div>
+    </aside>
+  </div>
+</div>
+
+<!-- Edit Week Modal -->
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Edit week modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <strong id="modalTitle">Edit week</strong>
+        <div class="subtitle" id="modalSubtitle">Edit all 7 days at once</div>
+      </div>
+      <button class="small" id="btnModalClose">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="error" id="errorBoxModal"></div>
+      <table class="wk-table" id="wkTable"></table>
+    </div>
+    <div class="modal-foot">
+      <button class="muted-btn" id="btnModalCancel">Cancel</button>
+      <button class="primary" id="btnModalSave">Save week</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const TZ = "America/Toronto";
+
+  const el = (id) => document.getElementById(id);
+
+  function showError(msg, boxId="errorBox"){
+    const b = el(boxId);
+    if(!b) return;
+    b.textContent = msg;
+    b.style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function clearError(boxId="errorBox"){
+    const b = el(boxId);
+    if(!b) return;
+    b.textContent = "";
+    b.style.display = "none";
+  }
+
+  function parseISODate(iso){
+    // Use noon UTC to avoid TZ day-shift when formatting for Toronto
+    const [y,m,d] = iso.split("-").map(Number);
+    return new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+  }
+  function toISODateUTC(d){
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth()+1).padStart(2,"0");
+    const day = String(d.getUTCDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  function addDaysUTC(d, days){
+    const nd = new Date(d.getTime());
+    nd.setUTCDate(nd.getUTCDate() + days);
+    return nd;
+  }
+  function fmtDayLabel(d){
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: TZ,
+      weekday: "short",
+      month: "short",
+      day: "numeric"
+    }).format(d);
+  }
+
+  function setBusy(text){
+    el("statusText").textContent = text;
+  }
+
+  const state = {
+    user: null,
+    profile: null,
+    startISO: null,
+    days: [],
+    outlets: [],
+    services: [],
+    mealGroups: [],
+    outletMap: new Map(),   // key: date|outletId -> record
+    svcMap: new Map(),      // key: date|mealGroup -> record
+    dirtyOutlets: new Set(),// keys
+    dirtySvcs: new Set(),   // keys
+    modal: { outlet: null }
+  };
+
+  function updateUnsavedUI(){
+    const dirty = state.dirtyOutlets.size + state.dirtySvcs.size;
+    el("unsavedPill").style.display = dirty ? "inline-flex" : "none";
+    const dot = el("dotState");
+    dot.classList.remove("ok","warn");
+    dot.classList.add(dirty ? "warn" : "ok");
+  }
+
+  function keyOutlet(dateISO, outletId){ return `${dateISO}|${outletId}`; }
+  function keySvc(dateISO, mealGroup){ return `${dateISO}|${mealGroup}`; }
+
+  async function getSessionUser(){
+    if(!window.sb) throw new Error("Supabase client not found. Check vendor/supabase-js.iife.min.js + supabase.js order.");
+    const { data, error } = await window.sb.auth.getSession();
+    if(error) throw error;
+    return data.session?.user || null;
+  }
+
+  async function loadProfile(userId){
+    const { data, error } = await window.sb
+      .from("profiles")
+      .select("user_id, full_name, role, department, is_active")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if(error) throw error;
+    return data || null;
+  }
+
+  async function loadMasterData(){
+    const outletsReq = window.sb
+      .from("outlet_items")
+      .select("id, name, department, sort_order, is_active")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    const servicesReq = window.sb
+      .from("service_items")
+      .select("id, name, category, sort_order, is_active")
+      .eq("is_active", true)
+      .order("category", { ascending: true })
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    const [outletsRes, servicesRes] = await Promise.all([outletsReq, servicesReq]);
+    if(outletsRes.error) throw outletsRes.error;
+    if(servicesRes.error) throw servicesRes.error;
+
+    state.outlets = outletsRes.data || [];
+    state.services = servicesRes.data || [];
+
+    const groups = new Map();
+    for(const s of state.services){
+      const g = (s.category || "").trim() || "Other";
+      if(!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(s);
+    }
+    state.mealGroups = Array.from(groups.keys());
+  }
+
+  function buildDays(startISO){
+    const start = parseISODate(startISO);
+    state.days = [];
+    for(let i=0;i<7;i++){
+      const d = addDaysUTC(start, i);
+      state.days.push({
+        d,
+        iso: toISODateUTC(d),
+        label: fmtDayLabel(d)
+      });
+    }
+    const endISO = state.days[state.days.length - 1].iso;
+    el("rangeLabel").textContent = `${state.days[0].label} → ${state.days[6].label} (${state.days[0].iso} to ${endISO})`;
+  }
+
+  async function loadWeekData(){
+    clearError("errorBox");
+    clearError("errorBoxSvc");
+    setBusy("Loading week data…");
+
+    state.outletMap.clear();
+    state.svcMap.clear();
+    state.dirtyOutlets.clear();
+    state.dirtySvcs.clear();
+    updateUnsavedUI();
+
+    const startISO = state.days[0].iso;
+    const endISO = state.days[6].iso;
+
+    const [hoursRes, svcRes] = await Promise.all([
+      window.sb.from("daily_outlet_hours")
+        .select("outlet_date, outlet_item_id, is_open, open_time, close_time, notes, updated_by, updated_at")
+        .gte("outlet_date", startISO)
+        .lte("outlet_date", endISO),
+      window.sb.from("daily_service_selection")
+        .select("service_date, meal_group, service_item_id, notes, updated_by, updated_at")
+        .gte("service_date", startISO)
+        .lte("service_date", endISO)
+    ]);
+
+    if(hoursRes.error) throw hoursRes.error;
+    if(svcRes.error) throw svcRes.error;
+
+    for(const r of (hoursRes.data || [])){
+      state.outletMap.set(keyOutlet(r.outlet_date, r.outlet_item_id), r);
+    }
+    for(const r of (svcRes.data || [])){
+      state.svcMap.set(keySvc(r.service_date, r.meal_group), r);
+    }
+
+    renderOutletTable();
+    renderServices();
+    setBusy("Ready");
+    updateUnsavedUI();
+  }
+
+  function getOutletRecord(dateISO, outletId){
+    const k = keyOutlet(dateISO, outletId);
+    if(!state.outletMap.has(k)){
+      state.outletMap.set(k, {
+        outlet_date: dateISO,
+        outlet_item_id: outletId,
+        is_open: false,
+        open_time: null,
+        close_time: null,
+        notes: ""
+      });
+    }
+    return state.outletMap.get(k);
+  }
+
+  function getSvcRecord(dateISO, mealGroup){
+    const k = keySvc(dateISO, mealGroup);
+    if(!state.svcMap.has(k)){
+      state.svcMap.set(k, {
+        service_date: dateISO,
+        meal_group: mealGroup,
+        service_item_id: null,
+        notes: ""
+      });
+    }
+    return state.svcMap.get(k);
+  }
+
+  function validateOutletRecord(r){
+    if(r.is_open){
+      if(!r.open_time || !r.close_time){
+        return "If an outlet is OPEN, open and close times are required.";
+      }
+      // close must be after open (simple same-day rule)
+      const o = String(r.open_time).slice(0,5);
+      const c = String(r.close_time).slice(0,5);
+      if(c <= o){
+        return "Close time must be after open time.";
+      }
+    }
+    return null;
+  }
+
+  function renderOutletTable(){
+    const table = el("outletTable");
+    table.innerHTML = "";
+
+    const thead = document.createElement("thead");
+    const hr = document.createElement("tr");
+
+    const th0 = document.createElement("th");
+    th0.textContent = "Outlet";
+    hr.appendChild(th0);
+
+    for(const day of state.days){
+      const th = document.createElement("th");
+      th.textContent = `${day.label}`;
+      const sub = document.createElement("div");
+      sub.style.fontSize = "11px";
+      sub.style.color = "var(--muted)";
+      sub.textContent = day.iso;
+      th.appendChild(document.createElement("br"));
+      th.appendChild(sub);
+      hr.appendChild(th);
+    }
+
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    for(const outlet of state.outlets){
+      const tr = document.createElement("tr");
+
+      // First sticky col
+      const tdName = document.createElement("td");
+      const wrap = document.createElement("div");
+      wrap.className = "outlet-name";
+
+      const nameLine = document.createElement("div");
+      nameLine.className = "name";
+      nameLine.textContent = outlet.name;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = outlet.department ? outlet.department : "—";
+
+      const actions = document.createElement("div");
+      actions.className = "row-actions";
+
+      const btnWeek = document.createElement("button");
+      btnWeek.className = "small";
+      btnWeek.textContent = "Edit week";
+      btnWeek.addEventListener("click", () => openWeekModal(outlet));
+
+      actions.appendChild(btnWeek);
+
+      wrap.appendChild(nameLine);
+      wrap.appendChild(meta);
+      wrap.appendChild(actions);
+
+      tdName.appendChild(wrap);
+      tr.appendChild(tdName);
+
+      // 7 day cells
+      for(const day of state.days){
+        const td = document.createElement("td");
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        const r = getOutletRecord(day.iso, outlet.id);
+
+        const rowTop = document.createElement("div");
+        rowTop.className = "rowline";
+
+        const badge = document.createElement("span");
+        badge.className = "badge " + (r.is_open ? "open" : "closed");
+        badge.textContent = r.is_open ? "Open" : "Closed";
+
+        const sw = document.createElement("label");
+        sw.className = "switch";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !!r.is_open;
+        const slider = document.createElement("span");
+        slider.className = "slider";
+        sw.appendChild(cb);
+        sw.appendChild(slider);
+
+        rowTop.appendChild(badge);
+        rowTop.appendChild(sw);
+
+        const timeBox = document.createElement("div");
+        timeBox.className = "timebox";
+
+        const tOpen = document.createElement("input");
+        tOpen.type = "time";
+        tOpen.value = r.open_time ? String(r.open_time).slice(0,5) : "";
+        tOpen.placeholder = "Open";
+        tOpen.disabled = !r.is_open;
+
+        const tClose = document.createElement("input");
+        tClose.type = "time";
+        tClose.value = r.close_time ? String(r.close_time).slice(0,5) : "";
+        tClose.placeholder = "Close";
+        tClose.disabled = !r.is_open;
+
+        timeBox.appendChild(tOpen);
+        timeBox.appendChild(tClose);
+
+        const notes = document.createElement("textarea");
+        notes.placeholder = "Notes (optional)";
+        notes.value = r.notes || "";
+        notes.rows = 2;
+
+        function markDirty(){
+          const k = keyOutlet(day.iso, outlet.id);
+          state.dirtyOutlets.add(k);
+          cell.classList.add("dirty");
+          updateUnsavedUI();
+        }
+
+        function refreshBadge(){
+          badge.className = "badge " + (r.is_open ? "open" : "closed");
+          badge.textContent = r.is_open ? "Open" : "Closed";
+        }
+
+        cb.addEventListener("change", () => {
+          r.is_open = cb.checked;
+          if(!r.is_open){
+            // Keep notes, but clear times on save (set null)
+            tOpen.value = "";
+            tClose.value = "";
+            r.open_time = null;
+            r.close_time = null;
+          }
+          tOpen.disabled = !r.is_open;
+          tClose.disabled = !r.is_open;
+          refreshBadge();
+          markDirty();
+        });
+
+        tOpen.addEventListener("change", () => {
+          r.open_time = tOpen.value || null;
+          markDirty();
+        });
+
+        tClose.addEventListener("change", () => {
+          r.close_time = tClose.value || null;
+          markDirty();
+        });
+
+        notes.addEventListener("change", () => {
+          r.notes = notes.value || "";
+          markDirty();
+        });
+
+        // If already dirty, show
+        const existingKey = keyOutlet(day.iso, outlet.id);
+        if(state.dirtyOutlets.has(existingKey)) cell.classList.add("dirty");
+
+        cell.appendChild(rowTop);
+        cell.appendChild(timeBox);
+        cell.appendChild(notes);
+
+        td.appendChild(cell);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+  }
+
+  function renderServices(){
+    const wrap = el("servicesWrap");
+    wrap.innerHTML = "";
+
+    const groups = new Map();
+    for(const s of state.services){
+      const g = (s.category || "").trim() || "Other";
+      if(!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(s);
+    }
+
+    for(const [mealGroup, items] of groups.entries()){
+      const box = document.createElement("div");
+      box.className = "svc-group";
+
+      const head = document.createElement("div");
+      head.className = "svc-head";
+      const title = document.createElement("strong");
+      title.textContent = mealGroup;
+
+      const note = document.createElement("span");
+      note.className = "pill";
+      note.textContent = "Pick one per day";
+
+      head.appendChild(title);
+      head.appendChild(note);
+
+      const grid = document.createElement("div");
+      grid.className = "svc-grid";
+
+      for(const day of state.days){
+        const row = document.createElement("div");
+        row.className = "svc-row";
+
+        const lbl = document.createElement("div");
+        lbl.className = "daylbl";
+        lbl.textContent = day.label;
+
+        const right = document.createElement("div");
+        right.style.display = "grid";
+        right.style.gridTemplateColumns = "1fr";
+        right.style.gap = "8px";
+
+        const r = getSvcRecord(day.iso, mealGroup);
+
+        const sel = document.createElement("select");
+        const opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = "— none —";
+        sel.appendChild(opt0);
+
+        for(const it of items){
+          const opt = document.createElement("option");
+          opt.value = it.id;
+          opt.textContent = it.name;
+          sel.appendChild(opt);
+        }
+        sel.value = r.service_item_id || "";
+
+        const notes = document.createElement("textarea");
+        notes.placeholder = "Notes (optional)";
+        notes.rows = 2;
+        notes.value = r.notes || "";
+
+        function markDirtySvc(){
+          const k = keySvc(day.iso, mealGroup);
+          state.dirtySvcs.add(k);
+          updateUnsavedUI();
+        }
+
+        sel.addEventListener("change", () => {
+          r.service_item_id = sel.value || null;
+          markDirtySvc();
+        });
+        notes.addEventListener("change", () => {
+          r.notes = notes.value || "";
+          markDirtySvc();
+        });
+
+        right.appendChild(sel);
+        right.appendChild(notes);
+
+        row.appendChild(lbl);
+        row.appendChild(right);
+        grid.appendChild(row);
+      }
+
+      box.appendChild(head);
+      box.appendChild(grid);
+      wrap.appendChild(box);
+    }
+  }
+
+  async function saveOutlets(){
+    clearError("errorBox");
+    if(!state.user) return;
+
+    if(state.dirtyOutlets.size === 0){
+      setBusy("Nothing to save");
+      updateUnsavedUI();
+      return;
+    }
+
+    // Validate first
+    for(const k of state.dirtyOutlets){
+      const [dateISO, outletId] = k.split("|");
+      const r = getOutletRecord(dateISO, outletId);
+      const msg = validateOutletRecord(r);
+      if(msg){
+        showError(`${msg}\n\nOutlet: ${outletId}\nDate: ${dateISO}`, "errorBox");
+        setBusy("Fix required fields");
+        return;
+      }
+    }
+
+    setBusy("Saving outlet changes…");
+
+    const rows = [];
+    for(const k of state.dirtyOutlets){
+      const [dateISO, outletId] = k.split("|");
+      const r = getOutletRecord(dateISO, outletId);
+
+      rows.push({
+        outlet_date: dateISO,
+        outlet_item_id: outletId,
+        is_open: !!r.is_open,
+        open_time: r.is_open ? (r.open_time ? String(r.open_time).slice(0,5) : null) : null,
+        close_time: r.is_open ? (r.close_time ? String(r.close_time).slice(0,5) : null) : null,
+        notes: r.notes || "",
+        updated_by: state.user.id
+      });
+    }
+
+    const { error } = await window.sb
+      .from("daily_outlet_hours")
+      .upsert(rows, { onConflict: "outlet_date,outlet_item_id" });
+
+    if(error){
+      showError(String(error.message || error), "errorBox");
+      setBusy("Save failed");
+      return;
+    }
+
+    state.dirtyOutlets.clear();
+    renderOutletTable(); // clears dirty highlights
+    setBusy("Saved outlet changes");
+    updateUnsavedUI();
+  }
+
+  async function saveServices(){
+    clearError("errorBoxSvc");
+    if(!state.user) return;
+
+    if(state.dirtySvcs.size === 0){
+      return;
+    }
+
+    const rows = [];
+    for(const k of state.dirtySvcs){
+      const [dateISO, mealGroup] = k.split("|");
+      const r = getSvcRecord(dateISO, mealGroup);
+
+      rows.push({
+        service_date: dateISO,
+        meal_group: mealGroup,
+        service_item_id: r.service_item_id || null,
+        notes: r.notes || "",
+        updated_by: state.user.id
+      });
+    }
+
+    const { error } = await window.sb
+      .from("daily_service_selection")
+      .upsert(rows, { onConflict: "service_date,meal_group" });
+
+    if(error){
+      showError(String(error.message || error), "errorBoxSvc");
+      return;
+    }
+
+    state.dirtySvcs.clear();
+    setBusy("Saved services");
+    updateUnsavedUI();
+  }
+
+  function openWeekModal(outlet){
+    state.modal.outlet = outlet;
+    clearError("errorBoxModal");
+
+    el("modalTitle").textContent = `Edit week: ${outlet.name}`;
+    el("modalSubtitle").textContent = "Open/closed + times + notes for all 7 days";
+
+    const wk = el("wkTable");
+    wk.innerHTML = "";
+
+    const thead = document.createElement("thead");
+    const trh = document.createElement("tr");
+    ["Day", "Open", "Open time", "Close time", "Notes"].forEach(t => {
+      const th = document.createElement("th");
+      th.textContent = t;
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    wk.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    for(const day of state.days){
+      const r = getOutletRecord(day.iso, outlet.id);
+
+      const tr = document.createElement("tr");
+
+      const tdDay = document.createElement("td");
+      tdDay.innerHTML = `<div style="font-weight:650">${day.label}</div><div style="font-size:12px;color:var(--muted)">${day.iso}</div>`;
+      tr.appendChild(tdDay);
+
+      const tdOpen = document.createElement("td");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!r.is_open;
+      tdOpen.appendChild(cb);
+      tr.appendChild(tdOpen);
+
+      const tdOT = document.createElement("td");
+      const inOT = document.createElement("input");
+      inOT.type = "time";
+      inOT.value = r.open_time ? String(r.open_time).slice(0,5) : "";
+      inOT.disabled = !r.is_open;
+      tdOT.appendChild(inOT);
+      tr.appendChild(tdOT);
+
+      const tdCT = document.createElement("td");
+      const inCT = document.createElement("input");
+      inCT.type = "time";
+      inCT.value = r.close_time ? String(r.close_time).slice(0,5) : "";
+      inCT.disabled = !r.is_open;
+      tdCT.appendChild(inCT);
+      tr.appendChild(tdCT);
+
+      const tdN = document.createElement("td");
+      const ta = document.createElement("textarea");
+      ta.value = r.notes || "";
+      ta.rows = 2;
+      tdN.appendChild(ta);
+      tr.appendChild(tdN);
+
+      // Store controls on the row
+      tr.dataset.date = day.iso;
+
+      cb.addEventListener("change", () => {
+        const open = cb.checked;
+        inOT.disabled = !open;
+        inCT.disabled = !open;
+        if(!open){
+          inOT.value = "";
+          inCT.value = "";
+        }
+      });
+
+      tbody.appendChild(tr);
+    }
+
+    wk.appendChild(tbody);
+
+    el("modalBackdrop").style.display = "flex";
+  }
+
+  function closeWeekModal(){
+    el("modalBackdrop").style.display = "none";
+    state.modal.outlet = null;
+  }
+
+  async function saveWeekModal(){
+    clearError("errorBoxModal");
+    const outlet = state.modal.outlet;
+    if(!outlet) return;
+
+    const wk = el("wkTable");
+    const rows = Array.from(wk.querySelectorAll("tbody tr"));
+
+    // Apply to state + validate
+    for(const tr of rows){
+      const dateISO = tr.dataset.date;
+      const cb = tr.querySelector('input[type="checkbox"]');
+      const [inOT, inCT] = tr.querySelectorAll('input[type="time"]');
+      const ta = tr.querySelector("textarea");
+
+      const r = getOutletRecord(dateISO, outlet.id);
+      r.is_open = !!cb.checked;
+      r.open_time = r.is_open ? (inOT.value || null) : null;
+      r.close_time = r.is_open ? (inCT.value || null) : null;
+      r.notes = ta.value || "";
+
+      const msg = validateOutletRecord(r);
+      if(msg){
+        showError(`${msg}\n\nDate: ${dateISO}`, "errorBoxModal");
+        return;
+      }
+    }
+
+    // Mark dirty keys
+    for(const day of state.days){
+      state.dirtyOutlets.add(keyOutlet(day.iso, outlet.id));
+    }
+    updateUnsavedUI();
+
+    // Close + rerender
+    closeWeekModal();
+    renderOutletTable();
+  }
+
+  async function downloadPdf(){
+    clearError("errorBox");
+    setBusy("Preparing PDF…");
+
+    const snap = el("snapshot");
+    // Make sure it's scrolled to top for clean capture
+    el("tableWrap").scrollTop = 0;
+
+    // Wait a tick for any layout updates
+    await new Promise(r => setTimeout(r, 80));
+
+    const canvas = await window.html2canvas(snap, {
+      backgroundColor: "#ffffff",
+      scale: 2,
+      useCORS: true
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF("p", "pt", "letter");
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    // Fit to page width
+    const imgW = pageW;
+    const imgH = canvas.height * (imgW / canvas.width);
+
+    let y = 0;
+    let remaining = imgH;
+
+    while(remaining > 0){
+      pdf.addImage(imgData, "PNG", 0, y, imgW, imgH);
+      remaining -= pageH;
+      if(remaining > 0){
+        pdf.addPage();
+        y -= pageH; // move image up for the next slice
+      }
+    }
+
+    const fname = `FNB_Outlets_${state.days[0].iso}_to_${state.days[6].iso}.pdf`;
+    pdf.save(fname);
+    setBusy("PDF downloaded");
+  }
+
+  function setUserUI(){
+    const who = el("whoami");
+    const btnOut = el("btnSignOut");
+
+    if(!state.user){
+      who.textContent = "Not signed in";
+      btnOut.style.display = "none";
+      return;
+    }
+
+    const name = state.profile?.full_name?.trim() || state.user.email || "Signed in";
+    const role = state.profile?.role || "user";
+    who.textContent = `${name} (${role})`;
+    btnOut.style.display = "inline-flex";
+  }
+
+  async function signOut(){
+    await window.sb.auth.signOut();
+    location.href = "index.html";
+  }
+
+  function setDatePicker(iso){
+    el("datePick").value = iso;
+  }
+
+  function todayISO(){
+    // Build ISO date in Toronto
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year:"numeric", month:"2-digit", day:"2-digit" })
+      .formatToParts(new Date());
+    const y = parts.find(p=>p.type==="year").value;
+    const m = parts.find(p=>p.type==="month").value;
+    const d = parts.find(p=>p.type==="day").value;
+    return `${y}-${m}-${d}`;
+  }
+
+  async function changeStart(newISO){
+    state.startISO = newISO;
+    buildDays(state.startISO);
+    setDatePicker(state.startISO);
+    await loadWeekData();
+  }
+
+  async function init(){
+    try{
+      setBusy("Checking sign-in…");
+      state.user = await getSessionUser();
+
+      if(!state.user){
+        setUserUI();
+        setBusy("Not signed in");
+        showError("You are not signed in. Go to your home page and sign in first.\n\nTip: If your login page is not index.html, change the redirect in this file.", "errorBox");
+        return;
+      }
+
+      state.profile = await loadProfile(state.user.id);
+      setUserUI();
+
+      setBusy("Loading lists…");
+      await loadMasterData();
+
+      const start = todayISO();
+      state.startISO = start;
+      buildDays(state.startISO);
+      setDatePicker(state.startISO);
+
+      await loadWeekData();
+    } catch (e){
+      console.error(e);
+      showError(String(e?.message || e), "errorBox");
+      setBusy("Error");
+    }
+  }
+
+  // Events
+  el("btnPrev").addEventListener("click", async () => {
+    const d = parseISODate(state.startISO);
+    await changeStart(toISODateUTC(addDaysUTC(d, -7)));
+  });
+  el("btnNext").addEventListener("click", async () => {
+    const d = parseISODate(state.startISO);
+    await changeStart(toISODateUTC(addDaysUTC(d, 7)));
+  });
+  el("btnToday").addEventListener("click", async () => {
+    await changeStart(todayISO());
+  });
+  el("datePick").addEventListener("change", async () => {
+    const iso = el("datePick").value;
+    if(!iso) return;
+    await changeStart(iso);
+  });
+
+  el("btnSave").addEventListener("click", saveOutlets);
+  el("btnSaveServices").addEventListener("click", saveServices);
+  el("btnPdf").addEventListener("click", downloadPdf);
+
+  el("btnSignOut").addEventListener("click", signOut);
+
+  el("btnModalClose").addEventListener("click", closeWeekModal);
+  el("btnModalCancel").addEventListener("click", closeWeekModal);
+  el("btnModalSave").addEventListener("click", saveWeekModal);
+
+  // Close modal on backdrop click
+  el("modalBackdrop").addEventListener("click", (e) => {
+    if(e.target === el("modalBackdrop")) closeWeekModal();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
 
