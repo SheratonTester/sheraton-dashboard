@@ -19,7 +19,6 @@
       --greenSoft: rgba(22,163,74,.12);
       --red:#dc2626;
       --redSoft: rgba(220,38,38,.10);
-      --blue:#2563eb;
     }
     *{ box-sizing:border-box; }
     body{
@@ -57,18 +56,17 @@
       border:1px solid var(--line); border-radius:12px;
       padding:10px 12px; font-size:13px; outline:none; background:#fff;
     }
-    button{
+    button, a.btnlink{
       border:1px solid var(--line); background:#fff; color:var(--text);
       padding:10px 12px; border-radius:12px; font-size:13px; cursor:pointer;
       transition: transform .04s ease, background .15s ease, border-color .15s ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
     }
-    button:hover{ background:#f8fafc; }
-    button:active{ transform: translateY(1px); }
-    .primary{
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      border-color: transparent; color:#fff;
-    }
-    .primary:hover{ background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+    button:hover, a.btnlink:hover{ background:#f8fafc; }
+    button:active, a.btnlink:active{ transform: translateY(1px); }
     .small{ padding:8px 10px; border-radius:10px; font-size:12px; }
     .muted-btn{ color:var(--muted); }
 
@@ -172,7 +170,6 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
       padding:8px 10px;
       user-select:none;
       transition: transform .04s ease, filter .15s ease, border-color .15s ease;
@@ -311,11 +308,12 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>F&B Outlets</h1>
-        <div class="subtitle">Auto-saves on each click. Green = selected/open, red = not selected/closed.</div>
+        <div class="subtitle">Single click = select. Double click a green cell to clear it back to red.</div>
       </div>
     </div>
 
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <a class="btnlink small" href="index.html">← Home</a>
       <span class="pill" id="whoami">Loading…</span>
       <button class="muted-btn small" id="btnSignOut" style="display:none;">Sign out</button>
     </div>
@@ -334,7 +332,7 @@
     <div class="controls">
       <span class="status"><span class="dot" id="dotState"></span><span id="statusText">Loading…</span></span>
       <span class="pill" id="rangeLabel"></span>
-      <span class="pill" id="unsavedPill" style="display:none;">Saving…</span>
+      <span class="pill" id="savingPill" style="display:none;">Saving…</span>
       <button class="small" id="btnPdf">Download PDF snapshot</button>
     </div>
   </div>
@@ -345,9 +343,9 @@
       <div class="card-head">
         <div class="card-title">
           <strong>Restaurants: Breakfast / Lunch / Dinner</strong>
-          <span>Breakfast, Lunch, Dinner = only ONE pick per day. Massimo is separate and can be multiple.</span>
+          <span>Breakfast, Lunch, Dinner = only ONE pick per day. Double click the green selection to clear it.</span>
         </div>
-        <div class="hint">Click an option to select it. It saves right away.</div>
+        <div class="hint">Auto-saves after each click.</div>
       </div>
       <div class="error" id="errorBoxMeals"></div>
 
@@ -371,9 +369,9 @@
       <div class="card-head">
         <div class="card-title">
           <strong>Outlets</strong>
-          <span>Lobby Bar is at the top. If open, times are required.</span>
+          <span>Lobby Bar is on top. If open, times are required.</span>
         </div>
-        <div class="hint">Click a cell → set open/closed and times.</div>
+        <div class="hint">Outlets always open a time/notes editor.</div>
       </div>
       <div class="error" id="errorBoxOutlets"></div>
 
@@ -427,7 +425,7 @@
     </div>
     <div class="modal-foot">
       <button class="muted-btn" id="btnModalCancel">Cancel</button>
-      <button class="primary" id="btnModalSave">Save</button>
+      <button class="btnlink primary" id="btnModalSave" style="border:0;">Save</button>
     </div>
   </div>
 </div>
@@ -457,7 +455,6 @@
     }
     return String(e);
   }
-
   function showErr(msg, boxId){
     const b = $(boxId);
     b.textContent = msg;
@@ -506,13 +503,10 @@
     if(!window.sb) throw new Error("Supabase client not found (window.sb). Check supabase.js.");
   }
 
-  // Normalize meal_group so we avoid any hidden DB checks (and avoid your 400)
-  // Breakfast/Lunch/Dinner -> lowercase
-  // "Massimo Breakfast" -> "massimo_breakfast"
   function normMealGroup(s){
     const t = String(s || "").trim().toLowerCase();
     if(t === "breakfast" || t === "lunch" || t === "dinner") return t;
-    if(t.startsWith("massimo")) return t.replace(/\s+/g, "_"); // massimo_breakfast etc
+    if(t.startsWith("massimo")) return t.replace(/\s+/g, "_");
     return t.replace(/\s+/g, "_");
   }
 
@@ -521,23 +515,19 @@
     profile: null,
     startISO: null,
     days: [],
-
     services: [],
     outlets: [],
-
-    svcMap: new Map(), // key: date|meal_group(norm) -> record
-    outMap: new Map(), // key: date|outlet_id -> record
-
-    saving: 0
+    svcMap: new Map(), // key: date|meal_group(norm)
+    outMap: new Map(), // key: date|outlet_id
+    saving: 0,
+    modal: null
   };
 
-  // Display groups
   const MEAL_GROUPS = [
     { label:"Breakfast", key:"breakfast", category:"breakfast" },
     { label:"Lunch",     key:"lunch",     category:"lunch" },
     { label:"Dinner",    key:"dinner",    category:"dinner" },
   ];
-
   const MASSIMO_GROUPS = [
     { label:"Breakfast", key:"massimo_breakfast", item_name:"MASSIMO BREAKFAST" },
     { label:"Lunch",     key:"massimo_lunch",     item_name:"MASSIMO LUNCH" },
@@ -553,11 +543,10 @@
     dot.classList.remove("ok","warn");
     if(state.saving > 0){
       dot.classList.add("warn");
-      $("unsavedPill").style.display = "inline-flex";
-      $("unsavedPill").textContent = "Saving…";
+      $("savingPill").style.display = "inline-flex";
     }else{
       dot.classList.add("ok");
-      $("unsavedPill").style.display = "none";
+      $("savingPill").style.display = "none";
     }
   }
 
@@ -672,6 +661,8 @@
 
     renderAll();
     setBusy("Ready");
+    state.saving = 0;
+    setSavingUI();
   }
 
   function makeTable(headers){
@@ -694,26 +685,30 @@
 
     const tbody = document.createElement("tbody");
     table.appendChild(tbody);
-
     return { table, tbody };
   }
 
-  function cellButton({selected, label, subText, onClick}){
+  function cellButton({selected, label, subText, onClick, onDblClick}){
     const btn = document.createElement("div");
     btn.className = "cellbtn " + (selected ? "green" : "red");
     btn.innerHTML = `<div><div>${label || ""}</div>${subText ? `<div class="tiny">${subText}</div>` : ""}</div>`;
-    btn.addEventListener("click", onClick);
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      onClick && onClick();
+    });
+    btn.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      onDblClick && onDblClick();
+    });
     return btn;
   }
 
   async function saveServiceOne(dateISO, mealGroupKey){
     try{
       clrErr("errorBoxMeals");
-      state.saving++;
-      setSavingUI();
+      state.saving++; setSavingUI();
 
       const rec = ensureSvc(dateISO, mealGroupKey);
-
       const payload = {
         service_date: dateISO,
         meal_group: mealGroupKey,
@@ -725,7 +720,6 @@
       const { error } = await window.sb
         .from("daily_service_selection")
         .upsert([payload], { onConflict: "service_date,meal_group" });
-
       if(error) throw error;
     } catch(e){
       showErr(errToText(e), "errorBoxMeals");
@@ -738,11 +732,9 @@
   async function saveOutletOne(dateISO, outletId){
     try{
       clrErr("errorBoxOutlets");
-      state.saving++;
-      setSavingUI();
+      state.saving++; setSavingUI();
 
       const rec = ensureOut(dateISO, outletId);
-
       const payload = {
         outlet_date: dateISO,
         outlet_item_id: outletId,
@@ -756,7 +748,6 @@
       const { error } = await window.sb
         .from("daily_outlet_hours")
         .upsert([payload], { onConflict: "outlet_date,outlet_item_id" });
-
       if(error) throw error;
     } catch(e){
       showErr(errToText(e), "errorBoxOutlets");
@@ -770,7 +761,7 @@
     const box = $(containerId);
     box.innerHTML = "";
 
-    const options = servicesByCategory(group.category); // category is lowercase
+    const options = servicesByCategory(group.category);
     const headers = ["Option", ...state.days.map(d => d.label)];
     const { table, tbody } = makeTable(headers);
 
@@ -790,10 +781,20 @@
           selected: isSelected,
           label: isSelected ? "Selected" : "Not selected",
           onClick: async () => {
-            // Only one option per day: just set the id, re-render, and auto-save.
-            rec.service_item_id = opt.id;
-            renderMealSheet(containerId, group);
-            await saveServiceOne(day.iso, group.key);
+            // single click selects (even if already selected)
+            if(rec.service_item_id !== opt.id){
+              rec.service_item_id = opt.id;
+              renderMealSheet(containerId, group);
+              await saveServiceOne(day.iso, group.key);
+            }
+          },
+          onDblClick: async () => {
+            // double click on green clears back to red
+            if(rec.service_item_id === opt.id){
+              rec.service_item_id = null;
+              renderMealSheet(containerId, group);
+              await saveServiceOne(day.iso, group.key);
+            }
           }
         }));
 
@@ -836,9 +837,17 @@
           selected,
           label: selected ? "On" : "Off",
           onClick: async () => {
-            rec.service_item_id = selected ? null : item.id;
+            rec.service_item_id = selected ? null : item.id; // toggle
             renderMassimoSheet();
             await saveServiceOne(day.iso, row.key);
+          },
+          onDblClick: async () => {
+            // double click also clears if on
+            if(rec.service_item_id === item.id){
+              rec.service_item_id = null;
+              renderMassimoSheet();
+              await saveServiceOne(day.iso, row.key);
+            }
           }
         }));
 
@@ -880,7 +889,8 @@
           selected,
           label: selected ? "Open" : "Closed",
           subText: outletTimeText(rec),
-          onClick: () => openOutletModal(outlet, day)
+          onClick: () => openOutletModal(outlet, day),
+          onDblClick: () => openOutletModal(outlet, day)
         }));
 
         tr.appendChild(td);
@@ -898,7 +908,6 @@
     renderMealSheet("sheetDinner", MEAL_GROUPS[2]);
     renderMassimoSheet();
 
-    // Lobby Bar on its own at the top
     const lobby = state.outlets.find(o => String(o.name || "").toLowerCase() === "lobby bar");
     const others = state.outlets.filter(o => !lobby || o.id !== lobby.id);
 
@@ -930,7 +939,7 @@
   function openOutletModal(outlet, day){
     clrErr("errorBoxModal");
 
-    state.modal = { outletId: outlet.id, dateISO: day.iso, outletName: outlet.name, dayLabel: day.label };
+    state.modal = { outletId: outlet.id, dateISO: day.iso };
 
     $("modalTitle").textContent = outlet.name;
     $("modalSub").textContent = `${day.label} (${day.iso})`;
@@ -998,13 +1007,12 @@
     rec.notes = notes;
 
     closeOutletModal();
-    // Re-render immediately so the times show in the cell
+
     const lobby = state.outlets.find(o => String(o.name || "").toLowerCase() === "lobby bar");
     const others = state.outlets.filter(o => !lobby || o.id !== lobby.id);
     renderOutletsSheet("sheetLobbyBar", lobby ? [lobby] : []);
     renderOutletsSheet("sheetOutlets", others);
 
-    // Auto-save this one cell
     await saveOutletOne(dateISO, outletId);
   }
 
@@ -1073,9 +1081,6 @@
       buildDays(state.startISO);
 
       await loadWeek();
-      setBusy("Ready");
-      state.saving = 0;
-      setSavingUI();
     } catch(e){
       console.error(e);
       setBusy("Error");
