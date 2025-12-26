@@ -2,371 +2,514 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sheraton Dashboard</title>
-
-  <!-- Must load in this order -->
-  <script defer src="vendor/supabase-js.iife.min.js"></script>
-  <script defer src="supabase.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sheraton Niagara Falls — Ops</title>
   <style>
     :root{
-      --bg1:#f6f9ff; --bg2:#ffffff; --card:#fff; --text:#0f172a; --muted:#64748b;
-      --line:#e2e8f0; --btn:#2563eb; --btn2:#0f172a; --bad:#b91c1c; --good:#15803d;
-      --shadow:0 10px 30px rgba(2,6,23,.10); --radius:18px;
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow: 0 10px 24px rgba(15, 23, 42, .08);
+      --green:#0b5d3a;
+      --red:#7a1120;
+      --focus: 0 0 0 4px rgba(11,93,58,.18);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(11,93,58,.10), transparent 55%),
+                  radial-gradient(900px 500px at 100% 10%, rgba(122,17,32,.08), transparent 55%),
+                  var(--bg);
       color:var(--text);
-      background: radial-gradient(1200px 600px at 20% 0%, #dbeafe 0%, transparent 55%),
-                  radial-gradient(1000px 700px at 100% 20%, #e9d5ff 0%, transparent 50%),
-                  linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
     }
-    .wrap{width:100%; max-width:980px;}
-    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px;}
-    .brand{display:flex; align-items:center; gap:10px; font-weight:900;}
-    .dot{width:12px; height:12px; border-radius:999px; background:var(--btn); box-shadow:0 0 0 6px rgba(37,99,235,.15);}
-    .pill{
-      font-size:12px; color:var(--muted);
-      border:1px solid var(--line); background:rgba(255,255,255,.65);
-      padding:6px 10px; border-radius:999px;
-      max-width:60vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    .wrap{max-width:980px;margin:0 auto;padding:24px}
+    .topbar{
+      display:flex;gap:14px;align-items:center;justify-content:space-between;
+      padding:16px 18px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.75);
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
     }
-
-    .card{background:var(--card); border:1px solid rgba(226,232,240,.8); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;}
-    .head{padding:18px; border-bottom:1px solid var(--line); background:linear-gradient(180deg, rgba(37,99,235,.10), transparent);}
-    .head h1{margin:0; font-size:22px;}
-    .head p{margin:8px 0 0 0; color:var(--muted); font-size:14px; line-height:1.35;}
-
-    .body{padding:18px; display:grid; grid-template-columns: 1fr 1fr; gap:16px;}
-    @media (max-width: 980px){ .body{grid-template-columns:1fr;} }
-
-    .panel{border:1px solid var(--line); border-radius:14px; padding:14px; background:rgba(255,255,255,.7);}
-    .panel h2{margin:0 0 10px 0; font-size:16px;}
-    .small{font-size:12px; color:var(--muted); margin-top:6px;}
-
-    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
-    input, select{
+    .brand{display:flex;flex-direction:column;gap:2px}
+    .brand h1{margin:0;font-size:18px}
+    .brand .sub{color:var(--muted);font-size:13px}
+    .userpill{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .badge{
+      font-size:12px;color:var(--green);background:rgba(11,93,58,.10);
+      border:1px solid rgba(11,93,58,.18);
+      padding:6px 10px;border-radius:999px;
+    }
+    .badge.red{color:var(--red);background:rgba(122,17,32,.08);border-color:rgba(122,17,32,.15)}
+    .btn{
+      border:1px solid var(--border);background:#fff;color:var(--text);
+      border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer;
+      transition:.15s transform, .15s box-shadow;
+    }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.10)}
+    .btn:focus{outline:none;box-shadow:var(--focus)}
+    .btn.primary{
+      border-color:rgba(11,93,58,.35);
+      background:linear-gradient(180deg, rgba(11,93,58,.10), rgba(11,93,58,.04));
+    }
+    .btn.logout{
+      border-color:rgba(122,17,32,.25);
+      background:linear-gradient(180deg, rgba(122,17,32,.08), rgba(122,17,32,.03));
+    }
+    .grid{display:grid;gap:16px;margin-top:18px}
+    .panel{
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:rgba(255,255,255,.82);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .panelHeader{padding:16px 18px;border-bottom:1px solid var(--border)}
+    .panelHeader h2{margin:0;font-size:16px}
+    .panelHeader p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .panelBody{padding:18px}
+    .error{
+      display:none;
+      margin:0 0 14px 0;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(122,17,32,.22);
+      background:rgba(122,17,32,.07);
+      color:#5b0a14;
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+    .loginBox{
+      max-width:420px;
+      margin:10px auto 0;
+      padding:18px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:rgba(255,255,255,.88);
+      box-shadow: var(--shadow);
+    }
+    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
+    input{
       width:100%;
-      padding:11px 12px;
+      padding:12px 12px;
       border-radius:12px;
-      border:1px solid var(--line);
+      border:1px solid var(--border);
       font-size:14px;
-      outline:none;
       background:#fff;
     }
-    input:focus, select:focus{border-color: rgba(37,99,235,.65); box-shadow:0 0 0 4px rgba(37,99,235,.12);}
-
-    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-    @media (max-width: 980px){ .row{grid-template-columns:1fr;} }
-
-    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
-    button{
-      border:0; border-radius:12px; padding:11px 14px;
-      font-weight:900; cursor:pointer; font-size:14px;
+    input:focus{outline:none;box-shadow:var(--focus);border-color:rgba(11,93,58,.35)}
+    .row{display:flex;gap:10px;align-items:center;margin-top:14px}
+    .row .btn{flex:1}
+    .cards{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .card{
+      grid-column:span 6;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:var(--card);
+      padding:16px;
+      box-shadow:0 10px 18px rgba(15,23,42,.06);
+      cursor:pointer;
+      transition:.15s transform,.15s box-shadow;
+      min-height:120px;
     }
-    .btn{background:var(--btn); color:#fff;}
-    .btn2{background:var(--btn2); color:#fff;}
-    .ghost{background:transparent; border:1px solid var(--line); color:var(--text); font-weight:900;}
-    button:disabled{opacity:.55; cursor:not-allowed;}
-
-    .msg{
-      margin-top:10px; padding:10px 12px; border-radius:12px;
-      border:1px solid var(--line); background:#fff; font-size:13px; display:none; line-height:1.35;
+    .card:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.10)}
+    .card.disabled{cursor:not-allowed;opacity:.62}
+    .cardTitle{margin:0;font-size:16px}
+    .cardDesc{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
+    .tagRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tag{
+      font-size:12px;padding:6px 10px;border-radius:999px;
+      border:1px solid var(--border);color:var(--muted);background:#fff;
     }
-    .msg.bad{border-color: rgba(185,28,28,.35); background: rgba(185,28,28,.06); color: var(--bad);}
-    .msg.good{border-color: rgba(21,128,61,.35); background: rgba(21,128,61,.06); color: var(--good);}
+    .tag.ok{color:var(--green);border-color:rgba(11,93,58,.25);background:rgba(11,93,58,.06)}
+    .tag.lock{color:var(--red);border-color:rgba(122,17,32,.20);background:rgba(122,17,32,.06)}
+    .small{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.35}
+    @media (max-width:760px){
+      .card{grid-column:span 12}
+      .topbar{flex-direction:column;align-items:flex-start}
+      .userpill{justify-content:flex-start}
+    }
 
-    a{color:var(--btn); text-decoration:none; font-weight:900;}
-    a:hover{text-decoration:underline;}
-
-    .hidden{display:none !important;}
+    /* Modal */
+    .modalOverlay{
+      position:fixed; inset:0;
+      background:rgba(15,23,42,.42);
+      display:none; align-items:center; justify-content:center;
+      padding:16px; z-index:50;
+    }
+    .modal{
+      width:min(520px, 100%);
+      background:#fff;
+      border-radius:18px;
+      border:1px solid var(--border);
+      box-shadow: 0 30px 80px rgba(15,23,42,.25);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .modalHead h3{margin:0;font-size:14px}
+    .modalBody{padding:14px 16px}
+    .modalFoot{
+      padding:14px 16px;
+      border-top:1px solid var(--border);
+      display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;
+    }
+    .hint{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.35}
+    .miniError{
+      display:none;
+      margin:0 0 10px 0;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(122,17,32,.22);
+      background:rgba(122,17,32,.07);
+      color:#5b0a14;
+      font-size:13px;
+      white-space:pre-wrap;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="brand"><span class="dot"></span> Sheraton Dashboard</div>
-      <div class="pill" id="statusPill">Loading…</div>
+      <div class="brand">
+        <h1>Sheraton Niagara Falls — Ops</h1>
+        <div class="sub">Home</div>
+      </div>
+      <div class="userpill" id="userPill" style="display:none;">
+        <span class="badge" id="userNameBadge">Signed in</span>
+        <span class="badge" id="roleBadge">ROLE</span>
+        <span class="badge" id="deptBadge">DEPT</span>
+        <button class="btn logout" id="logoutBtn" type="button">Logout</button>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="head">
-        <h1>Home</h1>
-        <p id="subText">Sign in to continue.</p>
+    <div class="grid">
+      <div class="panel" id="loginPanel">
+        <div class="panelHeader">
+          <h2>Sign in</h2>
+          <p>Use your Supabase account (email + password).</p>
+        </div>
+        <div class="panelBody">
+          <div class="error" id="errorBox"></div>
+
+          <div class="loginBox">
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" placeholder="name@company.com" />
+
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+
+            <div class="row">
+              <button class="btn primary" id="loginBtn" type="button">Login</button>
+            </div>
+
+            <div class="small">
+              If you clicked an invite link or password reset link, it should sign you in automatically and then ask you to set a new password.
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="body">
-        <!-- LOGIN -->
-        <div class="panel" id="panelLogin">
-          <h2>Login</h2>
-          <div class="small">Use email + password.</div>
-
-          <label for="loginEmail">Email</label>
-          <input id="loginEmail" type="email" autocomplete="email" placeholder="name@hotel.com" />
-
-          <label for="loginPassword">Password</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password" />
-
-          <div class="actions">
-            <button class="btn" id="btnLogin">Sign In</button>
-          </div>
-
-          <div id="msgLogin" class="msg"></div>
+      <div class="panel" id="homePanel" style="display:none;">
+        <div class="panelHeader">
+          <h2>Dashboards</h2>
+          <p>Only pages you have access to will be clickable.</p>
         </div>
+        <div class="panelBody">
+          <div class="error" id="errorBox2"></div>
 
-        <!-- FINISH SETUP -->
-        <div class="panel hidden" id="panelSetup">
-          <h2>Finish setup</h2>
-          <div class="small">Enter your full name, choose your department, and set a new password. Role is set to <b>user</b>.</div>
-
-          <label for="fullName">Full name</label>
-          <input id="fullName" type="text" placeholder="First + Last name" />
-
-          <label for="department">Department</label>
-          <select id="department">
-            <option value="">Select…</option>
-            <option>Engineering</option>
-            <option>Front Desk</option>
-            <option>Housekeeping</option>
-            <option>Food &amp; Beverage</option>
-            <option>Security</option>
-            <option>Sales</option>
-            <option>Other</option>
-          </select>
-
-          <div class="row">
-            <div>
-              <label for="newPwd">New password</label>
-              <input id="newPwd" type="password" autocomplete="new-password" placeholder="Min 8 characters" />
+          <div class="cards">
+            <div class="card" id="cardFnbOutlets" tabindex="0" role="button" aria-label="Open F&B + Outlets Dashboard">
+              <h3 class="cardTitle">F&amp;B + Outlets Dashboard</h3>
+              <p class="cardDesc">Restaurant selections, Massimo toggles, Lobby Bar + outlets hours.</p>
+              <div class="tagRow">
+                <span class="tag ok">Live</span>
+                <span class="tag">Viewer can view</span>
+              </div>
             </div>
-            <div>
-              <label for="newPwd2">Confirm password</label>
-              <input id="newPwd2" type="password" autocomplete="new-password" placeholder="Repeat password" />
+
+            <div class="card disabled" aria-disabled="true">
+              <h3 class="cardTitle">Maintenance Dashboard</h3>
+              <p class="cardDesc">Coming soon.</p>
+              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
+            </div>
+
+            <div class="card disabled" aria-disabled="true">
+              <h3 class="cardTitle">Housekeeping Dashboard</h3>
+              <p class="cardDesc">Coming soon.</p>
+              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
+            </div>
+
+            <div class="card disabled" aria-disabled="true">
+              <h3 class="cardTitle">Guest Service Dashboard</h3>
+              <p class="cardDesc">Coming soon.</p>
+              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
             </div>
           </div>
 
-          <div class="actions">
-            <button class="btn2" id="btnComplete">Complete Setup</button>
-            <button class="ghost" id="btnLogout1" type="button">Sign Out</button>
+          <div class="small">
+            Rules: <b>Admin</b> can edit all. <b>User</b> can edit only their department parts. <b>Viewer</b> can view all but never edit.
           </div>
-
-          <div id="msgSetup" class="msg"></div>
-        </div>
-
-        <!-- NAV -->
-        <div class="panel hidden" id="panelNav">
-          <h2>Navigation</h2>
-          <div class="small">You’re onboarded. Pick where you want to go.</div>
-
-          <div class="actions">
-            <a class="ghost" style="padding:11px 14px; border-radius:12px; display:inline-block;" href="fnb-outlets.html">F&amp;B Outlets</a>
-            <button class="btn2" id="btnLogout2" type="button">Sign Out</button>
-          </div>
-
-          <div id="msgNav" class="msg"></div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Invite / Reset: set password popup -->
+  <div class="modalOverlay" id="pwOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHead">
+        <h3>Set your password</h3>
+        <button class="btn" id="pwCloseBtn" type="button">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="miniError" id="pwErr"></div>
+
+        <div class="hint">
+          Email (from your invite):
+          <div style="margin-top:6px;font-weight:900" id="pwEmail">—</div>
+        </div>
+
+        <label for="newPw">New password</label>
+        <input id="newPw" type="password" autocomplete="new-password" placeholder="New password" />
+
+        <label for="newPw2">Confirm password</label>
+        <input id="newPw2" type="password" autocomplete="new-password" placeholder="Confirm password" />
+
+        <div class="hint">
+          Tip: pick something strong. After saving, you’ll go to the home page.
+        </div>
+      </div>
+      <div class="modalFoot">
+        <button class="btn primary" id="pwSaveBtn" type="button">Save password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Local Supabase library (no CDN) -->
+  <script src="vendor/supabase-js.iife.min.js"></script>
+  <!-- Your project URL + anon key -->
+  <script src="supabase.js"></script>
+
   <script>
-    // Wait for window.sb (prevents "Supabase client missing" timing issues)
-    async function waitForSb(maxMs = 2500) {
-      const start = Date.now();
-      while (Date.now() - start < maxMs) {
-        if (window.sb) return true;
-        await new Promise(r => setTimeout(r, 50));
-      }
-      return false;
+    const $ = (id) => document.getElementById(id);
+
+    function showError(msg, which = 1) {
+      const box = which === 1 ? $("errorBox") : $("errorBox2");
+      box.textContent = msg;
+      box.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function clearErrors() {
+      $("errorBox").style.display = "none"; $("errorBox").textContent = "";
+      $("errorBox2").style.display = "none"; $("errorBox2").textContent = "";
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      const ok = await waitForSb(2500);
+    function showPwError(msg){
+      $("pwErr").textContent = msg;
+      $("pwErr").style.display = "block";
+    }
+    function clearPwError(){
+      $("pwErr").textContent = "";
+      $("pwErr").style.display = "none";
+    }
+
+    function setUserPill(profile) {
+      $("userPill").style.display = "flex";
+      $("userNameBadge").textContent = (profile.full_name || profile.email || "Signed in");
+      $("roleBadge").textContent = (profile.role || "viewer").toUpperCase();
+      $("deptBadge").textContent = (profile.department || "—");
+    }
+
+    function showHome(profile) {
+      $("loginPanel").style.display = "none";
+      $("homePanel").style.display = "block";
+      setUserPill(profile);
+
+      // Access: admin + viewer always; user only if dept is F&B or Outlets
+      const ok = (profile.role === "admin") ||
+                 (profile.role === "viewer") ||
+                 (profile.role === "user" && (profile.department === "F&B" || profile.department === "Outlets"));
+
+      const card = $("cardFnbOutlets");
       if (!ok) {
-        alert("Supabase client missing. Please refresh. If it keeps happening, your index.html script order is wrong.");
+        card.classList.add("disabled");
+        card.setAttribute("aria-disabled","true");
+        card.tabIndex = -1;
+      } else {
+        card.classList.remove("disabled");
+        card.removeAttribute("aria-disabled");
+        card.tabIndex = 0;
+        card.onclick = () => location.href = "fnb-outlets.html";
+        card.onkeydown = (e) => { if (e.key === "Enter") location.href = "fnb-outlets.html"; };
+      }
+    }
+
+    function showLogin() {
+      $("homePanel").style.display = "none";
+      $("loginPanel").style.display = "block";
+      $("userPill").style.display = "none";
+    }
+
+    async function loadProfile(userId) {
+      const { data, error } = await window.sb
+        .from("profiles")
+        .select("user_id,email,full_name,role,department,is_active")
+        .eq("user_id", userId)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error("Profile not found.");
+      if (data.is_active === false) throw new Error("Your account is inactive. Contact an admin.");
+      return data;
+    }
+
+    // Invite / recovery detection (Supabase puts tokens + type in the URL)
+    function isInviteOrRecoveryURL() {
+      const h = (location.hash || "").toLowerCase();
+      const q = (location.search || "").toLowerCase();
+      return h.includes("type=invite") || h.includes("type=recovery") || q.includes("type=invite") || q.includes("type=recovery");
+    }
+
+    function openPwModal(email) {
+      $("pwEmail").textContent = email || "—";
+      $("newPw").value = "";
+      $("newPw2").value = "";
+      clearPwError();
+      $("pwOverlay").style.display = "flex";
+    }
+    function closePwModal() {
+      $("pwOverlay").style.display = "none";
+      clearPwError();
+    }
+
+    async function saveNewPassword() {
+      clearPwError();
+
+      const p1 = ($("newPw").value || "").trim();
+      const p2 = ($("newPw2").value || "").trim();
+
+      if (!p1 || !p2) return showPwError("Please enter and confirm your new password.");
+      if (p1.length < 8) return showPwError("Password must be at least 8 characters.");
+      if (p1 !== p2) return showPwError("Passwords do not match.");
+
+      $("pwSaveBtn").disabled = true;
+      $("pwSaveBtn").textContent = "Saving...";
+
+      try {
+        const { error } = await window.sb.auth.updateUser({ password: p1 });
+        if (error) throw error;
+
+        // Clean URL so tokens/type aren’t left hanging around
+        try { history.replaceState({}, document.title, location.pathname); } catch(_) {}
+
+        closePwModal();
+      } catch (e) {
+        showPwError(e.message || "Could not set password.");
+      } finally {
+        $("pwSaveBtn").disabled = false;
+        $("pwSaveBtn").textContent = "Save password";
+      }
+    }
+
+    $("pwSaveBtn").addEventListener("click", saveNewPassword);
+    $("pwCloseBtn").addEventListener("click", closePwModal);
+    $("pwOverlay").addEventListener("click", (e) => { if (e.target === $("pwOverlay")) closePwModal(); });
+
+    $("loginBtn").addEventListener("click", async () => {
+      clearErrors();
+      const email = ($("email").value || "").trim();
+      const password = $("password").value || "";
+      if (!email || !password) return showError("Please enter email and password.");
+
+      $("loginBtn").disabled = true;
+      $("loginBtn").textContent = "Logging in...";
+
+      try {
+        const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        const user = data.user;
+        if (!user) throw new Error("Login failed. Try again.");
+
+        const profile = await loadProfile(user.id);
+        showHome(profile);
+      } catch (e) {
+        showError(e.message || "Login error. Please try again.");
+      } finally {
+        $("loginBtn").disabled = false;
+        $("loginBtn").textContent = "Login";
+      }
+    });
+
+    $("logoutBtn").addEventListener("click", async () => {
+      clearErrors();
+      try {
+        const { error } = await window.sb.auth.signOut();
+        if (error) throw error;
+        showLogin();
+      } catch (e) {
+        showError(e.message || "Logout error.", 2);
+      }
+    });
+
+    (async function init(){
+      clearErrors();
+
+      // Basic load checks
+      if (!window.supabase) {
+        showError("Supabase library not loaded. Check vendor/supabase-js.iife.min.js", 1);
+        return;
+      }
+      if (!window.sb) {
+        showError("Supabase client not loaded. Check supabase.js keys.", 1);
         return;
       }
 
-      const $ = (id) => document.getElementById(id);
-      const nowIso = () => new Date().toISOString();
+      try{
+        const { data, error } = await window.sb.auth.getSession();
+        if (error) throw error;
 
-      function showMsg(id, text, kind) {
-        const el = $(id);
-        el.className = "msg" + (kind ? (" " + kind) : "");
-        el.textContent = text;
-        el.style.display = "block";
-      }
-      function clearMsg(id) {
-        const el = $(id);
-        el.style.display = "none";
-        el.textContent = "";
-        el.className = "msg";
-      }
-
-      function safeNext() {
-        const url = new URL(window.location.href);
-        const next = url.searchParams.get("next") || "index.html";
-        if (!next) return "index.html";
-        if (next.startsWith("http://") || next.startsWith("https://") || next.startsWith("//")) return "index.html";
-        return next.replace(/^\//, "");
-      }
-
-      async function getUser() {
-        const { data, error } = await window.sb.auth.getUser();
-        if (error) return null;
-        return data?.user || null;
-      }
-
-      async function getProfile(userId) {
-        const { data, error } = await window.sb
-          .from("profiles")
-          .select("user_id, full_name, department, onboarding_completed")
-          .eq("user_id", userId)
-          .maybeSingle();
-        if (error) return null;
-        return data || null;
-      }
-
-      function setView(view) {
-        $("panelLogin").classList.toggle("hidden", view !== "login");
-        $("panelSetup").classList.toggle("hidden", view !== "setup");
-        $("panelNav").classList.toggle("hidden", view !== "nav");
-      }
-
-      async function refreshUI() {
-        const user = await getUser();
-
-        if (!user) {
-          $("statusPill").textContent = "Signed out";
-          $("subText").textContent = "Sign in to continue.";
-          setView("login");
+        const session = data.session;
+        if (!session?.user) {
+          showLogin();
           return;
         }
 
-        $("statusPill").textContent = user.email ? `Signed in: ${user.email}` : "Signed in";
+        const profile = await loadProfile(session.user.id);
+        showHome(profile);
 
-        const prof = await getProfile(user.id);
-        const onboarded = !!(prof && prof.onboarding_completed);
-
-        if (!onboarded) {
-          $("subText").textContent = "Finish setup to continue.";
-          setView("setup");
-          if (prof?.full_name) $("fullName").value = prof.full_name;
-          if (prof?.department) $("department").value = prof.department;
-          return;
+        // If this page load came from invite or recovery, pop the password setter
+        if (isInviteOrRecoveryURL()) {
+          openPwModal(session.user.email);
         }
 
-        $("subText").textContent = "You’re ready.";
-        setView("nav");
+      }catch(e){
+        showLogin();
+        showError(e.message || "Could not load session.");
       }
 
-      await refreshUI();
+      // keep in sync
+      window.sb.auth.onAuthStateChange(async (event, session) => {
+        try{
+          if (!session?.user) return showLogin();
+          const profile = await loadProfile(session.user.id);
+          showHome(profile);
 
-      $("btnLogin").addEventListener("click", async () => {
-        clearMsg("msgLogin");
-        const email = ($("loginEmail").value || "").trim();
-        const password = ($("loginPassword").value || "").trim();
-
-        if (!email || !password) {
-          showMsg("msgLogin", "Enter email and password.", "bad");
-          return;
-        }
-
-        const { error } = await window.sb.auth.signInWithPassword({ email, password });
-        if (error) {
-          showMsg("msgLogin", error.message || "Login failed.", "bad");
-          return;
-        }
-
-        await refreshUI();
-
-        const user = await getUser();
-        if (user) {
-          const prof = await getProfile(user.id);
-          if (prof?.onboarding_completed) {
-            const next = safeNext();
-            if (next && next !== "index.html") window.location.href = next;
+          if (isInviteOrRecoveryURL()) {
+            openPwModal(session.user.email);
           }
+        }catch(e){
+          showLogin();
+          showError(e.message || "Auth state error.");
         }
       });
-
-      async function doLogout() {
-        await window.sb.auth.signOut();
-        window.location.href = "index.html";
-      }
-      $("btnLogout1").addEventListener("click", doLogout);
-      $("btnLogout2").addEventListener("click", doLogout);
-
-      $("btnComplete").addEventListener("click", async () => {
-        clearMsg("msgSetup");
-
-        const user = await getUser();
-        if (!user) {
-          showMsg("msgSetup", "You are signed out. Please log in again.", "bad");
-          setView("login");
-          return;
-        }
-
-        const full_name = ($("fullName").value || "").trim();
-        const department = ($("department").value || "").trim();
-        const p1 = $("newPwd").value || "";
-        const p2 = $("newPwd2").value || "";
-
-        if (!full_name) return showMsg("msgSetup", "Please enter your full name.", "bad");
-        if (!department) return showMsg("msgSetup", "Please select your department.", "bad");
-        if (p1.length < 8) return showMsg("msgSetup", "Password must be at least 8 characters.", "bad");
-        if (p1 !== p2) return showMsg("msgSetup", "Passwords do not match.", "bad");
-
-        $("btnComplete").disabled = true;
-
-        try {
-          const pw = await window.sb.auth.updateUser({ password: p1 });
-          if (pw.error) throw pw.error;
-
-          const row = {
-            user_id: user.id,
-            email: user.email || null,
-            full_name,
-            department,
-            role: "user",
-            is_active: true,
-            password_set_at: nowIso(),
-            profile_completed_at: nowIso(),
-            onboarding_completed: true
-          };
-
-          const up = await window.sb
-            .from("profiles")
-            .upsert(row, { onConflict: "user_id" })
-            .select()
-            .single();
-
-          if (up.error) throw up.error;
-
-          showMsg("msgSetup", "Setup complete. Redirecting…", "good");
-
-          const next = safeNext();
-          setTimeout(() => {
-            if (next && next !== "index.html") window.location.href = next;
-            else refreshUI();
-          }, 500);
-
-        } catch (e) {
-          console.error(e);
-          showMsg("msgSetup", e?.message || "Setup failed.", "bad");
-          $("btnComplete").disabled = false;
-        }
-      });
-    });
+    })();
   </script>
 </body>
 </html>
