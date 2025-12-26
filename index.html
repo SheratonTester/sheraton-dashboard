@@ -1,16 +1,9 @@
-<!-- =========================
-FILE: index.html
-Email + Password login
-Forgot Password (emails reset link)
-Reset link returns to index.html and shows "Set New Password"
-NO invite/set-password flow
-========================= -->
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Sheraton Tools - Login</title>
+  <title>Sheraton Tools - Home</title>
 
   <style>
     :root{
@@ -22,6 +15,7 @@ NO invite/set-password flow
       --shadow: 0 14px 40px rgba(15,23,42,.10);
       --radius:18px;
       --blue:#2563eb;
+      --green:#16a34a;
     }
     *{ box-sizing:border-box; }
     body{
@@ -33,54 +27,93 @@ NO invite/set-password flow
         radial-gradient(900px 600px at 90% 10%, #e9fff6 0%, rgba(233,255,246,0) 55%),
         var(--bg);
       min-height:100vh;
+    }
+    header{
+      max-width:1100px;
+      margin:0 auto;
+      padding:22px 18px 10px;
       display:flex;
       align-items:center;
-      justify-content:center;
-      padding:18px;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
     }
+    .brand{ display:flex; align-items:center; gap:10px; }
+    .logo{
+      width:44px;height:44px;border-radius:16px;
+      background: linear-gradient(135deg, #2563eb, #22c55e);
+      box-shadow: var(--shadow);
+    }
+    h1{ margin:0; font-size:18px; }
+    .subtitle{ margin-top:2px; font-size:12px; color:var(--muted); }
+
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .dot{ width:8px;height:8px;border-radius:50%; background:#94a3b8; }
+    .dot.ok{ background: var(--green); }
+
     .wrap{
-      width:min(980px, 100%);
+      max-width:1100px;
+      margin:0 auto;
+      padding:10px 18px 34px;
       display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:16px;
-      align-items:stretch;
+      grid-template-columns: 1fr;
+      gap:14px;
     }
-    @media (max-width: 920px){
-      .wrap{ grid-template-columns:1fr; }
-    }
-    .hero, .card{
+
+    .card{
       background:var(--card);
       border:1px solid rgba(226,232,240,.9);
       border-radius:var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-    .hero{
-      padding:22px;
+    .card-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
       display:flex;
-      flex-direction:column;
+      align-items:flex-start;
       justify-content:space-between;
-      gap:14px;
+      gap:10px;
+      flex-wrap:wrap;
     }
-    .logo{
-      width:48px;height:48px;border-radius:16px;
-      background: linear-gradient(135deg, #2563eb, #22c55e);
-      box-shadow: var(--shadow);
+    .card-title strong{ font-size:14px; }
+    .card-title span{ display:block; font-size:12px; color:var(--muted); margin-top:4px; }
+
+    .card-body{ padding:14px; }
+
+    .error{
+      display:none;
+      margin:12px 14px 0;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#9f1239;
+      font-size:13px;
+      white-space:pre-wrap;
     }
-    h1{ margin:0; font-size:20px; }
-    .sub{ margin-top:6px; color:var(--muted); font-size:13px; line-height:1.35; }
-    .chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-    .chip{
-      font-size:12px; padding:6px 10px; border:1px solid var(--line);
-      border-radius:999px; color:var(--muted); background:#fff;
+    .ok{
+      display:none;
+      margin:12px 14px 0;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid #bbf7d0;
+      background:#f0fdf4;
+      color:#166534;
+      font-size:13px;
+      white-space:pre-wrap;
     }
-    .card{
-      padding:18px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .title{ font-weight:750; font-size:14px; }
+
     label{ font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
     input{
       width:100%;
@@ -92,18 +125,35 @@ NO invite/set-password flow
       background:#fff;
     }
     input:focus{ border-color: rgba(37,99,235,.55); }
-    button{
-      width:100%;
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+    @media (max-width: 800px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    button, a.btnlink{
       border:1px solid var(--line);
-      border-radius:12px;
+      background:#fff;
+      color:var(--text);
       padding:11px 12px;
+      border-radius:12px;
       font-size:14px;
       cursor:pointer;
-      background:#fff;
       transition: transform .04s ease, background .15s ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
     }
-    button:hover{ background:#f8fafc; }
-    button:active{ transform: translateY(1px); }
+    button:hover, a.btnlink:hover{ background:#f8fafc; }
+    button:active, a.btnlink:active{ transform: translateY(1px); }
+
     .primary{
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
       border-color: transparent;
@@ -111,14 +161,9 @@ NO invite/set-password flow
       font-weight:650;
     }
     .primary:hover{ background: linear-gradient(135deg, #1d4ed8, #1e40af); }
-    .row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .link{
+
+    .ghost{ color:var(--muted); }
+    .linklike{
       background:none;
       border:none;
       padding:0;
@@ -126,319 +171,318 @@ NO invite/set-password flow
       color:var(--blue);
       font-size:13px;
     }
-    .muted{ color:var(--muted); font-size:12px; }
-    .error{
-      display:none;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid #fecaca;
-      background:#fff1f2;
-      color:#9f1239;
-      font-size:13px;
-      white-space:pre-wrap;
+
+    .menuBtn{
+      padding:16px;
+      border-radius:16px;
+      align-items:flex-start;
+      justify-content:flex-start;
+      text-align:left;
+      gap:10px;
     }
-    .ok{
-      display:none;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid #bbf7d0;
-      background:#f0fdf4;
-      color:#166534;
-      font-size:13px;
-      white-space:pre-wrap;
+    .menuBtn strong{ display:block; font-size:14px; }
+    .menuBtn span{ display:block; font-size:12px; color:var(--muted); margin-top:3px; }
+    .icon{
+      width:34px;height:34px;border-radius:12px;
+      display:inline-flex; align-items:center; justify-content:center;
+      background: rgba(37,99,235,.12);
+      border:1px solid rgba(37,99,235,.18);
+      color:#1d4ed8;
+      flex:0 0 auto;
     }
+
     .hide{ display:none !important; }
-    .mini{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:2px;
-      line-height:1.35;
-    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <section class="hero">
-      <div>
-        <div class="logo" aria-hidden="true"></div>
-        <h1 style="margin-top:12px;">Sheraton Tools</h1>
-        <div class="sub">
-          Sign in with your email + password.
-          <br/>Forgot password is available on this screen.
-        </div>
-
-        <div class="chips">
-          <span class="chip">F&B Outlets</span>
-          <span class="chip">Dashboards</span>
-          <span class="chip">Internal use</span>
-        </div>
-      </div>
-
-      <div class="muted">
-        Tip: If you get “Supabase client not found”, it’s almost always a missing file or wrong path/case on GitHub Pages.
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="title" id="modeTitle">Sign in</div>
-
-      <div class="error" id="errorBox"></div>
-      <div class="ok" id="okBox"></div>
-
-      <!-- LOGIN FORM -->
-      <div id="loginForm">
-        <div>
-          <label for="email">Email</label>
-          <input id="email" type="email" autocomplete="username" placeholder="name@company.com">
-        </div>
-
-        <div>
-          <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
-        </div>
-
-        <button class="primary" id="btnLogin">Sign in</button>
-
-        <div class="row">
-          <button class="link" id="btnForgot" type="button">Forgot password?</button>
-          <span class="muted" id="sessionHint"></span>
-        </div>
-      </div>
-
-      <!-- FORGOT PASSWORD -->
-      <div id="forgotForm" class="hide">
-        <div class="mini">
-          Enter your email and we’ll send a reset link.
-        </div>
-        <div>
-          <label for="fpEmail">Email</label>
-          <input id="fpEmail" type="email" autocomplete="username" placeholder="name@company.com">
-        </div>
-        <button class="primary" id="btnSendReset">Send reset email</button>
-        <button id="btnBackToLogin" type="button">Back</button>
-      </div>
-
-      <!-- RESET PASSWORD (from email link) -->
-      <div id="resetForm" class="hide">
-        <div class="mini">
-          Set a new password for your account.
-        </div>
-        <div>
-          <label for="newPass">New password</label>
-          <input id="newPass" type="password" autocomplete="new-password" placeholder="New password">
-        </div>
-        <div>
-          <label for="newPass2">Confirm new password</label>
-          <input id="newPass2" type="password" autocomplete="new-password" placeholder="Confirm new password">
-        </div>
-        <button class="primary" id="btnSetNewPass">Set new password</button>
-        <button id="btnCancelReset" type="button">Cancel</button>
-      </div>
-    </section>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <div>
+      <h1>Sheraton Tools</h1>
+      <div class="subtitle">Home menu + login</div>
+    </div>
   </div>
 
-  <!-- Scripts: ALWAYS use ./ paths on GitHub Pages -->
-  <script src="./vendor/supabase-js.iife.min.js"></script>
-  <!-- supabase.js is provided above as its own file -->
-  <script src="./supabase.js"></script>
+  <span class="pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></span>
+</header>
 
-  <script>
-  (() => {
-    const $ = (id) => document.getElementById(id);
+<div class="wrap">
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">
+        <strong>Account</strong>
+        <span id="whoLine">Checking session…</span>
+      </div>
+      <div class="row">
+        <button class="ghost" id="btnSignOut" style="display:none;">Sign out</button>
+      </div>
+    </div>
 
-    function showErr(msg){
-      const b = $("errorBox");
-      b.textContent = msg;
-      b.style.display = "block";
-      $("okBox").style.display = "none";
-    }
-    function showOk(msg){
-      const b = $("okBox");
-      b.textContent = msg;
-      b.style.display = "block";
-      $("errorBox").style.display = "none";
-    }
-    function clearMsgs(){
-      $("errorBox").style.display = "none";
-      $("okBox").style.display = "none";
-    }
+    <div class="error" id="errorBox"></div>
+    <div class="ok" id="okBox"></div>
 
-    function setMode(mode){
-      // mode: login | forgot | reset
-      $("loginForm").classList.toggle("hide", mode !== "login");
-      $("forgotForm").classList.toggle("hide", mode !== "forgot");
-      $("resetForm").classList.toggle("hide", mode !== "reset");
-      $("modeTitle").textContent =
-        mode === "login" ? "Sign in" :
-        mode === "forgot" ? "Forgot password" :
-        "Set new password";
+    <div class="card-body">
+      <!-- LOGGED OUT -->
+      <div id="loggedOut">
+        <div class="grid">
+          <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="username" placeholder="name@company.com">
+          </div>
+          <div>
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="primary" id="btnLogin">Sign in</button>
+          <button class="linklike" id="btnForgot" type="button">Forgot password?</button>
+        </div>
+
+        <!-- Forgot password panel -->
+        <div id="forgotPanel" class="hide" style="margin-top:12px;">
+          <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">
+            Enter your email and we’ll send a reset link.
+          </div>
+          <div class="grid">
+            <div style="grid-column: 1 / -1;">
+              <label for="fpEmail">Email</label>
+              <input id="fpEmail" type="email" autocomplete="username" placeholder="name@company.com">
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="primary" id="btnSendReset" type="button">Send reset email</button>
+            <button id="btnCancelForgot" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGGED IN -->
+      <div id="loggedIn" class="hide">
+        <div class="grid">
+          <a class="btnlink menuBtn" href="fnb-outlets.html">
+            <span class="icon">🍽️</span>
+            <div>
+              <strong>F&B Outlets</strong>
+              <span>Breakfast/Lunch/Dinner selection + outlets hours</span>
+            </div>
+          </a>
+
+          <button class="menuBtn btnlink" id="btnPlaceholder" type="button">
+            <span class="icon">📊</span>
+            <div>
+              <strong>Dashboard (coming next)</strong>
+              <span>This is a placeholder button for your next pages</span>
+            </div>
+          </button>
+        </div>
+
+        <div style="margin-top:12px; font-size:12px; color:var(--muted);">
+          Tip: Use the Home button inside each page to come back here.
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Scripts (order matters) -->
+<script src="./vendor/supabase-js.iife.min.js?v=6"></script>
+<script src="./supabase.js?v=6"></script>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  function showErr(msg){
+    const b = $("errorBox");
+    b.textContent = msg;
+    b.style.display = "block";
+    $("okBox").style.display = "none";
+  }
+  function showOk(msg){
+    const b = $("okBox");
+    b.textContent = msg;
+    b.style.display = "block";
+    $("errorBox").style.display = "none";
+  }
+  function clearMsgs(){
+    $("errorBox").style.display = "none";
+    $("okBox").style.display = "none";
+  }
+
+  async function waitForSB(){
+    const start = Date.now();
+    while(!window.sb){
+      if(Date.now() - start > 5000) break;
+      await new Promise(r => setTimeout(r, 50));
+    }
+    if(!window.sb) throw new Error("Supabase client not loaded (window.sb). Check ./supabase.js and vendor file paths.");
+  }
+
+  function setStatus(text, ok){
+    $("statusText").textContent = text;
+    $("statusDot").classList.toggle("ok", !!ok);
+  }
+
+  async function getSession(){
+    const { data, error } = await window.sb.auth.getSession();
+    if(error) throw error;
+    return data.session || null;
+  }
+
+  async function loadProfile(userId){
+    const { data, error } = await window.sb
+      .from("profiles")
+      .select("user_id, full_name, role, department, is_active")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if(error) throw error;
+    return data || null;
+  }
+
+  function showLoggedInUI(profile, user){
+    $("loggedOut").classList.add("hide");
+    $("loggedIn").classList.remove("hide");
+    $("btnSignOut").style.display = "inline-flex";
+
+    const name = (profile?.full_name || "").trim() || user.email || "Signed in";
+    const role = profile?.role || "user";
+    const dept = profile?.department ? ` • ${profile.department}` : "";
+    $("whoLine").textContent = `${name} (${role}${dept})`;
+    setStatus("Signed in", true);
+  }
+
+  function showLoggedOutUI(){
+    $("loggedIn").classList.add("hide");
+    $("loggedOut").classList.remove("hide");
+    $("btnSignOut").style.display = "none";
+    $("whoLine").textContent = "Sign in to continue";
+    setStatus("Signed out", false);
+  }
+
+  async function init(){
+    try{
+      setStatus("Loading…", false);
+      await waitForSB();
+
+      const session = await getSession();
+      if(!session){
+        showLoggedOutUI();
+        return;
+      }
+
+      const profile = await loadProfile(session.user.id);
+      showLoggedInUI(profile, session.user);
+    }catch(e){
+      console.error(e);
+      setStatus("Error", false);
+      showErr(e.message || String(e));
+      showLoggedOutUI();
+    }
+  }
+
+  // Login
+  $("btnLogin").addEventListener("click", async () => {
+    try{
       clearMsgs();
-    }
+      const email = $("email").value.trim();
+      const password = $("password").value;
 
-    async function safeSB(){
-      if(!window.sb){
-        showErr("Supabase client not found. Make sure ./vendor/supabase-js.iife.min.js and ./supabase.js load correctly.");
-        throw new Error("Supabase client not found");
+      if(!email || !password){
+        showErr("Enter email and password.");
+        return;
       }
-      return window.sb;
-    }
 
-    async function checkSession(){
-      const sb = await safeSB();
-      const { data, error } = await sb.auth.getSession();
+      const { error } = await window.sb.auth.signInWithPassword({ email, password });
       if(error) throw error;
-      return data.session || null;
+
+      showOk("Signed in.");
+      await init();
+    }catch(e){
+      showErr(e.message || String(e));
     }
+  });
 
-    function getUrlType(){
-      // Supabase recovery links usually provide tokens and "type=recovery" (or similar)
-      const url = new URL(window.location.href);
-      const type = url.searchParams.get("type") || "";
-      // Also support hash style
-      const hash = new URLSearchParams((url.hash || "").replace(/^#/, ""));
-      const hType = hash.get("type") || "";
-      return (type || hType || "").toLowerCase();
-    }
+  // Forgot password
+  $("btnForgot").addEventListener("click", () => {
+    $("fpEmail").value = $("email").value.trim();
+    $("forgotPanel").classList.remove("hide");
+  });
+  $("btnCancelForgot").addEventListener("click", () => {
+    $("forgotPanel").classList.add("hide");
+  });
 
-    function cleanUrl(){
-      // keep it clean after handling reset
-      const url = new URL(window.location.href);
-      url.search = "";
-      url.hash = "";
-      window.history.replaceState({}, document.title, url.toString());
-    }
-
-    async function goHome(){
-      // Change this if your “home” is something else
-      window.location.href = "index.html";
-    }
-
-    async function goAfterLogin(){
-      // ✅ This is where you can send users after login.
-      // If your index is the menu/home, keep it as index.html.
-      // If you want to go straight to fnb-outlets, change it to "fnb-outlets.html".
-      window.location.href = "fnb-outlets.html";
-    }
-
-    async function init(){
-      try{
-        const sb = await safeSB();
-
-        // If already signed in, go to app page
-        const session = await checkSession();
-        if(session){
-          $("sessionHint").textContent = "Signed in";
-          await goAfterLogin();
-          return;
-        }
-
-        // If coming from password reset email link
-        const t = getUrlType();
-        if(t === "recovery"){
-          setMode("reset");
-          showOk("Reset link detected. Set your new password.");
-          return;
-        }
-
-        setMode("login");
-      }catch(e){
-        console.error(e);
+  $("btnSendReset").addEventListener("click", async () => {
+    try{
+      clearMsgs();
+      const email = $("fpEmail").value.trim();
+      if(!email){
+        showErr("Enter your email.");
+        return;
       }
+
+      // Redirect back here after clicking reset link
+      const redirectTo = window.location.origin + window.location.pathname;
+
+      const { error } = await window.sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if(error) throw error;
+
+      showOk("Reset email sent. Check your inbox.");
+    }catch(e){
+      showErr(e.message || String(e));
     }
+  });
 
-    // --- Login ---
-    $("btnLogin").addEventListener("click", async () => {
-      try{
-        clearMsgs();
-        const sb = await safeSB();
+  // If landing from a recovery link, let user set a new password via prompt
+  // (simple + fast; we can make a nicer UI later)
+  async function handleRecoveryLink(){
+    const url = new URL(window.location.href);
+    const type = (url.searchParams.get("type") || "").toLowerCase();
+    const hash = new URLSearchParams((url.hash || "").replace(/^#/, ""));
+    const hType = (hash.get("type") || "").toLowerCase();
 
-        const email = $("email").value.trim();
-        const password = $("password").value;
-
-        if(!email || !password){
-          showErr("Enter email and password.");
-          return;
-        }
-
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if(error) throw error;
-
-        await goAfterLogin();
-      }catch(e){
-        showErr(e.message || String(e));
+    if(type === "recovery" || hType === "recovery"){
+      const p1 = prompt("Set your new password (min 6 chars):");
+      if(!p1) return;
+      if(p1.length < 6){
+        showErr("Password must be at least 6 characters.");
+        return;
       }
-    });
-
-    // --- Forgot password ---
-    $("btnForgot").addEventListener("click", () => {
-      $("fpEmail").value = $("email").value.trim();
-      setMode("forgot");
-    });
-
-    $("btnBackToLogin").addEventListener("click", () => setMode("login"));
-
-    $("btnSendReset").addEventListener("click", async () => {
-      try{
-        clearMsgs();
-        const sb = await safeSB();
-
-        const email = $("fpEmail").value.trim();
-        if(!email){
-          showErr("Enter your email.");
-          return;
-        }
-
-        // Must match a Redirect URL in Supabase Auth settings.
-        // Use your actual GitHub Pages URL here (you can add multiple allowed redirects).
-        const redirectTo = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/index.html");
-
-        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
-        if(error) throw error;
-
-        showOk("Reset email sent. Check your inbox.");
-      }catch(e){
-        showErr(e.message || String(e));
+      const p2 = prompt("Confirm new password:");
+      if(p1 !== p2){
+        showErr("Passwords do not match.");
+        return;
       }
-    });
+      const { error } = await window.sb.auth.updateUser({ password: p1 });
+      if(error) throw error;
 
-    // --- Set new password (from recovery link) ---
-    $("btnSetNewPass").addEventListener("click", async () => {
-      try{
-        clearMsgs();
-        const sb = await safeSB();
+      // Clean URL
+      window.history.replaceState({}, document.title, url.origin + url.pathname);
+      showOk("Password updated. You can sign in now.");
+    }
+  }
 
-        const p1 = $("newPass").value;
-        const p2 = $("newPass2").value;
+  // Sign out
+  $("btnSignOut").addEventListener("click", async () => {
+    await window.sb.auth.signOut();
+    showLoggedOutUI();
+    showOk("Signed out.");
+  });
 
-        if(!p1 || p1.length < 6){
-          showErr("Password must be at least 6 characters.");
-          return;
-        }
-        if(p1 !== p2){
-          showErr("Passwords do not match.");
-          return;
-        }
+  // Placeholder
+  $("btnPlaceholder").addEventListener("click", () => {
+    alert("Dashboard page coming next.");
+  });
 
-        const { error } = await sb.auth.updateUser({ password: p1 });
-        if(error) throw error;
-
-        showOk("Password updated. Redirecting…");
-        cleanUrl();
-        // After reset, send them to login (or straight to app if you want)
-        setTimeout(() => window.location.href = "index.html", 800);
-      }catch(e){
-        showErr(e.message || String(e));
-      }
-    });
-
-    $("btnCancelReset").addEventListener("click", () => {
-      cleanUrl();
-      setMode("login");
-    });
-
-    init();
+  (async () => {
+    await init();
+    // only after init so sb exists
+    try{ await handleRecoveryLink(); }catch(e){ showErr(e.message || String(e)); }
   })();
-  </script>
+})();
+</script>
 </body>
 </html>
