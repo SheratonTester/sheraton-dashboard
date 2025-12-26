@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sheraton Dashboard</title>
 
+  <!-- Must load in this order -->
   <script defer src="vendor/supabase-js.iife.min.js"></script>
   <script defer src="supabase.js"></script>
-  <script defer src="app.js"></script>
 
   <style>
     :root{
@@ -17,43 +17,83 @@
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       color:var(--text);
       background: radial-gradient(1200px 600px at 20% 0%, #dbeafe 0%, transparent 55%),
                   radial-gradient(1000px 700px at 100% 20%, #e9d5ff 0%, transparent 50%),
                   linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
     }
-    .wrap{width:100%; max-width:860px;}
-    .top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;}
+    .wrap{width:100%; max-width:980px;}
+    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px;}
     .brand{display:flex; align-items:center; gap:10px; font-weight:900;}
     .dot{width:12px; height:12px; border-radius:999px; background:var(--btn); box-shadow:0 0 0 6px rgba(37,99,235,.15);}
-    .pill{font-size:12px; color:var(--muted); border:1px solid var(--line); background:rgba(255,255,255,.65); padding:6px 10px; border-radius:999px;}
+    .pill{
+      font-size:12px; color:var(--muted);
+      border:1px solid var(--line); background:rgba(255,255,255,.65);
+      padding:6px 10px; border-radius:999px;
+      max-width:60vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+
     .card{background:var(--card); border:1px solid rgba(226,232,240,.8); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;}
     .head{padding:18px; border-bottom:1px solid var(--line); background:linear-gradient(180deg, rgba(37,99,235,.10), transparent);}
     .head h1{margin:0; font-size:22px;}
     .head p{margin:8px 0 0 0; color:var(--muted); font-size:14px; line-height:1.35;}
-    .body{padding:18px; display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-    @media (max-width:860px){.body{grid-template-columns:1fr;}}
+
+    .body{padding:18px; display:grid; grid-template-columns: 1fr 1fr; gap:16px;}
+    @media (max-width: 980px){ .body{grid-template-columns:1fr;} }
+
     .panel{border:1px solid var(--line); border-radius:14px; padding:14px; background:rgba(255,255,255,.7);}
+    .panel h2{margin:0 0 10px 0; font-size:16px;}
+    .small{font-size:12px; color:var(--muted); margin-top:6px;}
+
     label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
-    input{width:100%; padding:11px 12px; border-radius:12px; border:1px solid var(--line); font-size:14px; outline:none; background:#fff;}
-    input:focus{border-color: rgba(37,99,235,.65); box-shadow:0 0 0 4px rgba(37,99,235,.12);}
+    input, select{
+      width:100%;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      font-size:14px;
+      outline:none;
+      background:#fff;
+    }
+    input:focus, select:focus{border-color: rgba(37,99,235,.65); box-shadow:0 0 0 4px rgba(37,99,235,.12);}
+
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    @media (max-width: 980px){ .row{grid-template-columns:1fr;} }
+
     .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
-    button{border:0; border-radius:12px; padding:11px 14px; font-weight:900; cursor:pointer; font-size:14px;}
+    button{
+      border:0; border-radius:12px; padding:11px 14px;
+      font-weight:900; cursor:pointer; font-size:14px;
+    }
     .btn{background:var(--btn); color:#fff;}
     .btn2{background:var(--btn2); color:#fff;}
     .ghost{background:transparent; border:1px solid var(--line); color:var(--text); font-weight:900;}
-    .msg{margin-top:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:13px; display:none; line-height:1.35;}
+    button:disabled{opacity:.55; cursor:not-allowed;}
+
+    .msg{
+      margin-top:10px; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--line); background:#fff; font-size:13px; display:none; line-height:1.35;
+    }
     .msg.bad{border-color: rgba(185,28,28,.35); background: rgba(185,28,28,.06); color: var(--bad);}
     .msg.good{border-color: rgba(21,128,61,.35); background: rgba(21,128,61,.06); color: var(--good);}
+
     a{color:var(--btn); text-decoration:none; font-weight:900;}
+    a:hover{text-decoration:underline;}
+
+    .hidden{display:none !important;}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="top">
+    <div class="topbar">
       <div class="brand"><span class="dot"></span> Sheraton Dashboard</div>
       <div class="pill" id="statusPill">Loading…</div>
     </div>
@@ -61,19 +101,20 @@
     <div class="card">
       <div class="head">
         <h1>Home</h1>
-        <p>If you log in through an invite, you will be forced into onboarding until it’s complete.</p>
+        <p id="subText">Sign in to continue.</p>
       </div>
 
       <div class="body">
-        <div class="panel" id="loginPanel">
-          <h3 style="margin:0 0 6px 0;">Login</h3>
-          <div style="color:var(--muted); font-size:12px;">Use email + password.</div>
+        <!-- LOGIN -->
+        <div class="panel" id="panelLogin">
+          <h2>Login</h2>
+          <div class="small">Use email + password.</div>
 
-          <label for="email">Email</label>
-          <input id="email" type="email" autocomplete="email" placeholder="name@hotel.com" />
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" type="email" autocomplete="email" placeholder="name@hotel.com" />
 
-          <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="current-password" placeholder="Your password" />
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password" />
 
           <div class="actions">
             <button class="btn" id="btnLogin">Sign In</button>
@@ -82,14 +123,53 @@
           <div id="msgLogin" class="msg"></div>
         </div>
 
-        <div class="panel" id="navPanel" style="display:none;">
-          <h3 style="margin:0 0 6px 0;">Navigation</h3>
-          <div style="color:var(--muted); font-size:12px;">You’ll only see this after onboarding is complete.</div>
+        <!-- FINISH SETUP (forced if onboarding not completed) -->
+        <div class="panel hidden" id="panelSetup">
+          <h2>Finish setup</h2>
+          <div class="small">Enter your full name, choose your department, and set a new password. Role is set to <b>user</b>.</div>
+
+          <label for="fullName">Full name</label>
+          <input id="fullName" type="text" placeholder="First + Last name" />
+
+          <label for="department">Department</label>
+          <select id="department">
+            <option value="">Select…</option>
+            <option>Engineering</option>
+            <option>Front Desk</option>
+            <option>Housekeeping</option>
+            <option>Food &amp; Beverage</option>
+            <option>Security</option>
+            <option>Sales</option>
+            <option>Other</option>
+          </select>
+
+          <div class="row">
+            <div>
+              <label for="newPwd">New password</label>
+              <input id="newPwd" type="password" autocomplete="new-password" placeholder="Min 8 characters" />
+            </div>
+            <div>
+              <label for="newPwd2">Confirm password</label>
+              <input id="newPwd2" type="password" autocomplete="new-password" placeholder="Repeat password" />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn2" id="btnComplete">Complete Setup</button>
+            <button class="ghost" id="btnLogout1" type="button">Sign Out</button>
+          </div>
+
+          <div id="msgSetup" class="msg"></div>
+        </div>
+
+        <!-- NAV -->
+        <div class="panel hidden" id="panelNav">
+          <h2>Navigation</h2>
+          <div class="small">You’re onboarded. Pick where you want to go.</div>
 
           <div class="actions">
             <a class="ghost" style="padding:11px 14px; border-radius:12px; display:inline-block;" href="fnb-outlets.html">F&amp;B Outlets</a>
-            <a class="ghost" style="padding:11px 14px; border-radius:12px; display:inline-block;" href="onboarding.html">My Profile</a>
-            <button class="btn2" id="btnLogout">Sign Out</button>
+            <button class="btn2" id="btnLogout2" type="button">Sign Out</button>
           </div>
 
           <div id="msgNav" class="msg"></div>
@@ -100,6 +180,7 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
+    const nowIso = () => new Date().toISOString();
 
     function showMsg(id, text, kind) {
       const el = $(id);
@@ -114,63 +195,178 @@
       el.className = "msg";
     }
 
+    function safeNext() {
+      const url = new URL(window.location.href);
+      const next = url.searchParams.get("next") || "index.html";
+      if (!next) return "index.html";
+      if (next.startsWith("http://") || next.startsWith("https://") || next.startsWith("//")) return "index.html";
+      // allow only simple relative paths
+      return next.replace(/^\//, "");
+    }
+
+    async function getUser() {
+      const { data, error } = await window.sb.auth.getUser();
+      if (error) return null;
+      return data?.user || null;
+    }
+
+    async function getProfile(userId) {
+      const { data, error } = await window.sb
+        .from("profiles")
+        .select("user_id, email, full_name, department, role, onboarding_completed")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) return null;
+      return data || null;
+    }
+
+    async function upsertProfile(row) {
+      return window.sb
+        .from("profiles")
+        .upsert(row, { onConflict: "user_id" })
+        .select()
+        .single();
+    }
+
+    function setView(view) {
+      // view: "login" | "setup" | "nav"
+      $("panelLogin").classList.toggle("hidden", view !== "login");
+      $("panelSetup").classList.toggle("hidden", view !== "setup");
+      $("panelNav").classList.toggle("hidden", view !== "nav");
+    }
+
     async function refreshUI() {
-      const sb = window.App.getSB();
-      const user = await window.App.getUser();
+      if (!window.sb) {
+        alert("Supabase client missing. Check supabase.js sets window.sb and vendor file loads.");
+        return;
+      }
+
+      const user = await getUser();
 
       if (!user) {
         $("statusPill").textContent = "Signed out";
-        $("loginPanel").style.display = "block";
-        $("navPanel").style.display = "none";
+        $("subText").textContent = "Sign in to continue.";
+        setView("login");
         return;
       }
 
       $("statusPill").textContent = user.email ? `Signed in: ${user.email}` : "Signed in";
 
-      const prof = await window.App.getProfile(user.id);
+      const prof = await getProfile(user.id);
       const onboarded = !!(prof && prof.onboarding_completed);
 
-      if (onboarded) {
-        $("loginPanel").style.display = "none";
-        $("navPanel").style.display = "block";
-      } else {
-        // guard will redirect anyway, but keep UI sane
-        $("loginPanel").style.display = "none";
-        $("navPanel").style.display = "none";
+      if (!onboarded) {
+        $("subText").textContent = "Finish setup to continue.";
+        setView("setup");
+        // Prefill if exists
+        if (prof?.full_name) $("fullName").value = prof.full_name;
+        if (prof?.department) $("department").value = prof.department;
+        return;
       }
+
+      $("subText").textContent = "You’re ready.";
+      setView("nav");
     }
 
     (async function init() {
-      // If user arrived with a ?next=... from guard, keep it around.
+      // If invite/login dropped tokens into URL, supabase.js has detectSessionInUrl true,
+      // so just refreshing UI is enough.
       await refreshUI();
 
       $("btnLogin").addEventListener("click", async () => {
         clearMsg("msgLogin");
-        const email = ($("email").value || "").trim();
-        const password = ($("password").value || "").trim();
+        const email = ($("loginEmail").value || "").trim();
+        const password = ($("loginPassword").value || "").trim();
 
         if (!email || !password) {
           showMsg("msgLogin", "Enter email and password.", "bad");
           return;
         }
 
-        const sb = window.App.getSB();
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-
+        const { error } = await window.sb.auth.signInWithPassword({ email, password });
         if (error) {
           showMsg("msgLogin", error.message || "Login failed.", "bad");
           return;
         }
 
-        // IMPORTANT: force onboarding gate immediately
-        await window.App.guardOnboarding().catch(() => {});
+        // after login, decide setup vs nav
         await refreshUI();
+
+        // if onboarded and next exists, go there
+        const user = await getUser();
+        if (user) {
+          const prof = await getProfile(user.id);
+          if (prof?.onboarding_completed) {
+            const next = safeNext();
+            if (next && next !== "index.html") window.location.href = next;
+          }
+        }
       });
 
-      $("btnLogout").addEventListener("click", async () => {
-        const sb = window.App.getSB();
-        await sb.auth.signOut();
-        await refreshUI();
+      async function doLogout() {
+        await window.sb.auth.signOut();
+        window.location.href = "index.html";
+      }
+      $("btnLogout1").addEventListener("click", doLogout);
+      $("btnLogout2").addEventListener("click", doLogout);
+
+      $("btnComplete").addEventListener("click", async () => {
+        clearMsg("msgSetup");
+
+        const user = await getUser();
+        if (!user) {
+          showMsg("msgSetup", "You are signed out. Please log in again.", "bad");
+          setView("login");
+          return;
+        }
+
+        const full_name = ($("fullName").value || "").trim();
+        const department = ($("department").value || "").trim();
+        const p1 = $("newPwd").value || "";
+        const p2 = $("newPwd2").value || "";
+
+        if (!full_name) return showMsg("msgSetup", "Please enter your full name.", "bad");
+        if (!department) return showMsg("msgSetup", "Please select your department.", "bad");
+        if (p1.length < 8) return showMsg("msgSetup", "Password must be at least 8 characters.", "bad");
+        if (p1 !== p2) return showMsg("msgSetup", "Passwords do not match.", "bad");
+
+        $("btnComplete").disabled = true;
+
+        try {
+          // 1) set password
+          const pw = await window.sb.auth.updateUser({ password: p1 });
+          if (pw.error) throw pw.error;
+
+          // 2) save profile (role forced to 'user')
+          const row = {
+            user_id: user.id,
+            email: user.email || null,
+            full_name,
+            department,
+            role: "user",
+            is_active: true,
+            password_set_at: nowIso(),
+            profile_completed_at: nowIso(),
+            onboarding_completed: true
+          };
+
+          const up = await upsertProfile(row);
+          if (up.error) throw up.error;
+
+          showMsg("msgSetup", "Setup complete. Redirecting…", "good");
+
+          // go to next or show nav
+          const next = safeNext();
+          setTimeout(() => {
+            if (next && next !== "index.html") window.location.href = next;
+            else refreshUI();
+          }, 500);
+
+        } catch (e) {
+          console.error(e);
+          showMsg("msgSetup", e?.message || "Setup failed.", "bad");
+          $("btnComplete").disabled = false;
+        }
       });
     })();
   </script>
