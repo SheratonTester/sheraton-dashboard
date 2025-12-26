@@ -123,7 +123,7 @@
           <div id="msgLogin" class="msg"></div>
         </div>
 
-        <!-- FINISH SETUP (forced if onboarding not completed) -->
+        <!-- FINISH SETUP -->
         <div class="panel hidden" id="panelSetup">
           <h2>Finish setup</h2>
           <div class="small">Enter your full name, choose your department, and set a new password. Role is set to <b>user</b>.</div>
@@ -179,98 +179,96 @@
   </div>
 
   <script>
-    const $ = (id) => document.getElementById(id);
-    const nowIso = () => new Date().toISOString();
-
-    function showMsg(id, text, kind) {
-      const el = $(id);
-      el.className = "msg" + (kind ? (" " + kind) : "");
-      el.textContent = text;
-      el.style.display = "block";
-    }
-    function clearMsg(id) {
-      const el = $(id);
-      el.style.display = "none";
-      el.textContent = "";
-      el.className = "msg";
+    // Wait for window.sb (prevents "Supabase client missing" timing issues)
+    async function waitForSb(maxMs = 2500) {
+      const start = Date.now();
+      while (Date.now() - start < maxMs) {
+        if (window.sb) return true;
+        await new Promise(r => setTimeout(r, 50));
+      }
+      return false;
     }
 
-    function safeNext() {
-      const url = new URL(window.location.href);
-      const next = url.searchParams.get("next") || "index.html";
-      if (!next) return "index.html";
-      if (next.startsWith("http://") || next.startsWith("https://") || next.startsWith("//")) return "index.html";
-      // allow only simple relative paths
-      return next.replace(/^\//, "");
-    }
-
-    async function getUser() {
-      const { data, error } = await window.sb.auth.getUser();
-      if (error) return null;
-      return data?.user || null;
-    }
-
-    async function getProfile(userId) {
-      const { data, error } = await window.sb
-        .from("profiles")
-        .select("user_id, email, full_name, department, role, onboarding_completed")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (error) return null;
-      return data || null;
-    }
-
-    async function upsertProfile(row) {
-      return window.sb
-        .from("profiles")
-        .upsert(row, { onConflict: "user_id" })
-        .select()
-        .single();
-    }
-
-    function setView(view) {
-      // view: "login" | "setup" | "nav"
-      $("panelLogin").classList.toggle("hidden", view !== "login");
-      $("panelSetup").classList.toggle("hidden", view !== "setup");
-      $("panelNav").classList.toggle("hidden", view !== "nav");
-    }
-
-    async function refreshUI() {
-      if (!window.sb) {
-        alert("Supabase client missing. Check supabase.js sets window.sb and vendor file loads.");
+    document.addEventListener("DOMContentLoaded", async () => {
+      const ok = await waitForSb(2500);
+      if (!ok) {
+        alert("Supabase client missing. Please refresh. If it keeps happening, your index.html script order is wrong.");
         return;
       }
 
-      const user = await getUser();
+      const $ = (id) => document.getElementById(id);
+      const nowIso = () => new Date().toISOString();
 
-      if (!user) {
-        $("statusPill").textContent = "Signed out";
-        $("subText").textContent = "Sign in to continue.";
-        setView("login");
-        return;
+      function showMsg(id, text, kind) {
+        const el = $(id);
+        el.className = "msg" + (kind ? (" " + kind) : "");
+        el.textContent = text;
+        el.style.display = "block";
+      }
+      function clearMsg(id) {
+        const el = $(id);
+        el.style.display = "none";
+        el.textContent = "";
+        el.className = "msg";
       }
 
-      $("statusPill").textContent = user.email ? `Signed in: ${user.email}` : "Signed in";
-
-      const prof = await getProfile(user.id);
-      const onboarded = !!(prof && prof.onboarding_completed);
-
-      if (!onboarded) {
-        $("subText").textContent = "Finish setup to continue.";
-        setView("setup");
-        // Prefill if exists
-        if (prof?.full_name) $("fullName").value = prof.full_name;
-        if (prof?.department) $("department").value = prof.department;
-        return;
+      function safeNext() {
+        const url = new URL(window.location.href);
+        const next = url.searchParams.get("next") || "index.html";
+        if (!next) return "index.html";
+        if (next.startsWith("http://") || next.startsWith("https://") || next.startsWith("//")) return "index.html";
+        return next.replace(/^\//, "");
       }
 
-      $("subText").textContent = "You’re ready.";
-      setView("nav");
-    }
+      async function getUser() {
+        const { data, error } = await window.sb.auth.getUser();
+        if (error) return null;
+        return data?.user || null;
+      }
 
-    (async function init() {
-      // If invite/login dropped tokens into URL, supabase.js has detectSessionInUrl true,
-      // so just refreshing UI is enough.
+      async function getProfile(userId) {
+        const { data, error } = await window.sb
+          .from("profiles")
+          .select("user_id, full_name, department, onboarding_completed")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (error) return null;
+        return data || null;
+      }
+
+      function setView(view) {
+        $("panelLogin").classList.toggle("hidden", view !== "login");
+        $("panelSetup").classList.toggle("hidden", view !== "setup");
+        $("panelNav").classList.toggle("hidden", view !== "nav");
+      }
+
+      async function refreshUI() {
+        const user = await getUser();
+
+        if (!user) {
+          $("statusPill").textContent = "Signed out";
+          $("subText").textContent = "Sign in to continue.";
+          setView("login");
+          return;
+        }
+
+        $("statusPill").textContent = user.email ? `Signed in: ${user.email}` : "Signed in";
+
+        const prof = await getProfile(user.id);
+        const onboarded = !!(prof && prof.onboarding_completed);
+
+        if (!onboarded) {
+          $("subText").textContent = "Finish setup to continue.";
+          setView("setup");
+          if (prof?.full_name) $("fullName").value = prof.full_name;
+          if (prof?.department) $("department").value = prof.department;
+          return;
+        }
+
+        $("subText").textContent = "You’re ready.";
+        setView("nav");
+      }
+
       await refreshUI();
 
       $("btnLogin").addEventListener("click", async () => {
@@ -289,10 +287,8 @@
           return;
         }
 
-        // after login, decide setup vs nav
         await refreshUI();
 
-        // if onboarded and next exists, go there
         const user = await getUser();
         if (user) {
           const prof = await getProfile(user.id);
@@ -333,11 +329,9 @@
         $("btnComplete").disabled = true;
 
         try {
-          // 1) set password
           const pw = await window.sb.auth.updateUser({ password: p1 });
           if (pw.error) throw pw.error;
 
-          // 2) save profile (role forced to 'user')
           const row = {
             user_id: user.id,
             email: user.email || null,
@@ -350,12 +344,16 @@
             onboarding_completed: true
           };
 
-          const up = await upsertProfile(row);
+          const up = await window.sb
+            .from("profiles")
+            .upsert(row, { onConflict: "user_id" })
+            .select()
+            .single();
+
           if (up.error) throw up.error;
 
           showMsg("msgSetup", "Setup complete. Redirecting…", "good");
 
-          // go to next or show nav
           const next = safeNext();
           setTimeout(() => {
             if (next && next !== "index.html") window.location.href = next;
@@ -368,7 +366,7 @@
           $("btnComplete").disabled = false;
         }
       });
-    })();
+    });
   </script>
 </body>
 </html>
