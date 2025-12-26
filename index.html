@@ -2,252 +2,176 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sheraton Niagara Falls — Ops</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sheraton Dashboard</title>
+
+  <script defer src="vendor/supabase-js.iife.min.js"></script>
+  <script defer src="supabase.js"></script>
+  <script defer src="app.js"></script>
+
   <style>
     :root{
-      --bg:#f6f8fb; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
-      --shadow: 0 10px 24px rgba(15, 23, 42, .08);
-      --green:#0b5d3a; --red:#7a1120; --focus: 0 0 0 4px rgba(11,93,58,.18);
+      --bg1:#f6f9ff; --bg2:#ffffff; --card:#fff; --text:#0f172a; --muted:#64748b;
+      --line:#e2e8f0; --btn:#2563eb; --btn2:#0f172a; --bad:#b91c1c; --good:#15803d;
+      --shadow:0 10px 30px rgba(2,6,23,.10); --radius:18px;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% 0%, rgba(11,93,58,.10), transparent 55%),
-                  radial-gradient(900px 500px at 100% 10%, rgba(122,17,32,.08), transparent 55%),
-                  var(--bg);
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       color:var(--text);
+      background: radial-gradient(1200px 600px at 20% 0%, #dbeafe 0%, transparent 55%),
+                  radial-gradient(1000px 700px at 100% 20%, #e9d5ff 0%, transparent 50%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
     }
-    .wrap{max-width:980px;margin:0 auto;padding:24px}
-    .topbar{
-      display:flex;gap:14px;align-items:center;justify-content:space-between;
-      padding:16px 18px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.75);
-      backdrop-filter: blur(8px);
-      box-shadow: var(--shadow);
-    }
-    .brand{display:flex;flex-direction:column;gap:2px}
-    .brand h1{margin:0;font-size:18px}
-    .brand .sub{color:var(--muted);font-size:13px}
-    .userpill{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .badge{
-      font-size:12px;color:var(--green);background:rgba(11,93,58,.10);
-      border:1px solid rgba(11,93,58,.18);
-      padding:6px 10px;border-radius:999px;
-    }
-    .badge.red{color:var(--red);background:rgba(122,17,32,.08);border-color:rgba(122,17,32,.15)}
-    .btn{
-      border:1px solid var(--border);background:#fff;color:var(--text);
-      border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer;
-      transition:.15s transform, .15s box-shadow;
-    }
-    .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.10)}
-    .btn:focus{outline:none;box-shadow:var(--focus)}
-    .btn.logout{border-color:rgba(122,17,32,.25);background:linear-gradient(180deg, rgba(122,17,32,.08), rgba(122,17,32,.03))}
-    .grid{display:grid;gap:16px;margin-top:18px}
-    .panel{
-      border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.82);
-      box-shadow: var(--shadow);overflow:hidden;
-    }
-    .panelHeader{padding:16px 18px;border-bottom:1px solid var(--border)}
-    .panelHeader h2{margin:0;font-size:16px}
-    .panelHeader p{margin:6px 0 0;color:var(--muted);font-size:13px}
-    .panelBody{padding:18px}
-    .error{
-      display:none;margin:0 0 14px 0;padding:12px 14px;border-radius:14px;
-      border:1px solid rgba(122,17,32,.22);background:rgba(122,17,32,.07);color:#5b0a14;font-size:13px;
-    }
-    .loginBox{
-      max-width:420px;margin:10px auto 0;padding:18px;border:1px solid var(--border);
-      border-radius:18px;background:rgba(255,255,255,.88);box-shadow: var(--shadow);
-    }
-    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
-    input{
-      width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);font-size:14px;background:#fff;
-    }
-    input:focus{outline:none;box-shadow:var(--focus);border-color:rgba(11,93,58,.35)}
-    .row{display:flex;gap:10px;align-items:center;margin-top:14px}
-    .row .btn{flex:1}
-    .cards{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
-    .card{
-      grid-column:span 6;border:1px solid var(--border);border-radius:18px;background:var(--card);
-      padding:16px;box-shadow:0 10px 18px rgba(15,23,42,.06);cursor:pointer;
-      transition:.15s transform,.15s box-shadow;min-height:120px;
-    }
-    .card:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.10)}
-    .card.disabled{cursor:not-allowed;opacity:.62}
-    .cardTitle{margin:0;font-size:16px}
-    .cardDesc{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
-    .tagRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .tag{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:#fff}
-    .tag.ok{color:var(--green);border-color:rgba(11,93,58,.25);background:rgba(11,93,58,.06)}
-    .tag.lock{color:var(--red);border-color:rgba(122,17,32,.20);background:rgba(122,17,32,.06)}
-    .small{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.35}
-    @media (max-width:760px){ .card{grid-column:span 12} .topbar{flex-direction:column;align-items:flex-start}}
+    .wrap{width:100%; max-width:860px;}
+    .top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:900;}
+    .dot{width:12px; height:12px; border-radius:999px; background:var(--btn); box-shadow:0 0 0 6px rgba(37,99,235,.15);}
+    .pill{font-size:12px; color:var(--muted); border:1px solid var(--line); background:rgba(255,255,255,.65); padding:6px 10px; border-radius:999px;}
+    .card{background:var(--card); border:1px solid rgba(226,232,240,.8); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;}
+    .head{padding:18px; border-bottom:1px solid var(--line); background:linear-gradient(180deg, rgba(37,99,235,.10), transparent);}
+    .head h1{margin:0; font-size:22px;}
+    .head p{margin:8px 0 0 0; color:var(--muted); font-size:14px; line-height:1.35;}
+    .body{padding:18px; display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+    @media (max-width:860px){.body{grid-template-columns:1fr;}}
+    .panel{border:1px solid var(--line); border-radius:14px; padding:14px; background:rgba(255,255,255,.7);}
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
+    input{width:100%; padding:11px 12px; border-radius:12px; border:1px solid var(--line); font-size:14px; outline:none; background:#fff;}
+    input:focus{border-color: rgba(37,99,235,.65); box-shadow:0 0 0 4px rgba(37,99,235,.12);}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    button{border:0; border-radius:12px; padding:11px 14px; font-weight:900; cursor:pointer; font-size:14px;}
+    .btn{background:var(--btn); color:#fff;}
+    .btn2{background:var(--btn2); color:#fff;}
+    .ghost{background:transparent; border:1px solid var(--line); color:var(--text); font-weight:900;}
+    .msg{margin-top:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:#fff; font-size:13px; display:none; line-height:1.35;}
+    .msg.bad{border-color: rgba(185,28,28,.35); background: rgba(185,28,28,.06); color: var(--bad);}
+    .msg.good{border-color: rgba(21,128,61,.35); background: rgba(21,128,61,.06); color: var(--good);}
+    a{color:var(--btn); text-decoration:none; font-weight:900;}
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <h1>Sheraton Niagara Falls — Ops</h1>
-        <div class="sub">Home</div>
-      </div>
-      <div class="userpill" id="userPill" style="display:none;">
-        <span class="badge" id="userNameBadge">Signed in</span>
-        <span class="badge" id="roleBadge">ROLE</span>
-        <span class="badge" id="deptBadge">DEPT</span>
-        <button class="btn logout" id="logoutBtn" type="button">Logout</button>
-      </div>
+    <div class="top">
+      <div class="brand"><span class="dot"></span> Sheraton Dashboard</div>
+      <div class="pill" id="statusPill">Loading…</div>
     </div>
 
-    <div class="grid">
-      <div class="panel" id="loginPanel">
-        <div class="panelHeader">
-          <div>
-            <h2>Sign in</h2>
-            <p>Use your Supabase account (email + password).</p>
-          </div>
-        </div>
-        <div class="panelBody">
-          <div class="error" id="errorBox"></div>
-
-          <div class="loginBox">
-            <label for="email">Email</label>
-            <input id="email" type="email" autocomplete="email" placeholder="name@company.com" />
-
-            <label for="password">Password</label>
-            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
-
-            <div class="row">
-              <button class="btn" id="loginBtn" type="button" style="border-color:rgba(11,93,58,.35);background:linear-gradient(180deg, rgba(11,93,58,.10), rgba(11,93,58,.04));">
-                Login
-              </button>
-            </div>
-
-            <div class="small">
-              If you used an invite/reset link, open it in this browser and it should complete automatically.
-            </div>
-          </div>
-        </div>
+    <div class="card">
+      <div class="head">
+        <h1>Home</h1>
+        <p>If you log in through an invite, you will be forced into onboarding until it’s complete.</p>
       </div>
 
-      <div class="panel" id="homePanel" style="display:none;">
-        <div class="panelHeader">
-          <h2>Dashboards</h2>
-          <p>Only pages you have access to will be clickable.</p>
+      <div class="body">
+        <div class="panel" id="loginPanel">
+          <h3 style="margin:0 0 6px 0;">Login</h3>
+          <div style="color:var(--muted); font-size:12px;">Use email + password.</div>
+
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="name@hotel.com" />
+
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="Your password" />
+
+          <div class="actions">
+            <button class="btn" id="btnLogin">Sign In</button>
+          </div>
+
+          <div id="msgLogin" class="msg"></div>
         </div>
-        <div class="panelBody">
-          <div class="error" id="errorBox2"></div>
 
-          <div class="cards">
-            <div class="card" id="cardFnbOutlets" tabindex="0" role="button" aria-label="Open F&B + Outlets Dashboard">
-              <h3 class="cardTitle">F&amp;B + Outlets Dashboard</h3>
-              <p class="cardDesc">Restaurant selections, Massimo toggles, Lobby Bar, Starbucks/Sweet Jesus/Freshii. One screen.</p>
-              <div class="tagRow">
-                <span class="tag ok">Live</span>
-                <span class="tag">Viewer can view</span>
-              </div>
-            </div>
+        <div class="panel" id="navPanel" style="display:none;">
+          <h3 style="margin:0 0 6px 0;">Navigation</h3>
+          <div style="color:var(--muted); font-size:12px;">You’ll only see this after onboarding is complete.</div>
 
-            <div class="card disabled" aria-disabled="true">
-              <h3 class="cardTitle">Maintenance Dashboard</h3>
-              <p class="cardDesc">Coming soon. This spot is reserved for future work.</p>
-              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
-            </div>
-
-            <div class="card disabled" aria-disabled="true">
-              <h3 class="cardTitle">Housekeeping Dashboard</h3>
-              <p class="cardDesc">Coming soon. This spot is reserved for future work.</p>
-              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
-            </div>
-
-            <div class="card disabled" aria-disabled="true">
-              <h3 class="cardTitle">Guest Service Dashboard</h3>
-              <p class="cardDesc">Coming soon. Occupancy & notes (7-day view).</p>
-              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
-            </div>
+          <div class="actions">
+            <a class="ghost" style="padding:11px 14px; border-radius:12px; display:inline-block;" href="fnb-outlets.html">F&amp;B Outlets</a>
+            <a class="ghost" style="padding:11px 14px; border-radius:12px; display:inline-block;" href="onboarding.html">My Profile</a>
+            <button class="btn2" id="btnLogout">Sign Out</button>
           </div>
 
-          <div class="small">
-            Rules: <b>Admin</b> can edit all. <b>User</b> can edit only their department parts. <b>Viewer</b> can view all but never edit.
-          </div>
+          <div id="msgNav" class="msg"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="vendor/supabase-js.iife.min.js"></script>
-  <script src="supabase.js"></script>
-  <script src="app.js?v=4"></script>
-
   <script>
-    (async function(){
-      App.initCommon();
+    const $ = (id) => document.getElementById(id);
 
-      const card = document.getElementById("cardFnbOutlets");
-      const setEnabled = (enabled) => {
-        if (!enabled) {
-          card.classList.add("disabled");
-          card.setAttribute("aria-disabled","true");
-          card.tabIndex = -1;
-        } else {
-          card.classList.remove("disabled");
-          card.removeAttribute("aria-disabled");
-          card.tabIndex = 0;
-        }
-      };
+    function showMsg(id, text, kind) {
+      const el = $(id);
+      el.className = "msg" + (kind ? (" " + kind) : "");
+      el.textContent = text;
+      el.style.display = "block";
+    }
+    function clearMsg(id) {
+      const el = $(id);
+      el.style.display = "none";
+      el.textContent = "";
+      el.className = "msg";
+    }
 
-      const showLogin = () => {
-        document.getElementById("homePanel").style.display = "none";
-        document.getElementById("loginPanel").style.display = "block";
-        document.getElementById("userPill").style.display = "none";
-      };
+    async function refreshUI() {
+      const sb = window.App.getSB();
+      const user = await window.App.getUser();
 
-      const showHome = (profile) => {
-        document.getElementById("loginPanel").style.display = "none";
-        document.getElementById("homePanel").style.display = "block";
-        document.getElementById("userPill").style.display = "flex";
-        document.getElementById("userNameBadge").textContent = profile.full_name || profile.email || "Signed in";
-        document.getElementById("roleBadge").textContent = (profile.role || "viewer").toUpperCase();
-        document.getElementById("deptBadge").textContent = profile.department || "—";
-
-        // Access: admin + viewer always; user only if dept is F&B or Outlets
-        const ok = (profile.role === "admin") || (profile.role === "viewer") || (profile.role === "user" && (profile.department === "F&B" || profile.department === "Outlets"));
-        setEnabled(ok);
-
-        card.onclick = () => { if (ok) location.href = "fnb-outlets.html"; };
-        card.onkeydown = (e) => { if (e.key === "Enter" && ok) location.href = "fnb-outlets.html"; };
-      };
-
-      document.getElementById("loginBtn").addEventListener("click", async () => {
-        App.clearErrors();
-        const email = (document.getElementById("email").value || "").trim();
-        const password = document.getElementById("password").value || "";
-        if (!email || !password) return App.showError("Please enter email and password.", "errorBox");
-        try{
-          await App.signIn(email, password);
-          const profile = await App.requireProfile();
-          showHome(profile);
-        }catch(e){
-          App.showError(e.message || "Login error.", "errorBox");
-        }
-      });
-
-      document.getElementById("logoutBtn").addEventListener("click", async () => {
-        App.clearErrors();
-        try { await App.signOut(); showLogin(); }
-        catch(e){ App.showError(e.message || "Logout error.", "errorBox2"); }
-      });
-
-      try{
-        const profile = await App.requireProfile(false);
-        if (!profile) return showLogin();
-        showHome(profile);
-      }catch(e){
-        showLogin();
-        App.showError(e.message || "Could not load session.", "errorBox");
+      if (!user) {
+        $("statusPill").textContent = "Signed out";
+        $("loginPanel").style.display = "block";
+        $("navPanel").style.display = "none";
+        return;
       }
+
+      $("statusPill").textContent = user.email ? `Signed in: ${user.email}` : "Signed in";
+
+      const prof = await window.App.getProfile(user.id);
+      const onboarded = !!(prof && prof.onboarding_completed);
+
+      if (onboarded) {
+        $("loginPanel").style.display = "none";
+        $("navPanel").style.display = "block";
+      } else {
+        // guard will redirect anyway, but keep UI sane
+        $("loginPanel").style.display = "none";
+        $("navPanel").style.display = "none";
+      }
+    }
+
+    (async function init() {
+      // If user arrived with a ?next=... from guard, keep it around.
+      await refreshUI();
+
+      $("btnLogin").addEventListener("click", async () => {
+        clearMsg("msgLogin");
+        const email = ($("email").value || "").trim();
+        const password = ($("password").value || "").trim();
+
+        if (!email || !password) {
+          showMsg("msgLogin", "Enter email and password.", "bad");
+          return;
+        }
+
+        const sb = window.App.getSB();
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          showMsg("msgLogin", error.message || "Login failed.", "bad");
+          return;
+        }
+
+        // IMPORTANT: force onboarding gate immediately
+        await window.App.guardOnboarding().catch(() => {});
+        await refreshUI();
+      });
+
+      $("btnLogout").addEventListener("click", async () => {
+        const sb = window.App.getSB();
+        await sb.auth.signOut();
+        await refreshUI();
+      });
     })();
   </script>
 </body>
