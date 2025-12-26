@@ -3,1256 +3,931 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sheraton Niagara Falls – Ops Dashboard</title>
+  <title>Sheraton Niagara Falls — Ops Dashboard</title>
+
+  <!-- Local Supabase library (must exist in repo root) -->
+  <script src="./supabase.js"></script>
+
   <style>
     :root{
-      --bg:#f6f9ff;
+      --bg:#f6f8ff;
       --card:#ffffff;
-      --text:#0b1220;
-      --muted:#5b6b86;
+      --text:#0f172a;
+      --muted:#475569;
+      --line:#e5e7eb;
+
       --brand:#2563eb;
-      --border:#e6eefc;
+      --brand2:#1d4ed8;
 
-      --green:#0f5132;     /* dark green */
-      --red:#7a1020;       /* dark red */
-      --tileText:#ffffff;
+      --green:#0f5132;  /* dark green */
+      --red:#7f1d1d;    /* dark red */
 
-      --shadow: 0 10px 30px rgba(16, 38, 96, .10);
-      --radius:16px;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --radius: 16px;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: linear-gradient(180deg, #eef4ff, #f7fbff 35%, var(--bg));
       color:var(--text);
+      background:linear-gradient(180deg,#f6f8ff 0%, #eef2ff 100%);
     }
     header{
-      position:sticky; top:0; z-index:50;
-      background: rgba(246,249,255,.92);
+      position:sticky; top:0;
+      z-index:20;
+      background:rgba(246,248,255,.85);
       backdrop-filter: blur(8px);
-      border-bottom:1px solid var(--border);
+      border-bottom:1px solid var(--line);
     }
-    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px}
-    .topbar{
-      display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+    .wrap{max-width:1200px; margin:0 auto; padding:16px;}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+    h1{
+      margin:0;
+      font-size:20px;
+      letter-spacing:.2px;
     }
-    h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.2px}
-    .pillrow{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
     .pill{
-      border:1px solid var(--border);
-      background: #fff;
-      border-radius:999px;
+      display:inline-flex; align-items:center; gap:8px;
       padding:6px 10px;
-      font-size:12px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--card);
       color:var(--muted);
-      box-shadow: 0 2px 10px rgba(0,0,0,.03);
+      font-size:12px;
     }
-    .actions{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-    }
-    label{font-size:12px;color:var(--muted)}
-    input[type="date"], input[type="text"], input[type="password"], select, textarea{
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px 12px;
-      font-size:14px;
-      background:#fff;
-      outline:none;
-      width:100%;
-    }
-    textarea{min-height:140px; resize:vertical}
+    .spacer{flex:1}
     .btn{
       border:0;
       background:var(--brand);
-      color:white;
+      color:#fff;
       padding:10px 14px;
       border-radius:12px;
       font-weight:700;
       cursor:pointer;
-      box-shadow: 0 10px 20px rgba(37,99,235,.18);
+      box-shadow: 0 8px 18px rgba(37,99,235,.18);
     }
-    .btn:active{transform: translateY(1px)}
-    .btn.secondary{
-      background:#fff;
-      color:var(--brand);
-      border:1px solid var(--border);
+    .btn:hover{background:var(--brand2)}
+    .btn.ghost{
+      background:transparent;
+      color:var(--brand2);
+      border:1px solid #c7d2fe;
       box-shadow:none;
-      font-weight:700;
     }
     .btn.danger{
-      background:#ef4444;
-      box-shadow: 0 10px 20px rgba(239,68,68,.15);
+      background:#dc2626;
+      box-shadow: 0 8px 18px rgba(220,38,38,.18);
     }
-    .grid{
-      display:grid;
-      gap:14px;
-    }
-    .card{
+    .inp{
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
       background:var(--card);
-      border:1px solid var(--border);
+      min-width:170px;
+      font-weight:600;
+      color:var(--text);
+    }
+    .section{
+      margin-top:14px;
+      background:var(--card);
+      border:1px solid var(--line);
       border-radius:var(--radius);
-      box-shadow: var(--shadow);
-      padding:14px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
     }
-    .sectionTitle{
+    .section .title{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; gap:10px;
+      background:linear-gradient(90deg,#ffffff 0%, #f8fafc 100%);
       font-weight:900;
-      letter-spacing:.2px;
-      margin:0 0 10px 0;
     }
-    .subtle{color:var(--muted);font-size:12px}
-
-    .errorBanner{
-      margin-top:10px;
-      display:none;
-      border:1px solid #fecaca;
-      background:#fff1f2;
-      color:#7f1d1d;
+    .hint{font-size:12px; color:var(--muted); font-weight:600}
+    .err{
+      margin-top:12px;
       padding:10px 12px;
       border-radius:12px;
-      font-size:13px;
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#991b1b;
+      font-weight:700;
+      display:none;
+      white-space:pre-wrap;
     }
-    .errorBanner.show{display:block}
 
-    /* Login */
-    .center{
-      min-height: calc(100vh - 76px);
-      display:flex; align-items:center; justify-content:center;
-      padding:22px 16px;
-    }
-    .loginCard{
-      width:min(520px, 100%);
+    /* Auth */
+    .authBox{
+      max-width:420px;
+      margin:50px auto 0;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
       padding:18px;
     }
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    .row > div{flex:1 1 220px}
+    .authBox h2{margin:0 0 8px 0}
+    .authBox label{display:block; font-size:12px; color:var(--muted); margin:12px 0 6px}
+    .authBox .inp{width:100%}
+    .authBox .btn{width:100%; margin-top:12px}
 
     /* Occupancy cards */
-    .occRow{
+    .cards{
       display:flex;
-      gap:10px;
-      overflow:auto;
-      padding-bottom:6px;
+      gap:12px;
+      padding:14px 16px;
+      overflow-x:auto;
       scroll-snap-type:x mandatory;
     }
-    .occTile{
-      min-width:170px;
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px;
-      background: #ffffff;
+    .card{
+      min-width:210px;
       scroll-snap-align:start;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      background:#fff;
+      box-shadow: 0 8px 20px rgba(15,23,42,.06);
       cursor:pointer;
     }
-    .occTop{
-      display:flex; justify-content:space-between; align-items:flex-start;
-      gap:8px;
-    }
-    .occDay{font-weight:900}
-    .occDate{font-size:12px;color:var(--muted)}
-    .occPct{font-size:26px;font-weight:950;margin-top:6px}
-    .occMeta{font-size:12px;color:var(--muted);margin-top:8px}
+    .card:hover{border-color:#c7d2fe}
+    .card .d1{font-weight:900}
+    .card .d2{color:var(--muted); font-weight:700; font-size:12px}
+    .card .pct{font-size:28px; font-weight:1000; margin:10px 0 6px}
+    .card .meta{font-size:12px; color:var(--muted); font-weight:650}
 
-    /* Status table */
-    .tableWrap{
-      overflow:auto;
-      border:1px solid var(--border);
+    /* Status grid */
+    .gridWrap{padding:14px 16px}
+    .groupHeader{
+      margin-top:12px;
+      padding:10px 12px;
       border-radius:14px;
+      background:#f1f5f9;
+      border:1px solid var(--line);
+      font-weight:1000;
+      letter-spacing:.3px;
     }
-    table{
+    .statusGrid{
       width:100%;
       border-collapse:separate;
       border-spacing:0;
-      min-width:900px;
+      margin-top:10px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:16px;
+    }
+    .statusGrid th, .statusGrid td{
+      border-bottom:1px solid var(--line);
+      border-right:1px solid var(--line);
+      padding:10px;
+      text-align:center;
+      font-weight:800;
       background:#fff;
     }
-    th, td{
-      padding:10px;
-      border-bottom:1px solid var(--border);
-      vertical-align:middle;
-    }
-    th{
-      position:sticky; top:0;
-      background:#f3f7ff;
-      z-index:2;
-      font-size:12px;
-      color:var(--muted);
+    .statusGrid th:first-child, .statusGrid td:first-child{
       text-align:left;
+      width:280px;
+      background:#fbfdff;
     }
-    .groupHeader{
-      background:#f8fbff;
-      font-weight:950;
-      color:#1f2a44;
-    }
-    .svcName{font-weight:800}
-    .tile{
-      width:100%;
-      height:44px;
-      border-radius:12px;
-      border:1px solid rgba(0,0,0,.08);
+    .statusGrid tr:last-child td{border-bottom:0}
+    .statusGrid th:last-child, .statusGrid td:last-child{border-right:0}
+
+    .box{
+      height:36px;
+      border-radius:10px;
       cursor:pointer;
-      position:relative;
-      overflow:hidden;
+      border:1px solid rgba(0,0,0,.08);
+      transition: transform .04s ease;
     }
-    .tile.green{background:var(--green)}
-    .tile.red{background:var(--red)}
-    .tileInfo{
-      position:absolute;
-      left:10px; right:10px; bottom:6px;
-      font-size:11px;
-      color:rgba(255,255,255,.92);
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-      pointer-events:none;
-    }
-    .tileInfo span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .box:active{transform: scale(.985)}
+    .box.red{background:var(--red)}
+    .box.green{background:var(--green)}
+    .box.disabled{opacity:.35; cursor:not-allowed}
+    .small{font-size:11px; color:var(--muted); font-weight:650}
 
     /* Modal */
     .modalBack{
       position:fixed; inset:0;
-      background:rgba(6,10,18,.45);
+      background:rgba(15,23,42,.55);
       display:none;
       align-items:center;
       justify-content:center;
-      padding:18px;
-      z-index:9999; /* above everything */
+      padding:14px;
+      z-index:50;
     }
-    .modalBack.show{display:flex}
     .modal{
-      width:min(820px, 100%);
+      width:min(680px, 100%);
       background:#fff;
       border-radius:18px;
-      border:1px solid var(--border);
-      box-shadow: 0 30px 90px rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow: 0 22px 60px rgba(0,0,0,.25);
       overflow:hidden;
     }
-    .modalHead{
-      display:flex; justify-content:space-between; align-items:center;
+    .modalTop{
       padding:14px 16px;
-      background:#f7faff;
-      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid var(--line);
+      background:#f8fafc;
+      font-weight:950;
     }
-    .modalHead strong{font-size:14px}
     .modalBody{padding:14px 16px}
-    .modalFoot{
-      padding:14px 16px;
-      border-top:1px solid var(--border);
-      display:flex; gap:10px; justify-content:flex-end;
-      background:#fff;
-    }
-
-    .tabs{
-      display:flex; gap:8px; margin-top:12px;
-    }
-    .tabbtn{
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .grid2 .inp{width:100%}
+    textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
       padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:#fff;
-      cursor:pointer;
-      font-weight:800;
-      color:var(--muted);
+      min-height:140px;
+      resize:vertical;
+      font-weight:650;
+      font-family:inherit;
     }
-    .tabbtn.active{
-      background: #eaf1ff;
-      color:#103a9c;
-      border-color:#cfe0ff;
+    .modalActions{
+      padding:14px 16px;
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      background:#f8fafc;
     }
-
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
-
     @media (max-width:720px){
-      .wrap{padding:12px}
-      table{min-width:780px}
-      .occTile{min-width:160px}
+      .grid2{grid-template-columns:1fr}
+      .statusGrid th:first-child, .statusGrid td:first-child{width:200px}
     }
   </style>
 </head>
+
 <body>
 <header>
   <div class="wrap">
-    <div class="topbar">
-      <div>
-        <h1>Sheraton Niagara Falls – Ops Dashboard</h1>
-        <div class="pillrow" style="margin-top:8px">
-          <div class="pill" id="pillRole">Role: —</div>
-          <div class="pill" id="pillDept">Dept: —</div>
-          <div class="pill" id="pillUser">User: —</div>
-        </div>
-      </div>
-      <div class="actions">
-        <div style="min-width:170px">
-          <label>Start date</label>
-          <input id="startDate" type="date" />
-        </div>
-        <button class="btn secondary" id="btnToday">Today</button>
-        <button class="btn" id="btnRefresh">Refresh</button>
-        <button class="btn secondary" id="btnPdf">Download 7-Day PDF Snapshot</button>
-        <button class="btn danger" id="btnLogout" style="display:none">Logout</button>
-      </div>
-    </div>
-    <div id="err" class="errorBanner"></div>
+    <div class="row">
+      <h1>Sheraton Niagara Falls — Ops Dashboard</h1>
+      <span class="pill" id="pillRole">Role: —</span>
+      <span class="pill" id="pillDept">Dept: —</span>
+      <span class="pill" id="pillUser">User: —</span>
+      <span class="spacer"></span>
 
-    <div class="tabs">
-      <button class="tabbtn active" id="tabDash">Dashboard</button>
-      <button class="tabbtn" id="tabUsers" style="display:none">Users</button>
+      <label class="small" style="font-weight:900;">Start date</label>
+      <input class="inp" type="date" id="startDate" />
+      <button class="btn ghost" id="btnToday">Today</button>
+      <button class="btn" id="btnRefresh">Refresh</button>
+      <button class="btn danger" id="btnLogout">Logout</button>
     </div>
+
+    <div id="err" class="err"></div>
   </div>
 </header>
 
-<main class="wrap" id="appRoot"></main>
+<!-- AUTH -->
+<div id="authRoot" class="wrap" style="display:none;">
+  <div class="authBox">
+    <h2>Sign in</h2>
+    <div class="hint">Use your hotel email + password.</div>
 
-<!-- Modal: occupancy edit -->
-<div class="modalBack" id="occModalBack" aria-hidden="true">
+    <label>Email</label>
+    <input id="authEmail" class="inp" type="email" placeholder="name@niagarafallshotels.com" />
+
+    <label>Password</label>
+    <input id="authPass" class="inp" type="password" placeholder="••••••••" />
+
+    <button class="btn" id="btnSignIn">Sign in</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appRoot" class="wrap" style="display:none;">
+  <div class="section">
+    <div class="title">
+      7-Day Occupancy Forecast
+      <span class="hint">Click a card to edit (Guest Service + Admin only).</span>
+    </div>
+    <div id="occCards" class="cards"></div>
+  </div>
+
+  <div class="section">
+    <div class="title">
+      Restaurant Status
+      <span class="hint">Green = active. Red = inactive. Double-click green to clear (closed).</span>
+    </div>
+    <div class="gridWrap" id="svcWrap"></div>
+  </div>
+
+  <div class="section">
+    <div class="title">
+      Massimo Status
+      <span class="hint">Massimo can have multiple greens (toggle each).</span>
+    </div>
+    <div class="gridWrap" id="massimoWrap"></div>
+  </div>
+</div>
+
+<!-- Occupancy modal -->
+<div id="modalBack" class="modalBack">
   <div class="modal">
-    <div class="modalHead">
-      <strong id="occModalTitle">Edit occupancy</strong>
-      <button class="btn secondary" id="occClose">Close</button>
+    <div class="modalTop">
+      <span id="modalTitle">Edit occupancy</span>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="btnCloseModal">Close</button>
     </div>
     <div class="modalBody">
-      <div class="row">
+      <div class="grid2">
         <div>
-          <label>Occupancy % (0–100)</label>
-          <input id="occPct" type="text" placeholder="e.g., 78.5" />
+          <div class="small" style="font-weight:900;margin-bottom:6px;">Occupancy % (0–100)</div>
+          <input id="occPct" class="inp" type="number" min="0" max="100" step="0.1" />
         </div>
         <div>
-          <label>Notes (short)</label>
-          <input id="occShort" type="text" placeholder="Optional" />
+          <div class="small" style="font-weight:900;margin-bottom:6px;">Short note</div>
+          <input id="occShort" class="inp" type="text" placeholder="Optional" />
         </div>
       </div>
-      <div style="margin-top:10px">
-        <label>Notes (long)</label>
-        <textarea id="occLong" placeholder="Type your longer notes here…"></textarea>
+      <div style="margin-top:12px;">
+        <div class="small" style="font-weight:900;margin-bottom:6px;">Long note</div>
+        <textarea id="occLong" placeholder="Optional (bigger box for easy notes)"></textarea>
       </div>
-      <div class="hint">Tip: clicking a day card will pre-fill the last saved data for that date.</div>
+      <div class="hint" style="margin-top:8px;">Saved changes are tracked by the database history tables.</div>
     </div>
-    <div class="modalFoot">
-      <button class="btn secondary" id="occCancel">Close</button>
-      <button class="btn" id="occSave">Save</button>
+    <div class="modalActions">
+      <button class="btn" id="btnSaveOcc">Save</button>
     </div>
   </div>
 </div>
-
-<!-- Login / Complete Account -->
-<div class="center" id="authRoot" style="display:none">
-  <div class="card loginCard">
-    <h2 style="margin:0 0 8px 0">Sign in</h2>
-    <div class="subtle">Use your work email.</div>
-
-    <div style="margin-top:14px" class="row">
-      <div>
-        <label>Email</label>
-        <input id="loginEmail" type="text" placeholder="name@niagarafallshotels.com" />
-      </div>
-      <div>
-        <label>Password</label>
-        <input id="loginPass" type="password" placeholder="••••••••" />
-      </div>
-    </div>
-
-    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
-      <button class="btn" id="btnLogin">Sign in</button>
-      <button class="btn secondary" id="btnForgot">Send reset email</button>
-    </div>
-
-    <hr style="border:0;border-top:1px solid var(--border); margin:16px 0">
-
-    <h3 style="margin:0 0 8px 0">First time / invited?</h3>
-    <div class="subtle">If you clicked an invite or reset link, set your name + new password here.</div>
-
-    <div style="margin-top:12px" class="row">
-      <div>
-        <label>Full name</label>
-        <input id="setupName" type="text" placeholder="First Last" />
-      </div>
-      <div>
-        <label>New password</label>
-        <input id="setupPass" type="password" placeholder="New password" />
-      </div>
-    </div>
-    <div style="margin-top:12px">
-      <button class="btn" id="btnComplete">Save name + password</button>
-    </div>
-
-    <div class="hint">If your company network blocks CDNs, you’re doing the right thing using local <b>supabase.js</b>.</div>
-  </div>
-</div>
-
-<!-- Supabase client (LOCAL) -->
-<script src="./supabase.js"></script>
 
 <script>
 (() => {
-  // ====== CONFIG ======
+  // ====== Supabase config ======
   const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
   const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
-  const TZ = "America/Toronto";
-  const DAYS = 7;
 
-  // Make sure we only create the client ONCE.
-  const sb = window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  // Guard: local supabase.js must exist
+  if (!window.supabase || !window.supabase.createClient) {
+    const e = document.getElementById("err");
+    e.style.display = "block";
+    e.textContent =
+      "Supabase client not found. Make sure supabase.js is in the repo root (same folder as index.html).";
+    document.getElementById("authRoot").style.display = "block";
+    return;
+  }
 
-  // ====== Helpers ======
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ====== DOM helpers ======
   const $ = (id) => document.getElementById(id);
   const errBox = $("err");
   function showErr(msg){
+    errBox.style.display = "block";
     errBox.textContent = msg;
-    errBox.classList.add("show");
   }
   function clearErr(){
+    errBox.style.display = "none";
     errBox.textContent = "";
-    errBox.classList.remove("show");
-  }
-  function fmtToronto(iso){
-    if(!iso) return "—";
-    try{
-      return new Date(iso).toLocaleString("en-CA", { timeZone: TZ, year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
-    }catch{ return "—"; }
-  }
-  function toISODate(d){
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
-  }
-  function addDays(isoDate, n){
-    const d = new Date(isoDate + "T12:00:00");
-    d.setDate(d.getDate() + n);
-    return toISODate(d);
-  }
-  function dayLabel(isoDate){
-    const d = new Date(isoDate + "T12:00:00");
-    return d.toLocaleDateString("en-CA", { timeZone: TZ, weekday:"short", month:"short", day:"2-digit" });
-  }
-
-  // Permissions
-  function canEditOccupancy(profile){
-    return profile?.role === "admin" || (profile?.role === "user" && profile?.department === "Guest Service");
-  }
-  function canEditRestaurants(profile){
-    return profile?.role === "admin" || (profile?.role === "user" && profile?.department === "F&B");
-  }
-  function canEditOutlets(profile){
-    return profile?.role === "admin" || (profile?.role === "user" && profile?.department === "Outlets");
   }
 
   // ====== State ======
-  let currentUser = null;
-  let profile = null;
+  let me = null;            // auth user
+  let profile = null;       // profiles row
+  let startDate = null;     // yyyy-mm-dd
+  let days = [];            // array of date strings
+  let profilesMap = new Map(); // user_id -> name
 
-  let startDate = toISODate(new Date());
-  let serviceItems = [];
-  let forecastByDate = new Map(); // date -> row
-  let selectionByKey = new Map(); // `${date}|${group}` -> row
-  let massimoByKey = new Map(); // `${date}|${service_item_id}` -> row
-  let outletByKey = new Map(); // `${date}|${outlet_name}` -> row
+  let serviceItems = [];    // service_items (breakfast/lunch/dinner)
+  let svcSel = [];          // daily_service_selection rows
+  let massimoItems = [];    // service_items group=massimo
+  let massimoRows = [];     // daily_massimo_status rows
 
-  // outlets list
-  const OUTLETS = [
-    { key:"Lobby Bar", editDept:"F&B" },
-    { key:"Starbucks", editDept:"Outlets" },
-    { key:"Sweet Jesus", editDept:"Outlets" },
-    { key:"Freshii", editDept:"Outlets" },
-  ];
-
-  // ====== UI roots ======
-  const appRoot = $("appRoot");
-  const authRoot = $("authRoot");
-
-  // ====== Tabs ======
-  $("tabDash").onclick = () => {
-    $("tabDash").classList.add("active");
-    $("tabUsers").classList.remove("active");
-    renderDashboard();
-  };
-  $("tabUsers").onclick = () => {
-    $("tabUsers").classList.add("active");
-    $("tabDash").classList.remove("active");
-    renderUsersAdmin();
-  };
-
-  // ====== Header actions ======
-  $("startDate").value = startDate;
-  $("startDate").addEventListener("change", () => {
-    startDate = $("startDate").value || startDate;
-    loadAll().catch(e => showErr(e?.message || String(e)));
-  });
-  $("btnToday").onclick = () => {
-    startDate = toISODate(new Date());
-    $("startDate").value = startDate;
-    loadAll().catch(e => showErr(e?.message || String(e)));
-  };
-  $("btnRefresh").onclick = () => loadAll().catch(e => showErr(e?.message || String(e)));
-  $("btnPdf").onclick = () => openPdfSnapshot();
-
-  // ====== Auth buttons ======
-  $("btnLogin").onclick = async () => {
-    clearErr();
-    const email = $("loginEmail").value.trim();
-    const password = $("loginPass").value;
-    if(!email || !password) return showErr("Enter email + password.");
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if(error) return showErr(error.message);
-    await onAuthChanged();
-  };
-
-  $("btnForgot").onclick = async () => {
-    clearErr();
-    const email = $("loginEmail").value.trim();
-    if(!email) return showErr("Enter your email first.");
-    const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href.split("#")[0]
-    });
-    if(error) return showErr(error.message);
-    showErr("Reset email sent. Use the link, then set your new password below.");
-  };
-
-  $("btnComplete").onclick = async () => {
-    clearErr();
-    const name = $("setupName").value.trim();
-    const pass = $("setupPass").value;
-    if(!name || !pass) return showErr("Enter full name + new password.");
-    const { data: u } = await sb.auth.getUser();
-    if(!u?.user) return showErr("You must open the invite/reset link first (it signs you in).");
-    const { error: e1 } = await sb.auth.updateUser({ password: pass });
-    if(e1) return showErr(e1.message);
-
-    // Upsert profile name (email from auth)
-    const user_id = u.user.id;
-    const email = u.user.email;
-    const { error: e2 } = await sb.from("profiles").upsert({
-      user_id,
-      email,
-      name,
-      // keep existing role/department if already set; if not, default to viewer
-      role: "viewer",
-      is_active: true
-    }, { onConflict: "user_id" });
-    if(e2) return showErr(e2.message);
-
-    showErr("Saved. You can sign in now.");
-  };
-
-  $("btnLogout").onclick = async () => {
-    await sb.auth.signOut();
-    await onAuthChanged();
-  };
-
-  // ====== Modals ======
-  let occEditDate = null;
-  $("occClose").onclick = () => closeOccModal();
-  $("occCancel").onclick = () => closeOccModal();
-  $("occSave").onclick = async () => {
-    clearErr();
-    if(!occEditDate) return;
-    if(!canEditOccupancy(profile)) return showErr("You don’t have permission to edit occupancy.");
-
-    const pctRaw = $("occPct").value.trim();
-    const pct = pctRaw ? Number(pctRaw) : null;
-    if(pctRaw && (Number.isNaN(pct) || pct < 0 || pct > 100)) return showErr("Occupancy must be 0–100.");
-
-    const payload = {
-      date: occEditDate,                 // IMPORTANT: always send date
-      occupancy_pct: pct,
-      notes_short: $("occShort").value.trim() || null,
-      notes_long: $("occLong").value.trim() || null,
-      updated_by: currentUser.id,
-      updated_at: new Date().toISOString()
-    };
-
-    const { error } = await sb.from("daily_forecast").upsert(payload, { onConflict: "date" });
-    if(error) return showErr(error.message);
-
-    closeOccModal();
-    await loadAll();
-  };
-
-  function openOccModal(dateStr){
-    occEditDate = dateStr;
-    $("occModalTitle").textContent = "Edit occupancy — " + dateStr;
-
-    const row = forecastByDate.get(dateStr) || {};
-    $("occPct").value = (row.occupancy_pct ?? "") === null ? "" : (row.occupancy_pct ?? "");
-    $("occShort").value = row.notes_short ?? "";
-    $("occLong").value = row.notes_long ?? "";
-
-    $("occModalBack").classList.add("show");
+  // ====== Permissions ======
+  function canEditOccupancy(){
+    if (!profile) return false;
+    if (profile.role === "admin") return true;
+    return (profile.role === "user" && profile.department === "Guest Service");
   }
-  function closeOccModal(){
-    occEditDate = null;
-    $("occModalBack").classList.remove("show");
+  function canEditRestaurants(){
+    if (!profile) return false;
+    if (profile.role === "admin") return true;
+    return (profile.role === "user" && profile.department === "F&B");
+  }
+  function canEditMassimo(){
+    // Massimo is still F&B-managed in this simple version
+    return canEditRestaurants();
   }
 
-  // ====== Data loading ======
-  async function loadProfile(){
-    const { data } = await sb.auth.getUser();
-    currentUser = data?.user || null;
-    if(!currentUser) return null;
+  // ====== Date helpers ======
+  function toYMD(d){
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  function addDays(ymd, n){
+    const [y,m,d] = ymd.split("-").map(Number);
+    const dt = new Date(y, m-1, d);
+    dt.setDate(dt.getDate()+n);
+    return toYMD(dt);
+  }
+  function niceDay(ymd){
+    const [y,m,d] = ymd.split("-").map(Number);
+    const dt = new Date(y, m-1, d);
+    return dt.toLocaleDateString("en-CA", { weekday:"short", month:"short", day:"numeric" });
+  }
+  function torontoTime(iso){
+    if(!iso) return "";
+    try{
+      const dt = new Date(iso);
+      return new Intl.DateTimeFormat("en-CA",{
+        timeZone:"America/Toronto",
+        year:"numeric", month:"short", day:"2-digit",
+        hour:"2-digit", minute:"2-digit"
+      }).format(dt);
+    }catch{ return ""; }
+  }
 
-    const { data: p, error } = await sb.from("profiles")
-      .select("user_id,email,name,role,department,is_active")
-      .eq("user_id", currentUser.id)
+  // ====== Loaders ======
+  async function loadProfilesMap(){
+    const { data, error } = await sb.from("profiles").select("user_id,name");
+    if(error) throw error;
+    profilesMap = new Map((data||[]).map(r => [r.user_id, r.name || "Unknown"]));
+  }
+
+  async function loadMyProfile(){
+    const { data: ures } = await sb.auth.getUser();
+    me = ures?.user || null;
+    if(!me) return;
+
+    const { data, error } = await sb
+      .from("profiles")
+      .select("*")
+      .eq("user_id", me.id)
       .maybeSingle();
 
     if(error) throw error;
-    return p || null;
-  }
-
-  async function loadAll(){
-    clearErr();
-    if(!sb) return showErr("Supabase client not found. Make sure supabase.js is in the repo root.");
-
-    profile = await loadProfile();
+    profile = data || null;
 
     $("pillRole").textContent = "Role: " + (profile?.role || "—");
     $("pillDept").textContent = "Dept: " + (profile?.department || "—");
-    $("pillUser").textContent = "User: " + (profile?.name || currentUser?.email || "—");
+    $("pillUser").textContent = "User: " + (profile?.name || me.email || "—");
+  }
 
-    // Tabs / buttons
-    $("btnLogout").style.display = currentUser ? "inline-flex" : "none";
-    $("tabUsers").style.display = (profile?.role === "admin") ? "inline-flex" : "none";
+  async function loadServiceItems(){
+    const { data, error } = await sb
+      .from("service_items")
+      .select("id,name,group_name,sort_order")
+      .order("sort_order", { ascending:true });
 
-    // Build 7-day window
-    const dates = [];
-    for(let i=0;i<DAYS;i++) dates.push(addDays(startDate, i));
+    if(error) throw error;
 
-    // Service items
-    {
-      const { data, error } = await sb.from("service_items")
-        .select("id,name,group_name,sort_order")
-        .order("group_name", { ascending:true })
-        .order("sort_order", { ascending:true });
+    const all = data || [];
+    serviceItems = all.filter(x => ["breakfast","lunch","dinner"].includes(x.group_name));
+    massimoItems = all.filter(x => x.group_name === "massimo");
+  }
 
-      if(error) throw error;
-      serviceItems = data || [];
-    }
+  async function loadSelections(){
+    const fromDate = startDate;
+    const toDate = addDays(startDate, 6);
 
-    // Forecast
-    {
-      const { data, error } = await sb.from("daily_forecast")
-        .select("date,occupancy_pct,notes_short,notes_long,updated_at,updated_by_name")
-        .in("date", dates);
+    const svcQ = sb
+      .from("daily_service_selection")
+      .select("*")
+      .gte("date", fromDate)
+      .lte("date", toDate);
 
-      if(error) throw error;
-      forecastByDate = new Map((data || []).map(r => [r.date, r]));
-    }
+    const masQ = sb
+      .from("daily_massimo_status")
+      .select("*")
+      .gte("date", fromDate)
+      .lte("date", toDate);
 
-    // Restaurant selections (breakfast/lunch/dinner)
-    {
-      const { data, error } = await sb.from("daily_service_selection")
-        .select("date,group_name,service_item_id,updated_at,updated_by_name")
-        .in("date", dates);
+    const [{ data: svcData, error: svcErr }, { data: masData, error: masErr }] =
+      await Promise.all([svcQ, masQ]);
 
-      if(error) throw error;
-      selectionByKey = new Map((data || []).map(r => [`${r.date}|${r.group_name}`, r]));
-    }
+    if(svcErr) throw svcErr;
+    if(masErr) throw masErr;
 
-    // Massimo status
-    {
-      const { data, error } = await sb.from("daily_massimo_status")
-        .select("date,service_item_id,is_active,updated_at,updated_by_name")
-        .in("date", dates);
+    svcSel = svcData || [];
+    massimoRows = masData || [];
+  }
 
-      if(error) throw error;
-      massimoByKey = new Map((data || []).map(r => [`${r.date}|${r.service_item_id}`, r]));
-    }
+  async function loadForecast(){
+    const fromDate = startDate;
+    const toDate = addDays(startDate, 6);
 
-    // Outlets hours
-    {
-      const { data, error } = await sb.from("daily_outlet_hours")
-        .select("date,outlet_name,is_open,open_time,close_time,updated_at,updated_by_name")
-        .in("date", dates);
+    const { data, error } = await sb
+      .from("daily_forecast")
+      .select("*")
+      .gte("date", fromDate)
+      .lte("date", toDate);
 
-      if(error) throw error;
-      outletByKey = new Map((data || []).map(r => [`${r.date}|${r.outlet_name}`, r]));
-    }
+    if(error) throw error;
+    return data || [];
+  }
 
-    // Render correct tab
-    if($("tabUsers").classList.contains("active") && profile?.role === "admin"){
-      renderUsersAdmin();
-    } else {
-      $("tabDash").classList.add("active");
-      $("tabUsers").classList.remove("active");
-      renderDashboard();
+  // ====== Renderers ======
+  function buildDays(){
+    days = Array.from({length:7}).map((_,i)=>addDays(startDate,i));
+  }
+
+  async function renderOccupancy(){
+    const occ = await loadForecast();
+    const byDate = new Map(occ.map(r => [r.date, r]));
+    const wrap = $("occCards");
+    wrap.innerHTML = "";
+
+    for(const d of days){
+      const row = byDate.get(d) || null;
+      const pct = row?.occupancy_percent ?? row?.occupancy ?? null; // tolerate older column names if any
+      const pctText = (pct === null || pct === undefined) ? "—" : (Number(pct).toFixed(1) + "%");
+
+      const who = row?.updated_by ? (profilesMap.get(row.updated_by) || "Unknown") : "—";
+      const when = row?.updated_at ? torontoTime(row.updated_at) : "";
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="d1">${niceDay(d)}</div>
+        <div class="d2">${d}</div>
+        <div class="pct">${pctText}</div>
+        <div class="meta">Last update: ${escapeHtml(who)} ${when ? "• " + escapeHtml(when) : ""}</div>
+      `;
+      card.addEventListener("click", () => openOccModal(d, row));
+      wrap.appendChild(card);
     }
   }
 
-  // ====== Render Dashboard ======
-  function renderDashboard(){
-    const dates = [];
-    for(let i=0;i<DAYS;i++) dates.push(addDays(startDate, i));
-
-    appRoot.innerHTML = `
-      <div class="grid">
-        <div class="card">
-          <h3 class="sectionTitle">7-Day Occupancy Forecast</h3>
-          <div class="subtle">Click a day to edit (Guest Service or Admin).</div>
-          <div class="occRow" id="occRow"></div>
-        </div>
-
-        <div class="card">
-          <h3 class="sectionTitle">Restaurant Status</h3>
-          <div class="subtle">Dark green = active. Dark red = inactive. (F&B or Admin can edit.)</div>
-          <div class="tableWrap" style="margin-top:10px">
-            <table id="svcTable"></table>
-          </div>
-          <div class="hint">Tip: Double-click a green box to clear it (all red for that day/group). Massimo can have multiple greens.</div>
-        </div>
-
-        <div class="card">
-          <h3 class="sectionTitle">Lobby Bar & Outlets</h3>
-          <div class="subtle">Open/Closed + hours (Lobby Bar = F&B. Others = Outlets. Admin can edit all.)</div>
-          <div class="tableWrap" style="margin-top:10px">
-            <table id="outletTable"></table>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Occupancy row
-    const occRow = $("occRow");
-    occRow.innerHTML = dates.map(d => {
-      const row = forecastByDate.get(d);
-      const pct = row?.occupancy_pct;
-      const pctText = (pct === null || pct === undefined) ? "—" : (Number(pct).toFixed(1) + "%");
-      const meta = row?.updated_at ? `${row.updated_by_name || "—"} • ${fmtToronto(row.updated_at)}` : "—";
-      return `
-        <div class="occTile" data-date="${d}">
-          <div class="occTop">
-            <div>
-              <div class="occDay">${dayLabel(d)}</div>
-              <div class="occDate">${d}</div>
-            </div>
-          </div>
-          <div class="occPct">${pctText}</div>
-          <div class="occMeta">Last update: ${meta}</div>
-        </div>
-      `;
-    }).join("");
-
-    [...occRow.querySelectorAll(".occTile")].forEach(el => {
-      el.addEventListener("click", () => {
-        if(!canEditOccupancy(profile)) return showErr("No permission to edit occupancy.");
-        openOccModal(el.getAttribute("data-date"));
-      });
-    });
-
-    // Service table
-    const svcTable = $("svcTable");
-    const svcDatesHeader = dates.map(d => `<th>${dayLabel(d)}<div class="subtle">${d}</div></th>`).join("");
+  function renderServiceGrid(){
+    const container = $("svcWrap");
+    container.innerHTML = "";
 
     const groups = [
-      { key:"breakfast", title:"BREAKFAST", mode:"single" },
-      { key:"lunch", title:"LUNCH", mode:"single" },
-      { key:"dinner", title:"DINNER", mode:"single" },
-      { key:"massimo", title:"MASSIMO", mode:"multi" },
+      { key:"breakfast", label:"BREAKFAST" },
+      { key:"lunch",     label:"LUNCH" },
+      { key:"dinner",    label:"DINNER" }
     ];
 
-    const rowsHtml = groups.map(g => {
-      const items = serviceItems.filter(x => x.group_name === g.key).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-
-      const headerRow = `
-        <tr class="groupHeader">
-          <td colspan="${1+dates.length}">${g.title}</td>
-        </tr>
-      `;
-
-      const itemRows = items.map(item => {
-        const cells = dates.map(d => {
-          const updated = getServiceUpdatedInfo(d, g.key, item.id);
-          const isGreen = isServiceGreen(d, g.key, item.id);
-          const cls = isGreen ? "green" : "red";
-          const infoLeft = updated.name || "—";
-          const infoRight = updated.at ? fmtToronto(updated.at) : "—";
-          return `
-            <td>
-              <div class="tile ${cls}" data-group="${g.key}" data-mode="${g.mode}" data-date="${d}" data-item="${item.id}">
-                <div class="tileInfo">
-                  <span>${infoLeft}</span>
-                  <span>${infoRight}</span>
-                </div>
-              </div>
-            </td>
-          `;
-        }).join("");
-
-        return `
-          <tr>
-            <td class="svcName">${item.name}</td>
-            ${cells}
-          </tr>
-        `;
-      }).join("");
-
-      return headerRow + itemRows;
-    }).join("");
-
-    svcTable.innerHTML = `
-      <thead>
-        <tr>
-          <th style="min-width:280px">Service</th>
-          ${svcDatesHeader}
-        </tr>
-      </thead>
-      <tbody>${rowsHtml}</tbody>
-    `;
-
-    // Click handlers for service tiles
-    [...svcTable.querySelectorAll(".tile")].forEach(tile => {
-      let clickTimer = null;
-      tile.addEventListener("click", (e) => {
-        // single click = set green (or toggle for massimo)
-        if(clickTimer) return;
-        clickTimer = setTimeout(async () => {
-          clickTimer = null;
-          await onServiceClick(tile, false);
-        }, 200);
-      });
-      tile.addEventListener("dblclick", async () => {
-        // double click = clear (turn all red for that day/group)
-        if(clickTimer){ clearTimeout(clickTimer); clickTimer=null; }
-        await onServiceClick(tile, true);
-      });
-    });
-
-    // Outlet table
-    const outletTable = $("outletTable");
-    outletTable.innerHTML = `
-      <thead>
-        <tr>
-          <th style="min-width:240px">Outlet</th>
-          ${svcDatesHeader}
-        </tr>
-      </thead>
-      <tbody>
-        ${OUTLETS.map(o => {
-          const cells = dates.map(d => {
-            const row = outletByKey.get(`${d}|${o.key}`);
-            const isOpen = !!row?.is_open;
-            const cls = isOpen ? "green" : "red";
-
-            const infoLeft = row?.updated_by_name || "—";
-            const infoRight = row?.updated_at ? fmtToronto(row.updated_at) : "—";
-            const hours = isOpen ? `${row?.open_time || "?"}–${row?.close_time || "?"}` : "Closed";
-
-            return `
-              <td>
-                <div class="tile ${cls}" data-outlet="${o.key}" data-date="${d}">
-                  <div class="tileInfo">
-                    <span>${hours}</span>
-                    <span>${infoRight}</span>
-                  </div>
-                </div>
-                <div class="subtle" style="margin-top:6px">${infoLeft}</div>
-              </td>
-            `;
-          }).join("");
-
-          return `
-            <tr>
-              <td class="svcName">${o.key} <span class="subtle">(${o.editDept})</span></td>
-              ${cells}
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    `;
-
-    [...outletTable.querySelectorAll(".tile")].forEach(tile => {
-      tile.addEventListener("click", async () => {
-        const outlet = tile.getAttribute("data-outlet");
-        const date = tile.getAttribute("data-date");
-        await editOutletDay(outlet, date);
-      });
-    });
-  }
-
-  function getServiceUpdatedInfo(date, group, itemId){
-    if(group === "massimo"){
-      const r = massimoByKey.get(`${date}|${itemId}`);
-      return { name: r?.updated_by_name || "—", at: r?.updated_at || null };
+    const selectedByDateGroup = new Map();
+    // daily_service_selection: one row per (date, group_name) with service_item_id
+    for(const r of svcSel){
+      selectedByDateGroup.set(`${r.date}::${r.group_name}`, r);
     }
-    const sel = selectionByKey.get(`${date}|${group}`);
-    // show who/when on every tile in that group (since only one selection per day)
-    return { name: sel?.updated_by_name || "—", at: sel?.updated_at || null };
-  }
 
-  function isServiceGreen(date, group, itemId){
-    if(group === "massimo"){
-      const r = massimoByKey.get(`${date}|${itemId}`);
-      return !!r?.is_active;
+    for(const g of groups){
+      const hdr = document.createElement("div");
+      hdr.className = "groupHeader";
+      hdr.textContent = g.label;
+      container.appendChild(hdr);
+
+      const tbl = document.createElement("table");
+      tbl.className = "statusGrid";
+
+      // header row
+      const thead = document.createElement("thead");
+      const hr = document.createElement("tr");
+      const th0 = document.createElement("th");
+      th0.textContent = "Service";
+      hr.appendChild(th0);
+      for(const d of days){
+        const th = document.createElement("th");
+        th.innerHTML = `${escapeHtml(niceDay(d))}<div class="small">${escapeHtml(d)}</div>`;
+        hr.appendChild(th);
+      }
+      thead.appendChild(hr);
+      tbl.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      const rows = serviceItems.filter(x => x.group_name === g.key);
+
+      for(const item of rows){
+        const tr = document.createElement("tr");
+        const tdName = document.createElement("td");
+        tdName.textContent = item.name;
+        tr.appendChild(tdName);
+
+        for(const d of days){
+          const td = document.createElement("td");
+
+          const selRow = selectedByDateGroup.get(`${d}::${g.key}`) || null;
+          const isGreen = selRow && selRow.service_item_id === item.id;
+
+          const who = selRow?.updated_by ? (profilesMap.get(selRow.updated_by) || "Unknown") : "—";
+          const when = selRow?.updated_at ? torontoTime(selRow.updated_at) : "";
+
+          const box = document.createElement("div");
+          box.className = "box " + (isGreen ? "green" : "red");
+
+          // tooltip
+          box.title = isGreen
+            ? `Updated by ${who}${when ? " • " + when : ""} (double-click to clear)`
+            : "Click to set active";
+
+          const editable = canEditRestaurants();
+          if(!editable){
+            box.classList.add("disabled");
+          } else {
+            // Single click: set it active
+            box.addEventListener("click", () => setServiceSelection(d, g.key, item.id));
+            // Double click on green: clear selection (closed)
+            box.addEventListener("dblclick", () => {
+              if(isGreen) clearServiceSelection(d, g.key);
+            });
+          }
+
+          td.appendChild(box);
+          tr.appendChild(td);
+        }
+
+        tbody.appendChild(tr);
+      }
+
+      tbl.appendChild(tbody);
+      container.appendChild(tbl);
+
+      const note = document.createElement("div");
+      note.className = "hint";
+      note.style.marginTop = "8px";
+      note.textContent = "Tip: green means the selected option for that day. If all red, that meal period is effectively closed.";
+      container.appendChild(note);
     }
-    const sel = selectionByKey.get(`${date}|${group}`);
-    return sel?.service_item_id === itemId;
   }
 
-  async function onServiceClick(tile, isDouble){
+  function renderMassimoGrid(){
+    const container = $("massimoWrap");
+    container.innerHTML = "";
+
+    const byDateItem = new Map();
+    for(const r of massimoRows){
+      byDateItem.set(`${r.date}::${r.service_item_id}`, r);
+    }
+
+    const tbl = document.createElement("table");
+    tbl.className = "statusGrid";
+
+    const thead = document.createElement("thead");
+    const hr = document.createElement("tr");
+    const th0 = document.createElement("th");
+    th0.textContent = "Service";
+    hr.appendChild(th0);
+    for(const d of days){
+      const th = document.createElement("th");
+      th.innerHTML = `${escapeHtml(niceDay(d))}<div class="small">${escapeHtml(d)}</div>`;
+      hr.appendChild(th);
+    }
+    thead.appendChild(hr);
+    tbl.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    for(const item of massimoItems){
+      const tr = document.createElement("tr");
+      const tdName = document.createElement("td");
+      tdName.textContent = item.name;
+      tr.appendChild(tdName);
+
+      for(const d of days){
+        const td = document.createElement("td");
+        const row = byDateItem.get(`${d}::${item.id}`) || null;
+        const isGreen = !!(row && row.is_active === true);
+
+        const who = row?.updated_by ? (profilesMap.get(row.updated_by) || "Unknown") : "—";
+        const when = row?.updated_at ? torontoTime(row.updated_at) : "";
+
+        const box = document.createElement("div");
+        box.className = "box " + (isGreen ? "green" : "red");
+        box.title = isGreen
+          ? `Updated by ${who}${when ? " • " + when : ""} (click to turn off)`
+          : "Click to turn on";
+
+        const editable = canEditMassimo();
+        if(!editable){
+          box.classList.add("disabled");
+        } else {
+          box.addEventListener("click", () => toggleMassimo(d, item.id, !isGreen));
+        }
+
+        td.appendChild(box);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    }
+
+    tbl.appendChild(tbody);
+    container.appendChild(tbl);
+  }
+
+  // ====== Actions ======
+  async function setServiceSelection(date, group, serviceItemId){
     clearErr();
-    if(!canEditRestaurants(profile)) return showErr("No permission to edit restaurant status.");
+    try{
+      // Upsert row for that date+group_name with the selected service_item_id
+      const payload = { date, group_name: group, service_item_id: serviceItemId };
+      const { error } = await sb
+        .from("daily_service_selection")
+        .upsert(payload, { onConflict: "date,group_name" });
 
-    const date = tile.getAttribute("data-date");
-    const group = tile.getAttribute("data-group");
-    const mode = tile.getAttribute("data-mode");
-    const itemId = tile.getAttribute("data-item");
+      if(error) throw error;
 
-    // Massimo: multi select (toggle)
-    if(mode === "multi"){
-      const key = `${date}|${itemId}`;
-      const current = massimoByKey.get(key);
-      const next = isDouble ? false : !current?.is_active;
-
-      const payload = {
-        date,                     // IMPORTANT: always send date
-        service_item_id: itemId,  // IMPORTANT
-        is_active: next,
-        updated_by: currentUser.id,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await sb.from("daily_massimo_status")
-        .upsert(payload, { onConflict:"date,service_item_id" });
-
-      if(error) return showErr(error.message);
-      await loadAll();
-      return;
+      await refreshAll();
+    }catch(e){
+      showErr("Restaurant update failed:\n" + (e?.message || JSON.stringify(e)));
     }
+  }
 
-    // Breakfast/Lunch/Dinner: single selection per day
-    if(isDouble){
-      // clear = delete selection row for that day/group
-      const { error } = await sb.from("daily_service_selection")
+  async function clearServiceSelection(date, group){
+    clearErr();
+    try{
+      // Clearing means: no green at all (closed). We delete the row for that date+group.
+      const { error } = await sb
+        .from("daily_service_selection")
         .delete()
         .eq("date", date)
         .eq("group_name", group);
 
-      if(error) return showErr(error.message);
-      await loadAll();
-      return;
-    } else {
-      // set selection
-      const payload = {
-        date,                 // IMPORTANT
-        group_name: group,
-        service_item_id: itemId,
-        updated_by: currentUser.id,
-        updated_at: new Date().toISOString()
-      };
+      if(error) throw error;
 
-      const { error } = await sb.from("daily_service_selection")
-        .upsert(payload, { onConflict:"date,group_name" });
-
-      if(error) return showErr(error.message);
-      await loadAll();
+      await refreshAll();
+    }catch(e){
+      showErr("Clear selection failed:\n" + (e?.message || JSON.stringify(e)));
     }
   }
 
-  async function editOutletDay(outletName, date){
+  async function toggleMassimo(date, serviceItemId, isActive){
     clearErr();
+    try{
+      const payload = { date, service_item_id: serviceItemId, is_active: isActive };
+      const { error } = await sb
+        .from("daily_massimo_status")
+        .upsert(payload, { onConflict: "date,service_item_id" });
 
-    // permission: lobby bar is F&B, others outlets, admin all
-    const outletDef = OUTLETS.find(x => x.key === outletName);
-    const deptNeeded = outletDef?.editDept;
+      if(error) throw error;
 
-    const allowed = (profile?.role === "admin")
-      || (profile?.role === "user" && profile?.department === deptNeeded);
-
-    if(!allowed) return showErr("No permission to edit this outlet.");
-
-    const existing = outletByKey.get(`${date}|${outletName}`) || null;
-
-    const isOpen = confirm(`${outletName} on ${date}\n\nOK = Open\nCancel = Closed`);
-    let open_time = null, close_time = null;
-
-    if(isOpen){
-      open_time = prompt("Open time (e.g., 07:00 or 7:00 AM)", existing?.open_time || "");
-      if(!open_time) return showErr("If open, you must enter open time.");
-      close_time = prompt("Close time (e.g., 22:00 or 10:00 PM)", existing?.close_time || "");
-      if(!close_time) return showErr("If open, you must enter close time.");
+      await refreshAll();
+    }catch(e){
+      showErr("Massimo update failed:\n" + (e?.message || JSON.stringify(e)));
     }
-
-    const payload = {
-      date,                 // IMPORTANT
-      outlet_name: outletName,
-      is_open: isOpen,
-      open_time,
-      close_time,
-      updated_by: currentUser.id,
-      updated_at: new Date().toISOString()
-    };
-
-    const { error } = await sb.from("daily_outlet_hours")
-      .upsert(payload, { onConflict:"date,outlet_name" });
-
-    if(error) return showErr(error.message);
-    await loadAll();
   }
 
-  // ====== Users Admin ======
-  async function renderUsersAdmin(){
-    if(profile?.role !== "admin"){
-      $("tabDash").click();
+  // Occupancy modal
+  let occEditingDate = null;
+
+  function openOccModal(date, row){
+    clearErr();
+    if(!canEditOccupancy()){
+      showErr("You do not have permission to edit occupancy (Guest Service + Admin only).");
       return;
     }
+
+    occEditingDate = date;
+    $("modalTitle").textContent = `Edit occupancy — ${date}`;
+
+    // Prefill from last entry
+    const pct = row?.occupancy_percent ?? row?.occupancy ?? "";
+    $("occPct").value = (pct === null || pct === undefined) ? "" : pct;
+    $("occShort").value = row?.notes_short ?? "";
+    $("occLong").value = row?.notes_long ?? "";
+
+    $("modalBack").style.display = "flex";
+  }
+
+  function closeOccModal(){
+    $("modalBack").style.display = "none";
+    occEditingDate = null;
+  }
+
+  async function saveOcc(){
     clearErr();
+    try{
+      if(!occEditingDate) return;
+      const date = occEditingDate;
 
-    const { data: users, error } = await sb.from("profiles")
-      .select("user_id,email,name,role,department,is_active")
-      .order("name", { ascending:true });
+      const pct = $("occPct").value.trim();
+      const shortN = $("occShort").value.trim();
+      const longN = $("occLong").value.trim();
 
-    if(error) return showErr(error.message);
-
-    appRoot.innerHTML = `
-      <div class="grid">
-        <div class="card">
-          <h3 class="sectionTitle">Admin – Users</h3>
-          <div class="subtle">Select a user, then update name / role / department. (No UID shown.)</div>
-
-          <div style="margin-top:12px" class="row">
-            <div style="flex: 2 1 320px">
-              <label>Select user</label>
-              <select id="userPick">
-                <option value="">— choose —</option>
-                ${(users||[]).map(u => `<option value="${u.user_id}">${(u.name||u.email)} — ${u.email}</option>`).join("")}
-              </select>
-            </div>
-            <div>
-              <label>Role</label>
-              <select id="uRole">
-                <option value="admin">admin</option>
-                <option value="user">user</option>
-                <option value="viewer">viewer</option>
-              </select>
-            </div>
-            <div>
-              <label>Department</label>
-              <select id="uDept">
-                <option value="">(none)</option>
-                <option value="Guest Service">Guest Service</option>
-                <option value="F&B">F&amp;B</option>
-                <option value="Outlets">Outlets</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:10px" class="row">
-            <div style="flex:2 1 320px">
-              <label>Full name</label>
-              <input id="uName" type="text" placeholder="Full name" />
-            </div>
-            <div>
-              <label>Active</label>
-              <select id="uActive">
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
-            <button class="btn" id="btnUserSave">Save changes</button>
-            <button class="btn secondary" id="btnUserReload">Reload list</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3 class="sectionTitle">Current users</h3>
-          <div class="tableWrap" style="margin-top:10px">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Active</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(users||[]).map(u => `
-                  <tr>
-                    <td>${u.name || "—"}</td>
-                    <td>${u.email || "—"}</td>
-                    <td>${u.role || "—"}</td>
-                    <td>${u.department || "—"}</td>
-                    <td>${String(u.is_active)}</td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const userPick = $("userPick");
-    function fill(u){
-      $("uName").value = u?.name || "";
-      $("uRole").value = u?.role || "viewer";
-      $("uDept").value = u?.department || "";
-      $("uActive").value = String(!!u?.is_active);
-    }
-
-    userPick.addEventListener("change", () => {
-      const uid = userPick.value;
-      const u = (users||[]).find(x => x.user_id === uid);
-      fill(u);
-    });
-
-    $("btnUserReload").onclick = () => loadAll().catch(e => showErr(e?.message || String(e)));
-
-    $("btnUserSave").onclick = async () => {
-      clearErr();
-      const uid = userPick.value;
-      if(!uid) return showErr("Pick a user first.");
-
+      // ALWAYS include date (fixes your null date issue)
       const payload = {
-        user_id: uid,
-        name: $("uName").value.trim() || null,
-        role: $("uRole").value,
-        department: $("uDept").value || null,
-        is_active: $("uActive").value === "true",
-        updated_at: new Date().toISOString()
+        date,
+        occupancy_percent: pct === "" ? null : Number(pct),
+        notes_short: shortN === "" ? null : shortN,
+        notes_long: longN === "" ? null : longN
       };
 
-      const { error } = await sb.from("profiles").upsert(payload, { onConflict:"user_id" });
-      if(error) return showErr(error.message);
+      const { error } = await sb
+        .from("daily_forecast")
+        .upsert(payload, { onConflict: "date" });
 
-      await loadAll();
-      $("tabUsers").click();
-    };
+      if(error) throw error;
+
+      closeOccModal();
+      await refreshAll();
+    }catch(e){
+      showErr("Occupancy save failed:\n" + (e?.message || JSON.stringify(e)));
+    }
   }
 
-  // ====== PDF Snapshot (print window) ======
-  function openPdfSnapshot(){
+  // ====== Boot / Refresh ======
+  async function refreshAll(){
     clearErr();
-    const dates = [];
-    for(let i=0;i<DAYS;i++) dates.push(addDays(startDate, i));
 
-    function pickSingleGroup(groupKey, title){
-      const items = serviceItems.filter(x => x.group_name === groupKey).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-      return dates.map(d => {
-        const sel = selectionByKey.get(`${d}|${groupKey}`);
-        if(!sel?.service_item_id){
-          return `<tr><td>${d}</td><td><b>${title} closed</b></td></tr>`;
-        }
-        const chosen = items.find(i => i.id === sel.service_item_id);
-        return `<tr><td>${d}</td><td>${chosen?.name || "—"}</td></tr>`;
-      }).join("");
-    }
+    // Build days
+    buildDays();
 
-    function pickMassimo(){
-      const items = serviceItems.filter(x => x.group_name === "massimo").sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-      return dates.map(d => {
-        const actives = items.filter(i => massimoByKey.get(`${d}|${i.id}`)?.is_active);
-        const text = actives.length ? actives.map(a => a.name).join(", ") : "Massimo closed";
-        return `<tr><td>${d}</td><td>${text}</td></tr>`;
-      }).join("");
-    }
+    // Load everything we need
+    await loadProfilesMap();
+    await loadServiceItems();
+    await loadSelections();
 
-    function outletLines(){
-      return OUTLETS.map(o => {
-        const lines = dates.map(d => {
-          const r = outletByKey.get(`${d}|${o.key}`);
-          const open = !!r?.is_open;
-          const txt = open ? `Open (${r?.open_time || "?"}–${r?.close_time || "?"})` : "Closed";
-          return `<tr><td>${d}</td><td>${txt}</td></tr>`;
-        }).join("");
-        return `
-          <h3>${o.key}</h3>
-          <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${lines}</tbody></table>
-        `;
-      }).join("");
-    }
-
-    const occLines = dates.map(d => {
-      const r = forecastByDate.get(d);
-      const pct = (r?.occupancy_pct === null || r?.occupancy_pct === undefined) ? "—" : (Number(r.occupancy_pct).toFixed(1) + "%");
-      const ns = r?.notes_short ? ` — ${escapeHtml(r.notes_short)}` : "";
-      return `<tr><td>${d}</td><td>${pct}${ns}</td></tr>`;
-    }).join("");
-
-    const html = `
-      <!doctype html>
-      <html><head>
-        <meta charset="utf-8">
-        <title>7-Day Snapshot</title>
-        <style>
-          body{font-family:Arial, sans-serif; padding:18px}
-          h1{margin:0 0 6px 0}
-          .sub{color:#555; margin:0 0 16px 0}
-          table{border-collapse:collapse; width:100%; margin:8px 0 18px 0}
-          th,td{border:1px solid #ccc; padding:8px; text-align:left; font-size:12px}
-          th{background:#f2f2f2}
-          h2{margin:18px 0 6px 0}
-          h3{margin:14px 0 6px 0}
-        </style>
-      </head>
-      <body>
-        <h1>Sheraton Niagara Falls – 7-Day Snapshot</h1>
-        <p class="sub">Start date: ${startDate} • Generated: ${new Date().toLocaleString("en-CA",{timeZone:TZ})} (Toronto time)</p>
-
-        <h2>Occupancy</h2>
-        <table><thead><tr><th>Date</th><th>Forecast</th></tr></thead><tbody>${occLines}</tbody></table>
-
-        <h2>Restaurants</h2>
-        <h3>Breakfast</h3>
-        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickSingleGroup("breakfast","Breakfast")}</tbody></table>
-
-        <h3>Lunch</h3>
-        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickSingleGroup("lunch","Lunch")}</tbody></table>
-
-        <h3>Dinner</h3>
-        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickSingleGroup("dinner","Dinner")}</tbody></table>
-
-        <h3>Massimo</h3>
-        <table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>${pickMassimo()}</tbody></table>
-
-        <h2>Lobby Bar & Outlets</h2>
-        ${outletLines()}
-
-        <script>
-          window.onload = () => setTimeout(() => window.print(), 200);
-        </script>
-      </body></html>
-    `;
-
-    const w = window.open("", "_blank");
-    if(!w) return showErr("Pop-up blocked. Allow pop-ups for this site.");
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
+    // Render
+    await renderOccupancy();
+    renderServiceGrid();
+    renderMassimoGrid();
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function startApp(){
+    clearErr();
+    // start date default today
+    if(!startDate){
+      startDate = toYMD(new Date());
+    }
+    $("startDate").value = startDate;
+
+    await loadMyProfile();
+
+    // If profile is inactive, block edits but still allow view
+    if(profile && profile.is_active === false){
+      showErr("Your account is marked inactive. Contact an admin.");
+    }
+
+    await refreshAll();
   }
 
-  // ====== Boot ======
-  async function onAuthChanged(){
+  // ====== Events ======
+  $("btnToday").addEventListener("click", async () => {
+    startDate = toYMD(new Date());
+    $("startDate").value = startDate;
+    await refreshAll();
+  });
+
+  $("btnRefresh").addEventListener("click", async () => {
+    startDate = $("startDate").value || startDate;
+    await refreshAll();
+  });
+
+  $("startDate").addEventListener("change", async () => {
+    startDate = $("startDate").value || startDate;
+    await refreshAll();
+  });
+
+  $("btnLogout").addEventListener("click", async () => {
+    clearErr();
+    await sb.auth.signOut();
+  });
+
+  $("btnSignIn").addEventListener("click", async () => {
+    clearErr();
+    try{
+      const email = $("authEmail").value.trim();
+      const password = $("authPass").value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+    }catch(e){
+      showErr("Login failed:\n" + (e?.message || JSON.stringify(e)));
+    }
+  });
+
+  $("btnCloseModal").addEventListener("click", closeOccModal);
+  $("modalBack").addEventListener("click", (ev) => {
+    if(ev.target === $("modalBack")) closeOccModal();
+  });
+  $("btnSaveOcc").addEventListener("click", saveOcc);
+
+  // ====== Auth routing ======
+  async function route(){
     clearErr();
     const { data } = await sb.auth.getUser();
     const user = data?.user || null;
 
     if(!user){
-      authRoot.style.display = "flex";
-      appRoot.style.display = "none";
+      $("authRoot").style.display = "block";
+      $("appRoot").style.display = "none";
+      $("pillRole").textContent = "Role: —";
+      $("pillDept").textContent = "Dept: —";
+      $("pillUser").textContent = "User: —";
       return;
     }
-    authRoot.style.display = "none";
-    appRoot.style.display = "block";
 
-    startDate = $("startDate").value || startDate;
-    await loadAll();
+    $("authRoot").style.display = "none";
+    $("appRoot").style.display = "block";
+    startApp().catch(e => showErr(e?.message || String(e)));
   }
 
-  // Guard: no supabase
-  if(!sb){
-    authRoot.style.display = "flex";
-    appRoot.style.display = "none";
-    showErr("Supabase client not found. Make sure supabase.js is in the repo root.");
-    return;
-  }
+  sb.auth.onAuthStateChange(() => route());
+  route().catch(e => showErr(e?.message || String(e)));
 
-  sb.auth.onAuthStateChange(() => onAuthChanged());
-  onAuthChanged().catch(e => showErr(e?.message || String(e)));
+  // ====== tiny utility ======
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"]/g, c => (
+      c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : "&quot;"
+    ));
+  }
 })();
 </script>
+
 </body>
-</html>    
+</html>
