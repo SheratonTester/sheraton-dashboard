@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>F&B Outlets (Grid)</title>
+  <title>F&B Outlets</title>
 
   <style>
     :root{
@@ -19,6 +19,7 @@
       --greenSoft: rgba(22,163,74,.12);
       --red:#dc2626;
       --redSoft: rgba(220,38,38,.10);
+      --blue:#2563eb;
     }
     *{ box-sizing:border-box; }
     body{
@@ -52,10 +53,12 @@
       margin-bottom:12px;
     }
     .controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
     input[type="date"]{
       border:1px solid var(--line); border-radius:12px;
       padding:10px 12px; font-size:13px; outline:none; background:#fff;
     }
+
     button, a.btnlink{
       border:1px solid var(--line); background:#fff; color:var(--text);
       padding:10px 12px; border-radius:12px; font-size:13px; cursor:pointer;
@@ -67,6 +70,11 @@
     }
     button:hover, a.btnlink:hover{ background:#f8fafc; }
     button:active, a.btnlink:active{ transform: translateY(1px); }
+    .primary{
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: transparent; color:#fff; font-weight:650;
+    }
+    .primary:hover{ background: linear-gradient(135deg, #1d4ed8, #1e40af); }
     .small{ padding:8px 10px; border-radius:10px; font-size:12px; }
     .muted-btn{ color:var(--muted); }
 
@@ -308,7 +316,7 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>F&B Outlets</h1>
-        <div class="subtitle">Single click = select. Double click a green cell to clear it back to red.</div>
+        <div class="subtitle">Single click = select. Double click a green cell to clear it back to red. Auto-saves.</div>
       </div>
     </div>
 
@@ -333,7 +341,6 @@
       <span class="status"><span class="dot" id="dotState"></span><span id="statusText">Loading…</span></span>
       <span class="pill" id="rangeLabel"></span>
       <span class="pill" id="savingPill" style="display:none;">Saving…</span>
-      <button class="small" id="btnPdf">Download PDF snapshot</button>
     </div>
   </div>
 
@@ -371,7 +378,7 @@
           <strong>Outlets</strong>
           <span>Lobby Bar is on top. If open, times are required.</span>
         </div>
-        <div class="hint">Outlets always open a time/notes editor.</div>
+        <div class="hint">Outlets open a time/notes editor.</div>
       </div>
       <div class="error" id="errorBoxOutlets"></div>
 
@@ -425,18 +432,14 @@
     </div>
     <div class="modal-foot">
       <button class="muted-btn" id="btnModalCancel">Cancel</button>
-      <button class="btnlink primary" id="btnModalSave" style="border:0;">Save</button>
+      <button class="primary" id="btnModalSave">Save</button>
     </div>
   </div>
 </div>
 
-<!-- IMPORTANT: scripts load at the END -->
-<script src="vendor/supabase-js.iife.min.js"></script>
-<script src="supabase.js"></script>
-<script src="app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
+<!-- Scripts (order matters) -->
+<script src="./vendor/supabase-js.iife.min.js?v=5"></script>
+<script src="./supabase.js?v=5"></script>
 <script>
 (() => {
   const TZ = "America/Toronto";
@@ -467,6 +470,15 @@
     b.style.display = "none";
   }
 
+  async function waitForSB(){
+    const start = Date.now();
+    while(!window.sb){
+      if(Date.now() - start > 5000) break;
+      await new Promise(r => setTimeout(r, 50));
+    }
+    if(!window.sb) throw new Error("Supabase client not loaded (window.sb). Check ./supabase.js and vendor file paths.");
+  }
+
   function parseISODate(iso){
     const [y,m,d] = iso.split("-").map(Number);
     return new Date(Date.UTC(y, m-1, d, 12, 0, 0));
@@ -494,15 +506,6 @@
     return `${y}-${m}-${d}`;
   }
 
-  async function waitForSB(){
-    const start = Date.now();
-    while(!window.sb){
-      if(Date.now() - start > 4000) break;
-      await new Promise(r => setTimeout(r, 50));
-    }
-    if(!window.sb) throw new Error("Supabase client not found (window.sb). Check supabase.js.");
-  }
-
   function normMealGroup(s){
     const t = String(s || "").trim().toLowerCase();
     if(t === "breakfast" || t === "lunch" || t === "dinner") return t;
@@ -517,8 +520,8 @@
     days: [],
     services: [],
     outlets: [],
-    svcMap: new Map(), // key: date|meal_group(norm)
-    outMap: new Map(), // key: date|outlet_id
+    svcMap: new Map(),
+    outMap: new Map(),
     saving: 0,
     modal: null
   };
@@ -530,8 +533,8 @@
   ];
   const MASSIMO_GROUPS = [
     { label:"Breakfast", key:"massimo_breakfast", item_name:"MASSIMO BREAKFAST" },
-    { label:"Lunch",     key:"massimo_lunch",     item_name:"MASSIMO LUNCH" },
-    { label:"Dinner",    key:"massimo_dinner",    item_name:"MASSIMO DINNER" }
+    { label:"Lunch",     key:"massimo_lunch", item_name:"MASSIMO LUNCH" },
+    { label:"Dinner",    key:"massimo_dinner", item_name:"MASSIMO DINNER" }
   ];
 
   function keySvc(dateISO, mealGroupKey){ return `${dateISO}|${mealGroupKey}`; }
@@ -555,6 +558,7 @@
     if(error) throw error;
     return data.session?.user || null;
   }
+
   async function loadProfile(userId){
     const { data, error } = await window.sb
       .from("profiles")
@@ -604,12 +608,7 @@
   function ensureSvc(dateISO, mealGroupKey){
     const k = keySvc(dateISO, mealGroupKey);
     if(!state.svcMap.has(k)){
-      state.svcMap.set(k, {
-        service_date: dateISO,
-        meal_group: mealGroupKey,
-        service_item_id: null,
-        notes: ""
-      });
+      state.svcMap.set(k, { service_date: dateISO, meal_group: mealGroupKey, service_item_id: null, notes: "" });
     }
     return state.svcMap.get(k);
   }
@@ -618,12 +617,8 @@
     const k = keyOut(dateISO, outletId);
     if(!state.outMap.has(k)){
       state.outMap.set(k, {
-        outlet_date: dateISO,
-        outlet_item_id: outletId,
-        is_open: false,
-        open_time: null,
-        close_time: null,
-        notes: ""
+        outlet_date: dateISO, outlet_item_id: outletId,
+        is_open: false, open_time: null, close_time: null, notes: ""
       });
     }
     return state.outMap.get(k);
@@ -679,7 +674,6 @@
       th.textContent = headers[i];
       tr.appendChild(th);
     }
-
     thead.appendChild(tr);
     table.appendChild(thead);
 
@@ -692,14 +686,8 @@
     const btn = document.createElement("div");
     btn.className = "cellbtn " + (selected ? "green" : "red");
     btn.innerHTML = `<div><div>${label || ""}</div>${subText ? `<div class="tiny">${subText}</div>` : ""}</div>`;
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      onClick && onClick();
-    });
-    btn.addEventListener("dblclick", (e) => {
-      e.preventDefault();
-      onDblClick && onDblClick();
-    });
+    btn.addEventListener("click", (e) => { e.preventDefault(); onClick && onClick(); });
+    btn.addEventListener("dblclick", (e) => { e.preventDefault(); onDblClick && onDblClick(); });
     return btn;
   }
 
@@ -781,7 +769,6 @@
           selected: isSelected,
           label: isSelected ? "Selected" : "Not selected",
           onClick: async () => {
-            // single click selects (even if already selected)
             if(rec.service_item_id !== opt.id){
               rec.service_item_id = opt.id;
               renderMealSheet(containerId, group);
@@ -789,7 +776,6 @@
             }
           },
           onDblClick: async () => {
-            // double click on green clears back to red
             if(rec.service_item_id === opt.id){
               rec.service_item_id = null;
               renderMealSheet(containerId, group);
@@ -837,12 +823,11 @@
           selected,
           label: selected ? "On" : "Off",
           onClick: async () => {
-            rec.service_item_id = selected ? null : item.id; // toggle
+            rec.service_item_id = selected ? null : item.id;
             renderMassimoSheet();
             await saveServiceOne(day.iso, row.key);
           },
           onDblClick: async () => {
-            // double click also clears if on
             if(rec.service_item_id === item.id){
               rec.service_item_id = null;
               renderMassimoSheet();
@@ -935,11 +920,10 @@
     location.href = "index.html";
   }
 
-  // ---- Outlet modal logic ----
+  // Outlet modal
   function openOutletModal(outlet, day){
     clrErr("errorBoxModal");
-
-    state.modal = { outletId: outlet.id, dateISO: day.iso };
+    state.modal = { outletId: outlet.id, dateISO: day.iso, outletName: outlet.name, dayLabel: day.label };
 
     $("modalTitle").textContent = outlet.name;
     $("modalSub").textContent = `${day.label} (${day.iso})`;
@@ -1007,67 +991,18 @@
     rec.notes = notes;
 
     closeOutletModal();
-
-    const lobby = state.outlets.find(o => String(o.name || "").toLowerCase() === "lobby bar");
-    const others = state.outlets.filter(o => !lobby || o.id !== lobby.id);
-    renderOutletsSheet("sheetLobbyBar", lobby ? [lobby] : []);
-    renderOutletsSheet("sheetOutlets", others);
-
+    renderAll();
     await saveOutletOne(dateISO, outletId);
-  }
-
-  async function downloadPdf(){
-    setBusy("Preparing PDF…");
-    await new Promise(r => setTimeout(r, 60));
-
-    const canvas = await window.html2canvas(document.querySelector(".wrap"), {
-      backgroundColor: "#ffffff",
-      scale: 2,
-      useCORS: true
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "pt", "letter");
-
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-
-    const imgW = pageW;
-    const imgH = canvas.height * (imgW / canvas.width);
-
-    let y = 0;
-    let remaining = imgH;
-
-    while(remaining > 0){
-      pdf.addImage(imgData, "PNG", 0, y, imgW, imgH);
-      remaining -= pageH;
-      if(remaining > 0){
-        pdf.addPage();
-        y -= pageH;
-      }
-    }
-
-    pdf.save(`FNB_Grid_${state.days[0].iso}_to_${state.days[6].iso}.pdf`);
-    setBusy("PDF downloaded");
-  }
-
-  async function changeStart(newISO){
-    state.startISO = newISO;
-    buildDays(state.startISO);
-    await loadWeek();
   }
 
   async function init(){
     try{
-      setBusy("Checking sign-in…");
       await waitForSB();
+      setBusy("Checking sign-in…");
 
       state.user = await getSessionUser();
       if(!state.user){
-        setUserUI();
-        setBusy("Not signed in");
-        showErr("You are not signed in. Go to your home page and sign in first.", "errorBoxMeals");
+        location.href = "index.html";
         return;
       }
 
@@ -1081,6 +1016,7 @@
       buildDays(state.startISO);
 
       await loadWeek();
+      setBusy("Ready");
     } catch(e){
       console.error(e);
       setBusy("Error");
@@ -1092,21 +1028,31 @@
   // Events
   $("btnPrev").addEventListener("click", async () => {
     const d = parseISODate(state.startISO);
-    await changeStart(toISODateUTC(addDaysUTC(d, -7)));
+    state.startISO = toISODateUTC(addDaysUTC(d, -7));
+    buildDays(state.startISO);
+    await loadWeek();
   });
   $("btnNext").addEventListener("click", async () => {
     const d = parseISODate(state.startISO);
-    await changeStart(toISODateUTC(addDaysUTC(d, 7)));
+    state.startISO = toISODateUTC(addDaysUTC(d, 7));
+    buildDays(state.startISO);
+    await loadWeek();
   });
-  $("btnToday").addEventListener("click", async () => changeStart(todayISO()));
+  $("btnToday").addEventListener("click", async () => {
+    state.startISO = todayISO();
+    buildDays(state.startISO);
+    await loadWeek();
+  });
   $("datePick").addEventListener("change", async () => {
     const iso = $("datePick").value;
-    if(iso) await changeStart(iso);
+    if(iso){
+      state.startISO = iso;
+      buildDays(state.startISO);
+      await loadWeek();
+    }
   });
 
-  $("btnPdf").addEventListener("click", downloadPdf);
   $("btnSignOut").addEventListener("click", signOut);
-
   $("btnModalClose").addEventListener("click", closeOutletModal);
   $("btnModalCancel").addEventListener("click", closeOutletModal);
   $("btnModalSave").addEventListener("click", saveOutletModal);
