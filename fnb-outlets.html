@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>F&B Outlets</title>
+  <title>F&B Outlets (Grid)</title>
 
   <style>
     :root{
@@ -12,20 +12,24 @@
       --text:#0f172a;
       --muted:#64748b;
       --line:#e2e8f0;
-      --blue:#2563eb;
-      --green:#16a34a;
-      --red:#dc2626;
       --shadow: 0 10px 30px rgba(15,23,42,.08);
       --radius:18px;
+
+      --green:#16a34a;
+      --greenSoft: rgba(22,163,74,.12);
+      --red:#dc2626;
+      --redSoft: rgba(220,38,38,.10);
+      --blue:#2563eb;
     }
     *{ box-sizing:border-box; }
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:var(--text);
-      background: radial-gradient(1100px 700px at 10% 0%, #e9efff 0%, rgba(233,239,255,0) 60%),
-                  radial-gradient(900px 600px at 90% 10%, #e9fff6 0%, rgba(233,255,246,0) 55%),
-                  var(--bg);
+      background:
+        radial-gradient(1100px 700px at 10% 0%, #e9efff 0%, rgba(233,239,255,0) 60%),
+        radial-gradient(900px 600px at 90% 10%, #e9fff6 0%, rgba(233,255,246,0) 55%),
+        var(--bg);
     }
     header{ padding:22px 18px 10px; max-width:1320px; margin:0 auto; }
     .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
@@ -37,24 +41,17 @@
     }
     h1{ font-size:18px; margin:0; line-height:1.2; }
     .subtitle{ font-size:12px; color:var(--muted); margin-top:2px; }
+
     .pill{
       font-size:12px; padding:6px 10px; border:1px solid var(--line);
       border-radius:999px; background:#fff; color:var(--muted);
     }
     .wrap{ max-width:1320px; margin:0 auto; padding:10px 18px 34px; }
-    .grid{ display:grid; grid-template-columns: 1.35fr .65fr; gap:14px; }
-    @media (max-width: 1050px){ .grid{ grid-template-columns: 1fr; } }
-    .card{
-      background:var(--card); border:1px solid rgba(226,232,240,.9);
-      border-radius:var(--radius); box-shadow: var(--shadow); overflow:hidden;
-    }
-    .card-head{
-      padding:14px 14px 10px; border-bottom:1px solid var(--line);
+
+    .toolbar{
       display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      margin-bottom:12px;
     }
-    .card-title{ display:flex; flex-direction:column; gap:4px; }
-    .card-title strong{ font-size:14px; }
-    .card-title span{ font-size:12px; color:var(--muted); }
     .controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     input[type="date"]{
       border:1px solid var(--line); border-radius:12px;
@@ -72,130 +69,275 @@
       border-color: transparent; color:#fff;
     }
     .primary:hover{ background: linear-gradient(135deg, #1d4ed8, #1e40af); }
-    .muted-btn{ color:var(--muted); background:#fff; }
     .small{ padding:8px 10px; border-radius:10px; font-size:12px; }
+    .muted-btn{ color:var(--muted); }
 
-    .statusbar{
-      padding:10px 14px; display:flex; justify-content:space-between; align-items:center;
-      gap:10px; flex-wrap:wrap; border-bottom:1px solid var(--line);
-      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
     }
-    .status-left{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; color:var(--muted); font-size:12px; }
+
+    .card{
+      background:var(--card);
+      border:1px solid rgba(226,232,240,.9);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .card-title strong{ font-size:14px; }
+    .card-title span{ display:block; font-size:12px; color:var(--muted); margin-top:4px; }
+
+    .status{
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+      font-size:12px; color:var(--muted);
+    }
     .dot{ width:8px; height:8px; border-radius:50%; background:#94a3b8; }
-    .dot.ok{ background:#22c55e; } .dot.warn{ background:#f59e0b; }
+    .dot.ok{ background:#22c55e; }
+    .dot.warn{ background:#f59e0b; }
 
     .error{
-      display:none; margin:12px 14px; padding:10px 12px; border-radius:14px;
-      border:1px solid #fecaca; background:#fff1f2; color:#9f1239;
-      font-size:13px; white-space:pre-wrap;
+      display:none;
+      margin:12px 14px 0;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#9f1239;
+      font-size:13px;
+      white-space:pre-wrap;
     }
 
-    #snapshot{ padding:12px 14px 14px; }
-
-    .table-wrap{
-      overflow:auto; max-height:66vh; border-top:1px solid var(--line);
+    /* Snapshot area for PDF */
+    #snapshot{
+      padding:12px 14px 14px;
     }
-    table{ width:100%; border-collapse:separate; border-spacing:0; min-width:980px; }
+
+    /* Spreadsheet-like grid */
+    .sheet{
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:auto;
+      max-height: 70vh;
+      background:#fff;
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width: 980px;
+    }
     thead th{
-      position:sticky; top:0; background:#f8fafc; z-index:2;
-      border-bottom:1px solid var(--line); font-size:12px; color:var(--muted);
-      padding:10px 10px; text-align:left; white-space:nowrap;
+      position:sticky;
+      top:0;
+      z-index:3;
+      background:#f8fafc;
+      border-bottom:1px solid var(--line);
+      font-size:12px;
+      color:var(--muted);
+      padding:10px 10px;
+      text-align:center;
+      white-space:nowrap;
     }
-    th:first-child{ position:sticky; left:0; z-index:3; background:#f8fafc; }
-    tbody td{
-      border-bottom:1px solid var(--line); padding:10px 10px; vertical-align:top; background:#fff;
+    thead th:first-child{
+      position:sticky;
+      left:0;
+      z-index:4;
+      text-align:left;
     }
-    tbody td:first-child{
-      position:sticky; left:0; z-index:1; background:#fff; border-right:1px solid var(--line);
-      min-width:240px;
+    tbody td, tbody th{
+      border-bottom:1px solid var(--line);
+      border-right:1px solid var(--line);
+      padding:8px;
+      vertical-align:middle;
     }
-    .outlet-name{ display:flex; flex-direction:column; gap:4px; }
-    .outlet-name .name{ font-weight:650; font-size:13px; display:flex; align-items:center; gap:8px; }
-    .outlet-name .meta{ font-size:12px; color:var(--muted); }
-    .row-actions{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+    tbody tr:last-child td, tbody tr:last-child th{ border-bottom:none; }
+    tbody td:last-child, thead th:last-child{ border-right:none; }
 
-    .cell{ display:flex; flex-direction:column; gap:8px; min-width:190px; }
-    .rowline{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .badge{
-      font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid var(--line);
-      color:var(--muted); background:#fff; display:inline-flex; align-items:center; gap:6px; user-select:none;
+    tbody th{
+      position:sticky;
+      left:0;
+      z-index:2;
+      background:#fff;
+      text-align:left;
+      font-size:13px;
+      font-weight:650;
+      min-width: 260px;
     }
-    .badge.open{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.08); color:#166534; }
-    .badge.closed{ border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.06); color:#991b1b; }
-
-    .timebox{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
-    .timebox input[type="time"]{
-      width:100%; border:1px solid var(--line); border-radius:12px;
-      padding:8px 10px; font-size:12px; outline:none;
-    }
-    textarea{
-      width:100%; border:1px solid var(--line); border-radius:12px;
-      padding:8px 10px; font-size:12px; outline:none; resize:vertical; min-height:56px;
-    }
-    .help{ font-size:11px; color:var(--muted); }
-    .dirty{
-      outline: 2px solid rgba(37,99,235,.18);
-      outline-offset: 2px; border-radius:14px; padding:6px;
+    .row-sub{
+      font-size:12px;
+      font-weight:500;
+      color:var(--muted);
+      margin-top:2px;
     }
 
-    .switch{ position:relative; width:44px; height:24px; display:inline-block; flex:0 0 auto; }
+    .cellbtn{
+      width:100%;
+      min-height:46px;
+      border-radius:12px;
+      border:1px solid rgba(226,232,240,.9);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:8px 10px;
+      user-select:none;
+      transition: transform .04s ease, filter .15s ease, border-color .15s ease;
+      font-size:12px;
+      text-align:center;
+      line-height:1.15;
+      background:#fff;
+    }
+    .cellbtn:active{ transform: translateY(1px); }
+    .cellbtn.green{
+      background: var(--greenSoft);
+      border-color: rgba(22,163,74,.45);
+      color: #14532d;
+    }
+    .cellbtn.red{
+      background: var(--redSoft);
+      border-color: rgba(220,38,38,.35);
+      color: #7f1d1d;
+    }
+    .cellbtn .tiny{
+      display:block;
+      font-size:11px;
+      color: rgba(15,23,42,.65);
+      margin-top:3px;
+    }
+    .dirty-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:8px;height:8px;
+      border-radius:999px;
+      background: var(--blue);
+      margin-left:6px;
+      opacity:.9;
+    }
+
+    .section-sep{
+      margin:12px 0 8px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .section-sep:before{
+      content:"";
+      height:1px;
+      flex:1;
+      background: var(--line);
+    }
+    .section-sep:after{
+      content:"";
+      height:1px;
+      flex:1;
+      background: var(--line);
+    }
+
+    /* Outlet edit modal */
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background: rgba(15,23,42,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:50;
+    }
+    .modal{
+      width:min(560px, 100%);
+      background:#fff;
+      border-radius:22px;
+      border:1px solid rgba(226,232,240,.9);
+      box-shadow: 0 30px 80px rgba(15,23,42,.25);
+      overflow:hidden;
+    }
+    .modal-head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .modal-head strong{ font-size:14px; }
+    .modal-head .sub{ font-size:12px; color:var(--muted); margin-top:3px; }
+    .modal-body{ padding:12px 14px 14px; }
+    .modal-foot{
+      padding:12px 14px 14px;
+      border-top:1px solid var(--line);
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+    .field{
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap:10px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .field label{ font-size:12px; color:var(--muted); }
+    input[type="time"], textarea{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      outline:none;
+      width:100%;
+      background:#fff;
+    }
+    textarea{ min-height:70px; resize:vertical; }
+    .toggleRow{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      margin-bottom:12px;
+    }
+    .switch{
+      position:relative;
+      width:44px; height:24px;
+      display:inline-block;
+      flex:0 0 auto;
+    }
     .switch input{ display:none; }
     .slider{
-      position:absolute; inset:0; background:#e2e8f0; border-radius:999px;
-      transition:.15s ease; border:1px solid #cbd5e1;
+      position:absolute; inset:0;
+      background:#e2e8f0;
+      border-radius:999px;
+      transition:.15s ease;
+      border:1px solid #cbd5e1;
     }
     .slider:before{
-      content:""; position:absolute; height:18px; width:18px; left:3px; top:2px;
-      background:#fff; border-radius:50%;
+      content:"";
+      position:absolute;
+      height:18px; width:18px;
+      left:3px; top:2px;
+      background:#fff;
+      border-radius:50%;
       box-shadow: 0 4px 10px rgba(15,23,42,.15);
       transition:.15s ease;
     }
-    .switch input:checked + .slider{ background: rgba(34,197,94,.25); border-color: rgba(34,197,94,.45); }
-    .switch input:checked + .slider:before{ transform: translateX(20px); }
-
-    .services-wrap{ padding:12px 14px 14px; }
-    .svc-group{
-      border:1px solid var(--line); border-radius:16px; padding:10px; margin-bottom:10px;
-      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    .switch input:checked + .slider{
+      background: rgba(22,163,74,.25);
+      border-color: rgba(22,163,74,.45);
     }
-    .svc-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
-    .svc-head strong{ font-size:13px; }
-    .svc-grid{ display:grid; grid-template-columns: 1fr; gap:10px; }
-    .svc-row{ display:grid; grid-template-columns: 120px 1fr; gap:10px; align-items:start; }
-    .svc-row .daylbl{ font-size:12px; color:var(--muted); padding-top:10px; white-space:nowrap; }
-    select{
-      width:100%; border:1px solid var(--line); border-radius:12px;
-      padding:10px 12px; font-size:13px; outline:none; background:#fff;
+    .switch input:checked + .slider:before{
+      transform: translateX(20px);
     }
-
-    .modal-backdrop{
-      position:fixed; inset:0; background: rgba(15,23,42,.45);
-      display:none; align-items:center; justify-content:center; padding:18px; z-index:50;
-    }
-    .modal{
-      width:min(920px, 100%); max-height: 90vh; overflow:auto;
-      background:#fff; border-radius:22px; border:1px solid rgba(226,232,240,.9);
-      box-shadow: 0 30px 80px rgba(15,23,42,.25);
-    }
-    .modal-head{
-      padding:14px 14px 10px; border-bottom:1px solid var(--line);
-      display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;
-    }
-    .modal-head strong{ font-size:14px; }
-    .modal-body{ padding:12px 14px 14px; }
-    .modal-foot{
-      padding:12px 14px 14px; border-top:1px solid var(--line);
-      display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
-      background: linear-gradient(180deg, #ffffff, #fbfdff);
-    }
-    .wk-table{ width:100%; border-collapse:separate; border-spacing:0; }
-    .wk-table th, .wk-table td{
-      border-bottom:1px solid var(--line); padding:10px 8px; font-size:13px; vertical-align:top;
-    }
-    .wk-table th{
-      text-align:left; color:var(--muted); font-size:12px; background:#f8fafc;
-      position:sticky; top:0;
-    }
+    .hint{ font-size:12px; color:var(--muted); }
   </style>
 </head>
 
@@ -206,7 +348,7 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>F&B Outlets</h1>
-        <div class="subtitle">7-day hours + services. Times are required when Open.</div>
+        <div class="subtitle">Click the grid: green = selected/open, red = not selected/closed.</div>
       </div>
     </div>
 
@@ -218,82 +360,113 @@
 </header>
 
 <div class="wrap">
-  <div class="grid">
-    <section class="card" id="outletsCard">
+  <div class="toolbar">
+    <div class="controls">
+      <button class="small" id="btnPrev">← Prev 7</button>
+      <button class="small" id="btnToday">Today</button>
+      <button class="small" id="btnNext">Next 7 →</button>
+      <input type="date" id="datePick" />
+    </div>
+
+    <div class="controls">
+      <span class="status"><span class="dot" id="dotState"></span><span id="statusText">Loading…</span></span>
+      <span class="pill" id="rangeLabel"></span>
+      <span class="pill" id="unsavedPill" style="display:none;">Unsaved changes</span>
+      <button class="primary" id="btnSaveAll">Save all</button>
+      <button class="small" id="btnPdf">Download PDF snapshot</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <!-- MEALS -->
+    <section class="card">
       <div class="card-head">
         <div class="card-title">
-          <strong>Outlets & Restaurants</strong>
-          <span>Open requires open/close times (and close must be after open).</span>
+          <strong>Restaurants: Breakfast / Lunch / Dinner</strong>
+          <span>Breakfast, Lunch, Dinner = only ONE pick per day.</span>
         </div>
-
-        <div class="controls">
-          <button class="small" id="btnPrev">← Prev 7</button>
-          <button class="small" id="btnToday">Today</button>
-          <button class="small" id="btnNext">Next 7 →</button>
-          <input type="date" id="datePick" />
-          <button class="primary" id="btnSave">Save changes</button>
-          <button id="btnPdf" class="small">Download PDF snapshot</button>
-        </div>
+        <div class="hint">Tip: click a different option to switch it.</div>
       </div>
-
-      <div class="statusbar">
-        <div class="status-left">
-          <span class="dot" id="dotState"></span>
-          <span id="statusText">Loading…</span>
-          <span class="pill" id="unsavedPill" style="display:none;">Unsaved changes</span>
-        </div>
-        <div class="status-left">
-          <span class="help" id="rangeLabel"></span>
-        </div>
-      </div>
-
-      <div class="error" id="errorBox"></div>
+      <div class="error" id="errorBoxMeals"></div>
 
       <div id="snapshot">
-        <div class="table-wrap" id="tableWrap">
-          <table id="outletTable" aria-label="Outlet hours table"></table>
-        </div>
+        <div class="section-sep">Breakfast</div>
+        <div class="sheet" id="sheetBreakfast"></div>
+
+        <div class="section-sep">Lunch</div>
+        <div class="sheet" id="sheetLunch"></div>
+
+        <div class="section-sep">Dinner</div>
+        <div class="sheet" id="sheetDinner"></div>
+
+        <div class="section-sep">Massimo</div>
+        <div class="sheet" id="sheetMassimo"></div>
       </div>
     </section>
 
-    <aside class="card">
+    <!-- OUTLETS -->
+    <section class="card">
       <div class="card-head">
         <div class="card-title">
-          <strong>Services (by meal group)</strong>
-          <span>Uses service_items.category as the meal group.</span>
+          <strong>Outlets: Open / Closed + Times</strong>
+          <span>Click a cell to set open/closed. If open, times are required.</span>
         </div>
-        <div class="controls">
-          <button class="small" id="btnSaveServices">Save services</button>
-        </div>
+        <div class="hint">Green shows times inside the cell.</div>
       </div>
+      <div class="error" id="errorBoxOutlets"></div>
 
-      <div class="error" id="errorBoxSvc"></div>
-      <div class="services-wrap" id="servicesWrap"></div>
-    </aside>
+      <div style="padding:12px 14px 14px;">
+        <div class="sheet" id="sheetOutlets"></div>
+      </div>
+    </section>
   </div>
 </div>
 
-<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Edit week modal">
+<!-- Outlet modal -->
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-head">
       <div>
-        <strong id="modalTitle">Edit week</strong>
-        <div class="subtitle" id="modalSubtitle">Edit all 7 days at once</div>
+        <strong id="modalTitle">Outlet</strong>
+        <div class="sub" id="modalSub">Date</div>
       </div>
       <button class="small" id="btnModalClose">Close</button>
     </div>
     <div class="modal-body">
       <div class="error" id="errorBoxModal"></div>
-      <table class="wk-table" id="wkTable"></table>
+
+      <div class="toggleRow">
+        <label class="switch">
+          <input type="checkbox" id="mIsOpen">
+          <span class="slider"></span>
+        </label>
+        <div>
+          <div style="font-weight:650" id="mOpenLabel">Closed</div>
+          <div class="hint">If open, you must set open & close times.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="mOpenTime">Open time</label>
+        <input type="time" id="mOpenTime" />
+      </div>
+      <div class="field">
+        <label for="mCloseTime">Close time</label>
+        <input type="time" id="mCloseTime" />
+      </div>
+      <div class="field" style="align-items:start;">
+        <label for="mNotes" style="padding-top:10px;">Notes</label>
+        <textarea id="mNotes" placeholder="Optional"></textarea>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="muted-btn" id="btnModalCancel">Cancel</button>
-      <button class="primary" id="btnModalSave">Save week</button>
+      <button class="primary" id="btnModalSave">Save</button>
     </div>
   </div>
 </div>
 
-<!-- IMPORTANT: scripts load at the END (fixes your window.sb timing issue) -->
+<!-- IMPORTANT: scripts load at the END (prevents window.sb timing issues) -->
 <script src="vendor/supabase-js.iife.min.js"></script>
 <script src="supabase.js"></script>
 <script src="app.js"></script>
@@ -303,22 +476,19 @@
 <script>
 (() => {
   const TZ = "America/Toronto";
-  const el = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-  function showError(msg, boxId="errorBox"){
-    const b = el(boxId);
-    if(!b) return;
+  function showErr(msg, boxId){
+    const b = $(boxId);
     b.textContent = msg;
     b.style.display = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function clearError(boxId="errorBox"){
-    const b = el(boxId);
-    if(!b) return;
+  function clrErr(boxId){
+    const b = $(boxId);
     b.textContent = "";
     b.style.display = "none";
   }
-  function setBusy(text){ el("statusText").textContent = text; }
 
   function parseISODate(iso){
     const [y,m,d] = iso.split("-").map(Number);
@@ -336,12 +506,7 @@
     return nd;
   }
   function fmtDayLabel(d){
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: TZ,
-      weekday: "short",
-      month: "short",
-      day: "numeric"
-    }).format(d);
+    return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, weekday:"short", month:"short", day:"numeric" }).format(d);
   }
   function todayISO(){
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year:"numeric", month:"2-digit", day:"2-digit" })
@@ -352,16 +517,13 @@
     return `${y}-${m}-${d}`;
   }
 
-  // Wait until window.sb exists (extra safety)
-  async function waitForSupabaseClient(){
+  async function waitForSB(){
     const start = Date.now();
     while(!window.sb){
       if(Date.now() - start > 4000) break;
       await new Promise(r => setTimeout(r, 50));
     }
-    if(!window.sb){
-      throw new Error("Supabase client not found (window.sb). Check that supabase.js is loaded and creates window.sb.");
-    }
+    if(!window.sb) throw new Error("Supabase client not found (window.sb). Check supabase.js.");
   }
 
   const state = {
@@ -369,32 +531,46 @@
     profile: null,
     startISO: null,
     days: [],
-    outlets: [],
-    services: [],
-    outletMap: new Map(),   // date|outletId -> record
-    svcMap: new Map(),      // date|mealGroup -> record
-    dirtyOutlets: new Set(),
-    dirtySvcs: new Set(),
-    modal: { outlet: null }
+
+    services: [],      // service_items
+    outlets: [],       // outlet_items
+
+    // Maps for week
+    svcMap: new Map(), // key: date|meal_group -> record {service_item_id, notes}
+    outMap: new Map(), // key: date|outlet_item_id -> record {is_open, open_time, close_time, notes}
+
+    // Dirty keys
+    dirtySvc: new Set(),
+    dirtyOut: new Set(),
+
+    // Modal context
+    modal: { outletId:null, dateISO:null }
   };
 
-  function updateUnsavedUI(){
-    const dirty = state.dirtyOutlets.size + state.dirtySvcs.size;
-    el("unsavedPill").style.display = dirty ? "inline-flex" : "none";
-    const dot = el("dotState");
-    dot.classList.remove("ok","warn");
-    dot.classList.add(dirty ? "warn" : "ok");
-  }
+  const MEAL_GROUPS = ["Breakfast", "Lunch", "Dinner"];
+  const MASSIMO_GROUPS = [
+    { meal_group: "Massimo Breakfast", item_name: "MASSIMO BREAKFAST" },
+    { meal_group: "Massimo Lunch",     item_name: "MASSIMO LUNCH" },
+    { meal_group: "Massimo Dinner",    item_name: "MASSIMO DINNER" }
+  ];
 
-  const keyOutlet = (dateISO, outletId) => `${dateISO}|${outletId}`;
-  const keySvc = (dateISO, mealGroup) => `${dateISO}|${mealGroup}`;
+  function keySvc(dateISO, mealGroup){ return `${dateISO}|${mealGroup}`; }
+  function keyOut(dateISO, outletId){ return `${dateISO}|${outletId}`; }
+
+  function setBusy(txt){ $("statusText").textContent = txt; }
+  function updateDirtyUI(){
+    const dirtyCount = state.dirtySvc.size + state.dirtyOut.size;
+    $("unsavedPill").style.display = dirtyCount ? "inline-flex" : "none";
+    const dot = $("dotState");
+    dot.classList.remove("ok","warn");
+    dot.classList.add(dirtyCount ? "warn" : "ok");
+  }
 
   async function getSessionUser(){
     const { data, error } = await window.sb.auth.getSession();
     if(error) throw error;
     return data.session?.user || null;
   }
-
   async function loadProfile(userId){
     const { data, error } = await window.sb
       .from("profiles")
@@ -405,28 +581,26 @@
     return data || null;
   }
 
-  async function loadMasterData(){
-    const outletsReq = window.sb
-      .from("outlet_items")
-      .select("id, name, department, sort_order, is_active")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true })
-      .order("name", { ascending: true });
+  async function loadMaster(){
+    // Only active
+    const [svcRes, outRes] = await Promise.all([
+      window.sb.from("service_items")
+        .select("id, name, category, sort_order, is_active")
+        .eq("is_active", true)
+        .order("category", { ascending:true })
+        .order("sort_order", { ascending:true })
+        .order("name", { ascending:true }),
+      window.sb.from("outlet_items")
+        .select("id, name, department, sort_order, is_active")
+        .eq("is_active", true)
+        .order("sort_order", { ascending:true })
+        .order("name", { ascending:true })
+    ]);
+    if(svcRes.error) throw svcRes.error;
+    if(outRes.error) throw outRes.error;
 
-    const servicesReq = window.sb
-      .from("service_items")
-      .select("id, name, category, sort_order, is_active")
-      .eq("is_active", true)
-      .order("category", { ascending: true })
-      .order("sort_order", { ascending: true })
-      .order("name", { ascending: true });
-
-    const [outletsRes, servicesRes] = await Promise.all([outletsReq, servicesReq]);
-    if(outletsRes.error) throw outletsRes.error;
-    if(servicesRes.error) throw servicesRes.error;
-
-    state.outlets = outletsRes.data || [];
-    state.services = servicesRes.data || [];
+    state.services = svcRes.data || [];
+    state.outlets  = outRes.data || [];
   }
 
   function buildDays(startISO){
@@ -434,57 +608,29 @@
     state.days = [];
     for(let i=0;i<7;i++){
       const d = addDaysUTC(start, i);
-      state.days.push({ d, iso: toISODateUTC(d), label: fmtDayLabel(d) });
+      state.days.push({ iso: toISODateUTC(d), label: fmtDayLabel(d) });
     }
-    el("rangeLabel").textContent =
-      `${state.days[0].label} → ${state.days[6].label} (${state.days[0].iso} to ${state.days[6].iso})`;
+    $("rangeLabel").textContent = `${state.days[0].iso} → ${state.days[6].iso}`;
+    $("datePick").value = startISO;
   }
 
-  async function loadWeekData(){
-    clearError("errorBox");
-    clearError("errorBoxSvc");
-    setBusy("Loading week data…");
-
-    state.outletMap.clear();
-    state.svcMap.clear();
-    state.dirtyOutlets.clear();
-    state.dirtySvcs.clear();
-    updateUnsavedUI();
-
-    const startISO = state.days[0].iso;
-    const endISO = state.days[6].iso;
-
-    const [hoursRes, svcRes] = await Promise.all([
-      window.sb.from("daily_outlet_hours")
-        .select("outlet_date, outlet_item_id, is_open, open_time, close_time, notes, updated_by, updated_at")
-        .gte("outlet_date", startISO)
-        .lte("outlet_date", endISO),
-      window.sb.from("daily_service_selection")
-        .select("service_date, meal_group, service_item_id, notes, updated_by, updated_at")
-        .gte("service_date", startISO)
-        .lte("service_date", endISO)
-    ]);
-
-    if(hoursRes.error) throw hoursRes.error;
-    if(svcRes.error) throw svcRes.error;
-
-    for(const r of (hoursRes.data || [])){
-      state.outletMap.set(keyOutlet(r.outlet_date, r.outlet_item_id), r);
+  function ensureSvc(dateISO, meal_group){
+    const k = keySvc(dateISO, meal_group);
+    if(!state.svcMap.has(k)){
+      state.svcMap.set(k, {
+        service_date: dateISO,
+        meal_group,
+        service_item_id: null,
+        notes: ""
+      });
     }
-    for(const r of (svcRes.data || [])){
-      state.svcMap.set(keySvc(r.service_date, r.meal_group), r);
-    }
-
-    renderOutletTable();
-    renderServices();
-    setBusy("Ready");
-    updateUnsavedUI();
+    return state.svcMap.get(k);
   }
 
-  function getOutletRecord(dateISO, outletId){
-    const k = keyOutlet(dateISO, outletId);
-    if(!state.outletMap.has(k)){
-      state.outletMap.set(k, {
+  function ensureOut(dateISO, outletId){
+    const k = keyOut(dateISO, outletId);
+    if(!state.outMap.has(k)){
+      state.outMap.set(k, {
         outlet_date: dateISO,
         outlet_item_id: outletId,
         is_open: false,
@@ -493,471 +639,417 @@
         notes: ""
       });
     }
-    return state.outletMap.get(k);
+    return state.outMap.get(k);
   }
 
-  function getSvcRecord(dateISO, mealGroup){
-    const k = keySvc(dateISO, mealGroup);
-    if(!state.svcMap.has(k)){
-      state.svcMap.set(k, {
-        service_date: dateISO,
-        meal_group: mealGroup,
-        service_item_id: null,
-        notes: ""
-      });
+  async function loadWeek(){
+    clrErr("errorBoxMeals");
+    clrErr("errorBoxOutlets");
+    setBusy("Loading week…");
+
+    state.svcMap.clear();
+    state.outMap.clear();
+    state.dirtySvc.clear();
+    state.dirtyOut.clear();
+    updateDirtyUI();
+
+    const startISO = state.days[0].iso;
+    const endISO   = state.days[6].iso;
+
+    const [svcSelRes, outHoursRes] = await Promise.all([
+      window.sb.from("daily_service_selection")
+        .select("service_date, meal_group, service_item_id, notes, updated_by, updated_at")
+        .gte("service_date", startISO).lte("service_date", endISO),
+      window.sb.from("daily_outlet_hours")
+        .select("outlet_date, outlet_item_id, is_open, open_time, close_time, notes, updated_by, updated_at")
+        .gte("outlet_date", startISO).lte("outlet_date", endISO),
+    ]);
+    if(svcSelRes.error) throw svcSelRes.error;
+    if(outHoursRes.error) throw outHoursRes.error;
+
+    for(const r of (svcSelRes.data || [])){
+      state.svcMap.set(keySvc(r.service_date, r.meal_group), r);
     }
-    return state.svcMap.get(k);
-  }
-
-  // RULE: if open => times required and close > open
-  function validateOutletRecord(r){
-    if(r.is_open){
-      if(!r.open_time || !r.close_time){
-        return "If an outlet is OPEN, open and close times are required.";
-      }
-      const o = String(r.open_time).slice(0,5);
-      const c = String(r.close_time).slice(0,5);
-      if(c <= o){
-        return "Close time must be after open time.";
-      }
+    for(const r of (outHoursRes.data || [])){
+      state.outMap.set(keyOut(r.outlet_date, r.outlet_item_id), r);
     }
-    return null;
+
+    renderAll();
+    setBusy("Ready");
+    updateDirtyUI();
   }
 
-  function renderOutletTable(){
-    const table = el("outletTable");
-    table.innerHTML = "";
+  function servicesByCategory(cat){
+    const lc = cat.toLowerCase();
+    return state.services.filter(s => String(s.category || "").toLowerCase() === lc);
+  }
 
+  function makeTable(headers){
+    const table = document.createElement("table");
     const thead = document.createElement("thead");
-    const hr = document.createElement("tr");
+    const tr = document.createElement("tr");
 
+    // first col header
     const th0 = document.createElement("th");
-    th0.textContent = "Outlet";
-    hr.appendChild(th0);
+    th0.textContent = headers[0];
+    tr.appendChild(th0);
 
-    for(const day of state.days){
+    for(let i=1;i<headers.length;i++){
       const th = document.createElement("th");
-      th.textContent = day.label;
-      const sub = document.createElement("div");
-      sub.style.fontSize = "11px";
-      sub.style.color = "var(--muted)";
-      sub.textContent = day.iso;
-      th.appendChild(document.createElement("br"));
-      th.appendChild(sub);
-      hr.appendChild(th);
+      th.textContent = headers[i];
+      tr.appendChild(th);
     }
-    thead.appendChild(hr);
+
+    thead.appendChild(tr);
     table.appendChild(thead);
 
     const tbody = document.createElement("tbody");
+    table.appendChild(tbody);
 
-    for(const outlet of state.outlets){
+    return { table, tbody };
+  }
+
+  function cellButton({selected, label, subText, onClick, dirty=false}){
+    const btn = document.createElement("div");
+    btn.className = "cellbtn " + (selected ? "green" : "red");
+    btn.innerHTML = `<div><div>${label || ""}${dirty ? `<span class="dirty-badge" title="Unsaved"></span>` : ""}</div>${subText ? `<div class="tiny">${subText}</div>` : ""}</div>`;
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+
+  function renderMealSheet(containerId, mealGroup){
+    const box = $(containerId);
+    box.innerHTML = "";
+
+    const options = servicesByCategory(mealGroup); // category Breakfast/Lunch/Dinner
+    const headers = ["Option", ...state.days.map(d => d.label)];
+    const { table, tbody } = makeTable(headers);
+
+    for(const opt of options){
       const tr = document.createElement("tr");
 
-      const tdName = document.createElement("td");
-      const wrap = document.createElement("div");
-      wrap.className = "outlet-name";
-
-      const nameLine = document.createElement("div");
-      nameLine.className = "name";
-      nameLine.textContent = outlet.name;
-
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent = outlet.department || "—";
-
-      const actions = document.createElement("div");
-      actions.className = "row-actions";
-
-      const btnWeek = document.createElement("button");
-      btnWeek.className = "small";
-      btnWeek.textContent = "Edit week";
-      btnWeek.addEventListener("click", () => openWeekModal(outlet));
-      actions.appendChild(btnWeek);
-
-      wrap.appendChild(nameLine);
-      wrap.appendChild(meta);
-      wrap.appendChild(actions);
-
-      tdName.appendChild(wrap);
-      tr.appendChild(tdName);
+      const th = document.createElement("th");
+      th.innerHTML = `<div>${opt.name}</div><div class="row-sub">${mealGroup}</div>`;
+      tr.appendChild(th);
 
       for(const day of state.days){
         const td = document.createElement("td");
-        const cell = document.createElement("div");
-        cell.className = "cell";
+        const rec = ensureSvc(day.iso, mealGroup);
+        const isSelected = rec.service_item_id === opt.id;
+        const k = keySvc(day.iso, mealGroup);
+        const isDirty = state.dirtySvc.has(k);
 
-        const r = getOutletRecord(day.iso, outlet.id);
-
-        const rowTop = document.createElement("div");
-        rowTop.className = "rowline";
-
-        const badge = document.createElement("span");
-        badge.className = "badge " + (r.is_open ? "open" : "closed");
-        badge.textContent = r.is_open ? "Open" : "Closed";
-
-        const sw = document.createElement("label");
-        sw.className = "switch";
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = !!r.is_open;
-        const slider = document.createElement("span");
-        slider.className = "slider";
-        sw.appendChild(cb);
-        sw.appendChild(slider);
-
-        rowTop.appendChild(badge);
-        rowTop.appendChild(sw);
-
-        const timeBox = document.createElement("div");
-        timeBox.className = "timebox";
-
-        const tOpen = document.createElement("input");
-        tOpen.type = "time";
-        tOpen.value = r.open_time ? String(r.open_time).slice(0,5) : "";
-        tOpen.disabled = !r.is_open;
-
-        const tClose = document.createElement("input");
-        tClose.type = "time";
-        tClose.value = r.close_time ? String(r.close_time).slice(0,5) : "";
-        tClose.disabled = !r.is_open;
-
-        timeBox.appendChild(tOpen);
-        timeBox.appendChild(tClose);
-
-        const notes = document.createElement("textarea");
-        notes.placeholder = "Notes (optional)";
-        notes.value = r.notes || "";
-        notes.rows = 2;
-
-        const markDirty = () => {
-          const k = keyOutlet(day.iso, outlet.id);
-          state.dirtyOutlets.add(k);
-          cell.classList.add("dirty");
-          updateUnsavedUI();
-        };
-        const refreshBadge = () => {
-          badge.className = "badge " + (r.is_open ? "open" : "closed");
-          badge.textContent = r.is_open ? "Open" : "Closed";
-        };
-
-        cb.addEventListener("change", () => {
-          r.is_open = cb.checked;
-          if(!r.is_open){
-            tOpen.value = "";
-            tClose.value = "";
-            r.open_time = null;
-            r.close_time = null;
+        td.appendChild(cellButton({
+          selected: isSelected,
+          label: isSelected ? "Selected" : "Not selected",
+          subText: "",
+          dirty: isDirty && isSelected,
+          onClick: () => {
+            // Only one option per day: just set service_item_id to this option
+            rec.service_item_id = opt.id;
+            rec.notes = rec.notes || "";
+            state.dirtySvc.add(k);
+            updateDirtyUI();
+            renderMealSheet(containerId, mealGroup); // re-render this sheet so only one stays green
           }
-          tOpen.disabled = !r.is_open;
-          tClose.disabled = !r.is_open;
-          refreshBadge();
-          markDirty();
-        });
-        tOpen.addEventListener("change", () => { r.open_time = tOpen.value || null; markDirty(); });
-        tClose.addEventListener("change", () => { r.close_time = tClose.value || null; markDirty(); });
-        notes.addEventListener("change", () => { r.notes = notes.value || ""; markDirty(); });
+        }));
 
-        cell.appendChild(rowTop);
-        cell.appendChild(timeBox);
-        cell.appendChild(notes);
-
-        td.appendChild(cell);
         tr.appendChild(td);
       }
 
       tbody.appendChild(tr);
     }
 
-    table.appendChild(tbody);
+    box.appendChild(table);
   }
 
-  function renderServices(){
-    const wrap = el("servicesWrap");
-    wrap.innerHTML = "";
+  function renderMassimoSheet(){
+    const box = $("sheetMassimo");
+    box.innerHTML = "";
 
-    const groups = new Map();
+    const headers = ["Massimo", ...state.days.map(d => d.label)];
+    const { table, tbody } = makeTable(headers);
+
+    // Build mapping for Massimo items by name
+    const nameToItem = new Map();
     for(const s of state.services){
-      const g = (s.category || "").trim() || "Other";
-      if(!groups.has(g)) groups.set(g, []);
-      groups.get(g).push(s);
+      nameToItem.set(String(s.name || "").toUpperCase(), s);
     }
 
-    for(const [mealGroup, items] of groups.entries()){
-      const box = document.createElement("div");
-      box.className = "svc-group";
+    for(const row of MASSIMO_GROUPS){
+      const item = nameToItem.get(row.item_name);
+      if(!item) continue; // if missing, skip
 
-      const head = document.createElement("div");
-      head.className = "svc-head";
-      const title = document.createElement("strong");
-      title.textContent = mealGroup;
-
-      const note = document.createElement("span");
-      note.className = "pill";
-      note.textContent = "Pick one per day";
-
-      head.appendChild(title);
-      head.appendChild(note);
-
-      const grid = document.createElement("div");
-      grid.className = "svc-grid";
+      const tr = document.createElement("tr");
+      const th = document.createElement("th");
+      th.innerHTML = `<div>${row.item_name.replace("MASSIMO ","")}</div><div class="row-sub">Massimo (multi-select)</div>`;
+      tr.appendChild(th);
 
       for(const day of state.days){
-        const row = document.createElement("div");
-        row.className = "svc-row";
+        const td = document.createElement("td");
+        const rec = ensureSvc(day.iso, row.meal_group);
+        const selected = rec.service_item_id === item.id;
+        const k = keySvc(day.iso, row.meal_group);
+        const isDirty = state.dirtySvc.has(k);
 
-        const lbl = document.createElement("div");
-        lbl.className = "daylbl";
-        lbl.textContent = day.label;
+        td.appendChild(cellButton({
+          selected,
+          label: selected ? "On" : "Off",
+          subText: "",
+          dirty: isDirty,
+          onClick: () => {
+            // toggle (multi-select across the 3 meal_groups)
+            rec.service_item_id = selected ? null : item.id;
+            state.dirtySvc.add(k);
+            updateDirtyUI();
+            renderMassimoSheet();
+          }
+        }));
 
-        const right = document.createElement("div");
-        right.style.display = "grid";
-        right.style.gridTemplateColumns = "1fr";
-        right.style.gap = "8px";
-
-        const r = getSvcRecord(day.iso, mealGroup);
-
-        const sel = document.createElement("select");
-        const opt0 = document.createElement("option");
-        opt0.value = "";
-        opt0.textContent = "— none —";
-        sel.appendChild(opt0);
-
-        for(const it of items){
-          const opt = document.createElement("option");
-          opt.value = it.id;
-          opt.textContent = it.name;
-          sel.appendChild(opt);
-        }
-        sel.value = r.service_item_id || "";
-
-        const notes = document.createElement("textarea");
-        notes.placeholder = "Notes (optional)";
-        notes.rows = 2;
-        notes.value = r.notes || "";
-
-        const markDirtySvc = () => { state.dirtySvcs.add(keySvc(day.iso, mealGroup)); updateUnsavedUI(); };
-        sel.addEventListener("change", () => { r.service_item_id = sel.value || null; markDirtySvc(); });
-        notes.addEventListener("change", () => { r.notes = notes.value || ""; markDirtySvc(); });
-
-        right.appendChild(sel);
-        right.appendChild(notes);
-
-        row.appendChild(lbl);
-        row.appendChild(right);
-        grid.appendChild(row);
+        tr.appendChild(td);
       }
-
-      box.appendChild(head);
-      box.appendChild(grid);
-      wrap.appendChild(box);
-    }
-  }
-
-  async function saveOutlets(){
-    clearError("errorBox");
-    if(!state.user) return;
-
-    if(state.dirtyOutlets.size === 0){
-      setBusy("Nothing to save");
-      updateUnsavedUI();
-      return;
-    }
-
-    for(const k of state.dirtyOutlets){
-      const [dateISO, outletId] = k.split("|");
-      const r = getOutletRecord(dateISO, outletId);
-      const msg = validateOutletRecord(r);
-      if(msg){
-        showError(`${msg}\n\nDate: ${dateISO}`, "errorBox");
-        setBusy("Fix required fields");
-        return;
-      }
-    }
-
-    setBusy("Saving outlet changes…");
-
-    const rows = [];
-    for(const k of state.dirtyOutlets){
-      const [dateISO, outletId] = k.split("|");
-      const r = getOutletRecord(dateISO, outletId);
-
-      rows.push({
-        outlet_date: dateISO,
-        outlet_item_id: outletId,
-        is_open: !!r.is_open,
-        open_time: r.is_open ? (r.open_time ? String(r.open_time).slice(0,5) : null) : null,
-        close_time: r.is_open ? (r.close_time ? String(r.close_time).slice(0,5) : null) : null,
-        notes: r.notes || "",
-        updated_by: state.user.id
-      });
-    }
-
-    const { error } = await window.sb
-      .from("daily_outlet_hours")
-      .upsert(rows, { onConflict: "outlet_date,outlet_item_id" });
-
-    if(error){
-      showError(String(error.message || error), "errorBox");
-      setBusy("Save failed");
-      return;
-    }
-
-    state.dirtyOutlets.clear();
-    renderOutletTable();
-    setBusy("Saved outlet changes");
-    updateUnsavedUI();
-  }
-
-  async function saveServices(){
-    clearError("errorBoxSvc");
-    if(!state.user) return;
-
-    if(state.dirtySvcs.size === 0) return;
-
-    const rows = [];
-    for(const k of state.dirtySvcs){
-      const [dateISO, mealGroup] = k.split("|");
-      const r = getSvcRecord(dateISO, mealGroup);
-
-      rows.push({
-        service_date: dateISO,
-        meal_group: mealGroup,
-        service_item_id: r.service_item_id || null,
-        notes: r.notes || "",
-        updated_by: state.user.id
-      });
-    }
-
-    const { error } = await window.sb
-      .from("daily_service_selection")
-      .upsert(rows, { onConflict: "service_date,meal_group" });
-
-    if(error){
-      showError(String(error.message || error), "errorBoxSvc");
-      return;
-    }
-
-    state.dirtySvcs.clear();
-    setBusy("Saved services");
-    updateUnsavedUI();
-  }
-
-  function openWeekModal(outlet){
-    state.modal.outlet = outlet;
-    clearError("errorBoxModal");
-    el("modalTitle").textContent = `Edit week: ${outlet.name}`;
-    el("modalSubtitle").textContent = "Open/closed + times + notes for all 7 days";
-
-    const wk = el("wkTable");
-    wk.innerHTML = "";
-
-    const thead = document.createElement("thead");
-    const trh = document.createElement("tr");
-    ["Day","Open","Open time","Close time","Notes"].forEach(t => {
-      const th = document.createElement("th");
-      th.textContent = t;
-      trh.appendChild(th);
-    });
-    thead.appendChild(trh);
-    wk.appendChild(thead);
-
-    const tbody = document.createElement("tbody");
-    for(const day of state.days){
-      const r = getOutletRecord(day.iso, outlet.id);
-      const tr = document.createElement("tr");
-      tr.dataset.date = day.iso;
-
-      const tdDay = document.createElement("td");
-      tdDay.innerHTML = `<div style="font-weight:650">${day.label}</div><div style="font-size:12px;color:var(--muted)">${day.iso}</div>`;
-      tr.appendChild(tdDay);
-
-      const tdOpen = document.createElement("td");
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = !!r.is_open;
-      tdOpen.appendChild(cb);
-      tr.appendChild(tdOpen);
-
-      const tdOT = document.createElement("td");
-      const inOT = document.createElement("input");
-      inOT.type = "time";
-      inOT.value = r.open_time ? String(r.open_time).slice(0,5) : "";
-      inOT.disabled = !r.is_open;
-      tdOT.appendChild(inOT);
-      tr.appendChild(tdOT);
-
-      const tdCT = document.createElement("td");
-      const inCT = document.createElement("input");
-      inCT.type = "time";
-      inCT.value = r.close_time ? String(r.close_time).slice(0,5) : "";
-      inCT.disabled = !r.is_open;
-      tdCT.appendChild(inCT);
-      tr.appendChild(tdCT);
-
-      const tdN = document.createElement("td");
-      const ta = document.createElement("textarea");
-      ta.value = r.notes || "";
-      ta.rows = 2;
-      tdN.appendChild(ta);
-      tr.appendChild(tdN);
-
-      cb.addEventListener("change", () => {
-        const open = cb.checked;
-        inOT.disabled = !open;
-        inCT.disabled = !open;
-        if(!open){ inOT.value=""; inCT.value=""; }
-      });
 
       tbody.appendChild(tr);
     }
-    wk.appendChild(tbody);
 
-    el("modalBackdrop").style.display = "flex";
+    box.appendChild(table);
   }
-  function closeWeekModal(){ el("modalBackdrop").style.display = "none"; state.modal.outlet = null; }
 
-  function saveWeekModal(){
-    clearError("errorBoxModal");
-    const outlet = state.modal.outlet;
-    if(!outlet) return;
+  function renderOutletsSheet(){
+    const box = $("sheetOutlets");
+    box.innerHTML = "";
 
-    const rows = Array.from(el("wkTable").querySelectorAll("tbody tr"));
-    for(const tr of rows){
-      const dateISO = tr.dataset.date;
-      const cb = tr.querySelector('input[type="checkbox"]');
-      const [inOT, inCT] = tr.querySelectorAll('input[type="time"]');
-      const ta = tr.querySelector("textarea");
+    // Your request: specifically include these. We'll show all active, but the new ones are included.
+    // If you only want the F&B ones, uncomment filter.
+    // const outlets = state.outlets.filter(o => (o.department || "") === "F&B");
+    const outlets = state.outlets;
 
-      const r = getOutletRecord(dateISO, outlet.id);
-      r.is_open = !!cb.checked;
-      r.open_time = r.is_open ? (inOT.value || null) : null;
-      r.close_time = r.is_open ? (inCT.value || null) : null;
-      r.notes = ta.value || "";
+    const headers = ["Outlet", ...state.days.map(d => d.label)];
+    const { table, tbody } = makeTable(headers);
 
-      const msg = validateOutletRecord(r);
-      if(msg){
-        showError(`${msg}\n\nDate: ${dateISO}`, "errorBoxModal");
-        return;
+    for(const outlet of outlets){
+      const tr = document.createElement("tr");
+
+      const th = document.createElement("th");
+      th.innerHTML = `<div>${outlet.name}</div><div class="row-sub">${outlet.department || "—"}</div>`;
+      tr.appendChild(th);
+
+      for(const day of state.days){
+        const td = document.createElement("td");
+        const rec = ensureOut(day.iso, outlet.id);
+        const selected = !!rec.is_open;
+        const k = keyOut(day.iso, outlet.id);
+        const isDirty = state.dirtyOut.has(k);
+
+        const timeText = (rec.is_open && rec.open_time && rec.close_time)
+          ? `${String(rec.open_time).slice(0,5)}–${String(rec.close_time).slice(0,5)}`
+          : "";
+
+        td.appendChild(cellButton({
+          selected,
+          label: selected ? "Open" : "Closed",
+          subText: timeText,
+          dirty: isDirty,
+          onClick: () => {
+            // Always open modal (so times are handled right)
+            openOutletModal(outlet, day);
+          }
+        }));
+
+        tr.appendChild(td);
       }
+
+      tbody.appendChild(tr);
     }
 
-    for(const day of state.days){
-      state.dirtyOutlets.add(keyOutlet(day.iso, outlet.id));
-    }
-    updateUnsavedUI();
+    box.appendChild(table);
+  }
 
-    closeWeekModal();
-    renderOutletTable();
+  function renderAll(){
+    renderMealSheet("sheetBreakfast", "Breakfast");
+    renderMealSheet("sheetLunch", "Lunch");
+    renderMealSheet("sheetDinner", "Dinner");
+    renderMassimoSheet();
+    renderOutletsSheet();
+  }
+
+  function setUserUI(){
+    const who = $("whoami");
+    const btnOut = $("btnSignOut");
+
+    if(!state.user){
+      who.textContent = "Not signed in";
+      btnOut.style.display = "none";
+      return;
+    }
+    const name = state.profile?.full_name?.trim() || state.user.email || "Signed in";
+    const role = state.profile?.role || "user";
+    who.textContent = `${name} (${role})`;
+    btnOut.style.display = "inline-flex";
+  }
+
+  async function signOut(){
+    await window.sb.auth.signOut();
+    location.href = "index.html";
+  }
+
+  // ---- Outlet modal logic ----
+  function openOutletModal(outlet, day){
+    clrErr("errorBoxModal");
+
+    state.modal.outletId = outlet.id;
+    state.modal.dateISO = day.iso;
+
+    $("modalTitle").textContent = outlet.name;
+    $("modalSub").textContent = `${day.label} (${day.iso})`;
+
+    const rec = ensureOut(day.iso, outlet.id);
+
+    $("mIsOpen").checked = !!rec.is_open;
+    $("mOpenLabel").textContent = rec.is_open ? "Open" : "Closed";
+    $("mOpenTime").value = rec.open_time ? String(rec.open_time).slice(0,5) : "";
+    $("mCloseTime").value = rec.close_time ? String(rec.close_time).slice(0,5) : "";
+    $("mNotes").value = rec.notes || "";
+
+    // Disable times when closed
+    const setTimesEnabled = (enabled) => {
+      $("mOpenTime").disabled = !enabled;
+      $("mCloseTime").disabled = !enabled;
+    };
+    setTimesEnabled(!!rec.is_open);
+
+    $("mIsOpen").onchange = () => {
+      const open = $("mIsOpen").checked;
+      $("mOpenLabel").textContent = open ? "Open" : "Closed";
+      setTimesEnabled(open);
+      if(!open){
+        $("mOpenTime").value = "";
+        $("mCloseTime").value = "";
+      }
+    };
+
+    $("modalBackdrop").style.display = "flex";
+  }
+
+  function closeOutletModal(){
+    $("modalBackdrop").style.display = "none";
+    state.modal.outletId = null;
+    state.modal.dateISO = null;
+  }
+
+  function validateOutlet(open, openTime, closeTime){
+    if(!open) return null;
+    if(!openTime || !closeTime) return "If open, you must enter open time and close time.";
+    if(String(closeTime).slice(0,5) <= String(openTime).slice(0,5)) return "Close time must be after open time.";
+    return null;
+  }
+
+  function saveOutletModal(){
+    clrErr("errorBoxModal");
+    const outletId = state.modal.outletId;
+    const dateISO = state.modal.dateISO;
+    if(!outletId || !dateISO) return;
+
+    const open = $("mIsOpen").checked;
+    const openTime = $("mOpenTime").value || null;
+    const closeTime = $("mCloseTime").value || null;
+    const notes = $("mNotes").value || "";
+
+    const msg = validateOutlet(open, openTime, closeTime);
+    if(msg){
+      showErr(msg, "errorBoxModal");
+      return;
+    }
+
+    const rec = ensureOut(dateISO, outletId);
+    rec.is_open = open;
+    rec.open_time = open ? openTime : null;
+    rec.close_time = open ? closeTime : null;
+    rec.notes = notes;
+
+    state.dirtyOut.add(keyOut(dateISO, outletId));
+    updateDirtyUI();
+
+    closeOutletModal();
+    renderOutletsSheet();
+  }
+
+  // ---- Save to Supabase ----
+  async function saveAll(){
+    clrErr("errorBoxMeals");
+    clrErr("errorBoxOutlets");
+    setBusy("Saving…");
+
+    try{
+      // Save services
+      if(state.dirtySvc.size){
+        const rows = [];
+        for(const k of state.dirtySvc){
+          const [dateISO, mealGroup] = k.split("|");
+          const rec = ensureSvc(dateISO, mealGroup);
+
+          rows.push({
+            service_date: dateISO,
+            meal_group: mealGroup,
+            service_item_id: rec.service_item_id || null,
+            notes: rec.notes || "",
+            updated_by: state.user.id
+          });
+        }
+
+        const { error } = await window.sb
+          .from("daily_service_selection")
+          .upsert(rows, { onConflict: "service_date,meal_group" });
+
+        if(error) throw error;
+        state.dirtySvc.clear();
+      }
+
+      // Save outlets
+      if(state.dirtyOut.size){
+        const rows = [];
+        for(const k of state.dirtyOut){
+          const [dateISO, outletId] = k.split("|");
+          const rec = ensureOut(dateISO, outletId);
+
+          // UI already validates, DB also has constraint
+          rows.push({
+            outlet_date: dateISO,
+            outlet_item_id: outletId,
+            is_open: !!rec.is_open,
+            open_time: rec.is_open ? (rec.open_time ? String(rec.open_time).slice(0,5) : null) : null,
+            close_time: rec.is_open ? (rec.close_time ? String(rec.close_time).slice(0,5) : null) : null,
+            notes: rec.notes || "",
+            updated_by: state.user.id
+          });
+        }
+
+        const { error } = await window.sb
+          .from("daily_outlet_hours")
+          .upsert(rows, { onConflict: "outlet_date,outlet_item_id" });
+
+        if(error) throw error;
+        state.dirtyOut.clear();
+      }
+
+      updateDirtyUI();
+      setBusy("Saved");
+      // Re-load to show final saved data
+      await loadWeek();
+    } catch(e){
+      console.error(e);
+      const msg = String(e?.message || e);
+      // Split where to show
+      showErr(msg, "errorBoxOutlets");
+      setBusy("Save failed");
+    }
   }
 
   async function downloadPdf(){
-    clearError("errorBox");
     setBusy("Preparing PDF…");
-    el("tableWrap").scrollTop = 0;
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 60));
 
-    const canvas = await window.html2canvas(el("snapshot"), {
+    const canvas = await window.html2canvas(document.querySelector(".wrap"), {
       backgroundColor: "#ffffff",
       scale: 2,
       useCORS: true
@@ -985,97 +1077,74 @@
       }
     }
 
-    pdf.save(`FNB_Outlets_${state.days[0].iso}_to_${state.days[6].iso}.pdf`);
+    pdf.save(`FNB_Grid_${state.days[0].iso}_to_${state.days[6].iso}.pdf`);
     setBusy("PDF downloaded");
   }
-
-  function setUserUI(){
-    const who = el("whoami");
-    const btnOut = el("btnSignOut");
-
-    if(!state.user){
-      who.textContent = "Not signed in";
-      btnOut.style.display = "none";
-      return;
-    }
-    const name = state.profile?.full_name?.trim() || state.user.email || "Signed in";
-    const role = state.profile?.role || "user";
-    who.textContent = `${name} (${role})`;
-    btnOut.style.display = "inline-flex";
-  }
-
-  async function signOut(){
-    await window.sb.auth.signOut();
-    location.href = "index.html";
-  }
-
-  function setDatePicker(iso){ el("datePick").value = iso; }
 
   async function changeStart(newISO){
     state.startISO = newISO;
     buildDays(state.startISO);
-    setDatePicker(state.startISO);
-    await loadWeekData();
+    await loadWeek();
   }
 
   async function init(){
     try{
-      setBusy("Loading…");
-
-      await waitForSupabaseClient();
+      setBusy("Checking sign-in…");
+      await waitForSB();
 
       state.user = await getSessionUser();
       if(!state.user){
         setUserUI();
         setBusy("Not signed in");
-        showError("You are not signed in. Go to your home page and sign in first.\n\nIf your login page is not index.html, change the redirect in this file.", "errorBox");
+        showErr("You are not signed in. Go to your home page and sign in first.", "errorBoxMeals");
         return;
       }
 
       state.profile = await loadProfile(state.user.id);
       setUserUI();
 
-      setBusy("Loading outlets & services…");
-      await loadMasterData();
+      setBusy("Loading lists…");
+      await loadMaster();
 
       state.startISO = todayISO();
       buildDays(state.startISO);
-      setDatePicker(state.startISO);
 
-      await loadWeekData();
-
+      await loadWeek();
+      setBusy("Ready");
+      updateDirtyUI();
     } catch(e){
       console.error(e);
-      showError(String(e?.message || e), "errorBox");
       setBusy("Error");
-      el("whoami").textContent = "Error";
+      showErr(String(e?.message || e), "errorBoxMeals");
+      $("whoami").textContent = "Error";
     }
   }
 
-  // Buttons
-  el("btnPrev").addEventListener("click", async () => {
+  // Events
+  $("btnPrev").addEventListener("click", async () => {
     const d = parseISODate(state.startISO);
     await changeStart(toISODateUTC(addDaysUTC(d, -7)));
   });
-  el("btnNext").addEventListener("click", async () => {
+  $("btnNext").addEventListener("click", async () => {
     const d = parseISODate(state.startISO);
     await changeStart(toISODateUTC(addDaysUTC(d, 7)));
   });
-  el("btnToday").addEventListener("click", async () => { await changeStart(todayISO()); });
-  el("datePick").addEventListener("change", async () => {
-    const iso = el("datePick").value;
+  $("btnToday").addEventListener("click", async () => changeStart(todayISO()));
+  $("datePick").addEventListener("change", async () => {
+    const iso = $("datePick").value;
     if(iso) await changeStart(iso);
   });
 
-  el("btnSave").addEventListener("click", saveOutlets);
-  el("btnSaveServices").addEventListener("click", saveServices);
-  el("btnPdf").addEventListener("click", downloadPdf);
-  el("btnSignOut").addEventListener("click", signOut);
+  $("btnSaveAll").addEventListener("click", saveAll);
+  $("btnPdf").addEventListener("click", downloadPdf);
+  $("btnSignOut").addEventListener("click", signOut);
 
-  el("btnModalClose").addEventListener("click", closeWeekModal);
-  el("btnModalCancel").addEventListener("click", closeWeekModal);
-  el("btnModalSave").addEventListener("click", saveWeekModal);
-  el("modalBackdrop").addEventListener("click", (e) => { if(e.target === el("modalBackdrop")) closeWeekModal(); });
+  $("btnModalClose").addEventListener("click", closeOutletModal);
+  $("btnModalCancel").addEventListener("click", closeOutletModal);
+  $("btnModalSave").addEventListener("click", saveOutletModal);
+  $("modalBackdrop").addEventListener("click", (e) => {
+    if(e.target === $("modalBackdrop")) closeOutletModal();
+  });
 
   init();
 })();
