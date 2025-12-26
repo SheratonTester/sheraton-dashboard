@@ -8,12 +8,11 @@
   <!-- Load order matters -->
   <script defer src="vendor/supabase-js.iife.min.js"></script>
   <script defer src="supabase.js"></script>
-  <script defer src="app.js"></script>
 
   <style>
     :root{
       --bg1:#f6f9ff; --bg2:#ffffff; --card:#fff; --text:#0f172a; --muted:#64748b;
-      --line:#e2e8f0; --btn:#2563eb; --btn2:#0f172a; --bad:#b91c1c; --good:#15803d;
+      --line:#e2e8f0; --btn:#2563eb; --bad:#b91c1c; --good:#15803d;
       --shadow:0 10px 30px rgba(2,6,23,.10); --radius:18px;
     }
     *{box-sizing:border-box}
@@ -44,7 +43,7 @@
       font-size:12px; color:var(--muted);
       border:1px solid var(--line); background:rgba(255,255,255,.65);
       padding:6px 10px; border-radius:999px;
-      max-width:55vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      max-width:60vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     }
     .card{
       background:var(--card);
@@ -131,7 +130,7 @@
     <div class="card">
       <div class="header">
         <h1>Finish setup</h1>
-        <p>Enter your full name, choose your department, and set your password. Role is set to <b>user</b> automatically.</p>
+        <p>Enter your full name, choose your department, and set your password. Role is set to <b>user</b>.</p>
       </div>
 
       <div class="body">
@@ -172,7 +171,7 @@
       </div>
 
       <div class="footer">
-        <div>After setup, you’ll be sent back to where you were going.</div>
+        <div>After setup, you’ll go back automatically.</div>
         <div><a href="index.html">Home</a></div>
       </div>
     </div>
@@ -180,6 +179,7 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
+    const nowIso = () => new Date().toISOString();
 
     function showMsg(text, kind) {
       const el = $("msgBox");
@@ -193,15 +193,41 @@
       el.textContent = "";
       el.className = "msg";
     }
-    function nowIso() { return new Date().toISOString(); }
 
-    async function markInviteAcceptedIfExists(sb, user) {
-      // Optional: only runs if table exists + policies allow it
+    function safeNext() {
+      // Only allow same-site relative next (prevents weird redirects)
+      const url = new URL(window.location.href);
+      const next = url.searchParams.get("next") || "index.html";
+      if (next.startsWith("http://") || next.startsWith("https://")) return "index.html";
+      if (next.startsWith("//")) return "index.html";
+      return next;
+    }
+
+    async function getUserOrKick() {
+      const { data, error } = await window.sb.auth.getUser();
+      if (error || !data?.user) {
+        window.location.href = "index.html";
+        return null;
+      }
+      return data.user;
+    }
+
+    async function getProfile(userId) {
+      const { data, error } = await window.sb
+        .from("profiles")
+        .select("user_id, full_name, department, onboarding_completed")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) return null;
+      return data || null;
+    }
+
+    async function markInviteAcceptedIfExists(user) {
       try {
         const email = (user.email || "").toLowerCase();
         if (!email) return;
 
-        const sel = await sb
+        const sel = await window.sb
           .from("user_invites")
           .select("id")
           .ilike("email", email)
@@ -213,7 +239,7 @@
         const inviteId = sel.data?.[0]?.id;
         if (!inviteId) return;
 
-        await sb
+        await window.sb
           .from("user_invites")
           .update({ accepted_at: nowIso(), accepted_user_id: user.id })
           .eq("id", inviteId);
@@ -223,23 +249,27 @@
     (async function init() {
       clearMsg();
 
-      const sb = window.App.getSB();
-      const user = await window.App.getUser();
-
-      if (!user) {
-        window.location.href = "index.html";
+      if (!window.sb) {
+        alert("Supabase client not found. Make sure supabase.js loads and sets window.sb.");
         return;
       }
 
+      const user = await getUserOrKick();
+      if (!user) return;
+
       $("whoPill").textContent = user.email ? `Signed in: ${user.email}` : "Signed in";
 
-      // Prefill if profile already exists
-      const prof = await window.App.getProfile(user.id);
+      // Prefill if profile exists
+      const prof = await getProfile(user.id);
+      if (prof?.onboarding_completed) {
+        window.location.href = safeNext();
+        return;
+      }
       if (prof?.full_name) $("fullName").value = prof.full_name;
       if (prof?.department) $("department").value = prof.department;
 
       $("btnSignOut").addEventListener("click", async () => {
-        await sb.auth.signOut();
+        await window.sb.auth.signOut();
         window.location.href = "index.html";
       });
 
@@ -259,8 +289,8 @@
         $("btnComplete").disabled = true;
 
         try {
-          // 1) Set password in Auth
-          const pw = await sb.auth.updateUser({ password: p1 });
+          // 1) Set password
+          const pw = await window.sb.auth.updateUser({ password: p1 });
           if (pw.error) throw pw.error;
 
           // 2) Save profile (role forced to 'user')
@@ -276,7 +306,7 @@
             onboarding_completed: true
           };
 
-          const up = await sb
+          const up = await window.sb
             .from("profiles")
             .upsert(row, { onConflict: "user_id" })
             .select()
@@ -284,15 +314,11 @@
 
           if (up.error) throw up.error;
 
-          // Optional: invite accept tracking
-          await markInviteAcceptedIfExists(sb, user);
+          // Optional invite tracking
+          await markInviteAcceptedIfExists(user);
 
           showMsg("Setup complete. Redirecting…", "good");
-
-          // Send them back to the original page (from the gate), or home
-          const url = new URL(window.location.href);
-          const next = url.searchParams.get("next");
-          window.location.href = next ? next : "index.html";
+          setTimeout(() => (window.location.href = safeNext()), 500);
 
         } catch (e) {
           console.error(e);
