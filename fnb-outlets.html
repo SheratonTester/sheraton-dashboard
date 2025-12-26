@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>F&B Outlets</title>
 
-  <!-- Bright, modern look -->
   <style>
     :root{
       --bg:#f6f8ff;
@@ -28,448 +27,176 @@
                   radial-gradient(900px 600px at 90% 10%, #e9fff6 0%, rgba(233,255,246,0) 55%),
                   var(--bg);
     }
-    header{
-      padding:22px 18px 10px;
-      max-width: 1320px;
-      margin: 0 auto;
-    }
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .brand{
-      display:flex; align-items:center; gap:10px;
-    }
+    header{ padding:22px 18px 10px; max-width:1320px; margin:0 auto; }
+    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .brand{ display:flex; align-items:center; gap:10px; }
     .logo{
-      width:42px; height:42px;
-      border-radius:14px;
+      width:42px; height:42px; border-radius:14px;
       background: linear-gradient(135deg, #2563eb, #22c55e);
       box-shadow: var(--shadow);
     }
-    h1{
-      font-size:18px;
-      margin:0;
-      line-height:1.2;
-    }
-    .subtitle{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:2px;
-    }
+    h1{ font-size:18px; margin:0; line-height:1.2; }
+    .subtitle{ font-size:12px; color:var(--muted); margin-top:2px; }
     .pill{
-      font-size:12px;
-      padding:6px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      color:var(--muted);
+      font-size:12px; padding:6px 10px; border:1px solid var(--line);
+      border-radius:999px; background:#fff; color:var(--muted);
     }
-    .wrap{
-      max-width:1320px;
-      margin: 0 auto;
-      padding: 10px 18px 34px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1.35fr .65fr;
-      gap:14px;
-    }
-    @media (max-width: 1050px){
-      .grid{ grid-template-columns: 1fr; }
-    }
+    .wrap{ max-width:1320px; margin:0 auto; padding:10px 18px 34px; }
+    .grid{ display:grid; grid-template-columns: 1.35fr .65fr; gap:14px; }
+    @media (max-width: 1050px){ .grid{ grid-template-columns: 1fr; } }
     .card{
-      background:var(--card);
-      border:1px solid rgba(226,232,240,.9);
-      border-radius:var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+      background:var(--card); border:1px solid rgba(226,232,240,.9);
+      border-radius:var(--radius); box-shadow: var(--shadow); overflow:hidden;
     }
     .card-head{
-      padding:14px 14px 10px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+      padding:14px 14px 10px; border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
     }
-    .card-title{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
+    .card-title{ display:flex; flex-direction:column; gap:4px; }
     .card-title strong{ font-size:14px; }
     .card-title span{ font-size:12px; color:var(--muted); }
-    .controls{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
+    .controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     input[type="date"]{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      outline:none;
-      background:#fff;
+      border:1px solid var(--line); border-radius:12px;
+      padding:10px 12px; font-size:13px; outline:none; background:#fff;
     }
     button{
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      font-size:13px;
-      cursor:pointer;
+      border:1px solid var(--line); background:#fff; color:var(--text);
+      padding:10px 12px; border-radius:12px; font-size:13px; cursor:pointer;
       transition: transform .04s ease, background .15s ease, border-color .15s ease;
     }
     button:hover{ background:#f8fafc; }
     button:active{ transform: translateY(1px); }
     .primary{
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      border-color: transparent;
-      color:#fff;
+      border-color: transparent; color:#fff;
     }
     .primary:hover{ background: linear-gradient(135deg, #1d4ed8, #1e40af); }
-    .danger{
-      background: #fff5f5;
-      border-color: #fecaca;
-      color: #b91c1c;
-    }
-    .muted-btn{
-      color:var(--muted);
-      background:#fff;
-    }
-    .small{
-      padding:8px 10px;
-      border-radius:10px;
-      font-size:12px;
-    }
+    .muted-btn{ color:var(--muted); background:#fff; }
+    .small{ padding:8px 10px; border-radius:10px; font-size:12px; }
+
     .statusbar{
-      padding:10px 14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      border-bottom:1px solid var(--line);
+      padding:10px 14px; display:flex; justify-content:space-between; align-items:center;
+      gap:10px; flex-wrap:wrap; border-bottom:1px solid var(--line);
       background: linear-gradient(180deg, #ffffff, #fbfdff);
     }
-    .status-left{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-      color:var(--muted);
-      font-size:12px;
-    }
-    .dot{
-      width:8px; height:8px; border-radius:50%;
-      background:#94a3b8;
-    }
-    .dot.ok{ background: #22c55e; }
-    .dot.warn{ background: #f59e0b; }
+    .status-left{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; color:var(--muted); font-size:12px; }
+    .dot{ width:8px; height:8px; border-radius:50%; background:#94a3b8; }
+    .dot.ok{ background:#22c55e; } .dot.warn{ background:#f59e0b; }
+
     .error{
-      display:none;
-      margin:12px 14px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid #fecaca;
-      background:#fff1f2;
-      color:#9f1239;
-      font-size:13px;
-      white-space:pre-wrap;
+      display:none; margin:12px 14px; padding:10px 12px; border-radius:14px;
+      border:1px solid #fecaca; background:#fff1f2; color:#9f1239;
+      font-size:13px; white-space:pre-wrap;
     }
 
-    /* Snapshot area for PDF (capture this) */
-    #snapshot{
-      padding:12px 14px 14px;
-    }
+    #snapshot{ padding:12px 14px 14px; }
 
-    /* Outlet grid table */
     .table-wrap{
-      overflow:auto;
-      max-height: 66vh;
-      border-top:1px solid var(--line);
+      overflow:auto; max-height:66vh; border-top:1px solid var(--line);
     }
-    table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      min-width: 980px;
-    }
+    table{ width:100%; border-collapse:separate; border-spacing:0; min-width:980px; }
     thead th{
-      position:sticky;
-      top:0;
-      background:#f8fafc;
-      z-index:2;
-      border-bottom:1px solid var(--line);
-      font-size:12px;
-      color:var(--muted);
-      padding:10px 10px;
-      text-align:left;
-      white-space:nowrap;
+      position:sticky; top:0; background:#f8fafc; z-index:2;
+      border-bottom:1px solid var(--line); font-size:12px; color:var(--muted);
+      padding:10px 10px; text-align:left; white-space:nowrap;
     }
-    th:first-child{
-      position:sticky;
-      left:0;
-      z-index:3;
-      background:#f8fafc;
-    }
+    th:first-child{ position:sticky; left:0; z-index:3; background:#f8fafc; }
     tbody td{
-      border-bottom:1px solid var(--line);
-      padding:10px 10px;
-      vertical-align:top;
-      background:#fff;
+      border-bottom:1px solid var(--line); padding:10px 10px; vertical-align:top; background:#fff;
     }
     tbody td:first-child{
-      position:sticky;
-      left:0;
-      z-index:1;
-      background:#fff;
-      border-right:1px solid var(--line);
-      min-width: 240px;
+      position:sticky; left:0; z-index:1; background:#fff; border-right:1px solid var(--line);
+      min-width:240px;
     }
-    .outlet-name{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-    .outlet-name .name{
-      font-weight:650;
-      font-size:13px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .outlet-name .meta{
-      font-size:12px;
-      color:var(--muted);
-    }
-    .row-actions{
-      margin-top:8px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
+    .outlet-name{ display:flex; flex-direction:column; gap:4px; }
+    .outlet-name .name{ font-weight:650; font-size:13px; display:flex; align-items:center; gap:8px; }
+    .outlet-name .meta{ font-size:12px; color:var(--muted); }
+    .row-actions{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
 
-    /* Cell controls */
-    .cell{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-width: 190px;
-    }
-    .rowline{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-    }
+    .cell{ display:flex; flex-direction:column; gap:8px; min-width:190px; }
+    .rowline{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .badge{
-      font-size:11px;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      color:var(--muted);
-      background:#fff;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      user-select:none;
+      font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid var(--line);
+      color:var(--muted); background:#fff; display:inline-flex; align-items:center; gap:6px; user-select:none;
     }
-    .badge.open{
-      border-color: rgba(34,197,94,.35);
-      background: rgba(34,197,94,.08);
-      color:#166534;
-    }
-    .badge.closed{
-      border-color: rgba(220,38,38,.25);
-      background: rgba(220,38,38,.06);
-      color:#991b1b;
-    }
-    .timebox{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:8px;
-    }
+    .badge.open{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.08); color:#166534; }
+    .badge.closed{ border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.06); color:#991b1b; }
+
+    .timebox{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
     .timebox input[type="time"]{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:8px 10px;
-      font-size:12px;
-      outline:none;
+      width:100%; border:1px solid var(--line); border-radius:12px;
+      padding:8px 10px; font-size:12px; outline:none;
     }
     textarea{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:8px 10px;
-      font-size:12px;
-      outline:none;
-      resize:vertical;
-      min-height: 56px;
+      width:100%; border:1px solid var(--line); border-radius:12px;
+      padding:8px 10px; font-size:12px; outline:none; resize:vertical; min-height:56px;
     }
-    .help{
-      font-size:11px;
-      color:var(--muted);
-    }
+    .help{ font-size:11px; color:var(--muted); }
     .dirty{
       outline: 2px solid rgba(37,99,235,.18);
-      outline-offset: 2px;
-      border-radius: 14px;
-      padding: 6px;
+      outline-offset: 2px; border-radius:14px; padding:6px;
     }
 
-    /* Switch */
-    .switch{
-      position:relative;
-      width:44px;
-      height:24px;
-      display:inline-block;
-      flex:0 0 auto;
-    }
+    .switch{ position:relative; width:44px; height:24px; display:inline-block; flex:0 0 auto; }
     .switch input{ display:none; }
     .slider{
-      position:absolute;
-      inset:0;
-      background:#e2e8f0;
-      border-radius:999px;
-      transition:.15s ease;
-      border:1px solid #cbd5e1;
+      position:absolute; inset:0; background:#e2e8f0; border-radius:999px;
+      transition:.15s ease; border:1px solid #cbd5e1;
     }
     .slider:before{
-      content:"";
-      position:absolute;
-      height:18px; width:18px;
-      left:3px; top:2px;
-      background:#fff;
-      border-radius:50%;
+      content:""; position:absolute; height:18px; width:18px; left:3px; top:2px;
+      background:#fff; border-radius:50%;
       box-shadow: 0 4px 10px rgba(15,23,42,.15);
       transition:.15s ease;
     }
-    .switch input:checked + .slider{
-      background: rgba(34,197,94,.25);
-      border-color: rgba(34,197,94,.45);
-    }
-    .switch input:checked + .slider:before{
-      transform: translateX(20px);
-    }
+    .switch input:checked + .slider{ background: rgba(34,197,94,.25); border-color: rgba(34,197,94,.45); }
+    .switch input:checked + .slider:before{ transform: translateX(20px); }
 
-    /* Services card */
-    .services-wrap{
-      padding:12px 14px 14px;
-    }
+    .services-wrap{ padding:12px 14px 14px; }
     .svc-group{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:10px;
-      margin-bottom:10px;
+      border:1px solid var(--line); border-radius:16px; padding:10px; margin-bottom:10px;
       background: linear-gradient(180deg, #ffffff, #fbfdff);
     }
-    .svc-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-      flex-wrap:wrap;
-    }
+    .svc-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
     .svc-head strong{ font-size:13px; }
-    .svc-grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
-    .svc-row{
-      display:grid;
-      grid-template-columns: 120px 1fr;
-      gap:10px;
-      align-items:start;
-    }
-    .svc-row .daylbl{
-      font-size:12px;
-      color:var(--muted);
-      padding-top:10px;
-      white-space:nowrap;
-    }
+    .svc-grid{ display:grid; grid-template-columns: 1fr; gap:10px; }
+    .svc-row{ display:grid; grid-template-columns: 120px 1fr; gap:10px; align-items:start; }
+    .svc-row .daylbl{ font-size:12px; color:var(--muted); padding-top:10px; white-space:nowrap; }
     select{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      outline:none;
-      background:#fff;
+      width:100%; border:1px solid var(--line); border-radius:12px;
+      padding:10px 12px; font-size:13px; outline:none; background:#fff;
     }
 
-    /* Modal */
     .modal-backdrop{
-      position:fixed;
-      inset:0;
-      background: rgba(15,23,42,.45);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:50;
+      position:fixed; inset:0; background: rgba(15,23,42,.45);
+      display:none; align-items:center; justify-content:center; padding:18px; z-index:50;
     }
     .modal{
-      width:min(920px, 100%);
-      max-height: 90vh;
-      overflow:auto;
-      background:#fff;
-      border-radius:22px;
-      border:1px solid rgba(226,232,240,.9);
+      width:min(920px, 100%); max-height: 90vh; overflow:auto;
+      background:#fff; border-radius:22px; border:1px solid rgba(226,232,240,.9);
       box-shadow: 0 30px 80px rgba(15,23,42,.25);
     }
     .modal-head{
-      padding:14px 14px 10px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:flex-start;
-      flex-wrap:wrap;
+      padding:14px 14px 10px; border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;
     }
     .modal-head strong{ font-size:14px; }
     .modal-body{ padding:12px 14px 14px; }
     .modal-foot{
-      padding:12px 14px 14px;
-      border-top:1px solid var(--line);
-      display:flex;
-      justify-content:flex-end;
-      gap:10px;
-      flex-wrap:wrap;
+      padding:12px 14px 14px; border-top:1px solid var(--line);
+      display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
       background: linear-gradient(180deg, #ffffff, #fbfdff);
     }
-    .wk-table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-    }
+    .wk-table{ width:100%; border-collapse:separate; border-spacing:0; }
     .wk-table th, .wk-table td{
-      border-bottom:1px solid var(--line);
-      padding:10px 8px;
-      font-size:13px;
-      vertical-align:top;
+      border-bottom:1px solid var(--line); padding:10px 8px; font-size:13px; vertical-align:top;
     }
-    .wk-table th{ text-align:left; color:var(--muted); font-size:12px; background:#f8fafc; position:sticky; top:0; }
+    .wk-table th{
+      text-align:left; color:var(--muted); font-size:12px; background:#f8fafc;
+      position:sticky; top:0;
+    }
   </style>
-
-  <!-- Supabase (your repo file) -->
-  <script defer src="vendor/supabase-js.iife.min.js"></script>
-  <script defer src="supabase.js"></script>
-  <script defer src="app.js"></script>
-
-  <!-- PDF snapshot libs -->
-  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -479,12 +206,12 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>F&B Outlets</h1>
-        <div class="subtitle">7-day hours + services. Uses Supabase tables you already created.</div>
+        <div class="subtitle">7-day hours + services. Times are required when Open.</div>
       </div>
     </div>
 
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-      <span class="pill" id="whoami">Not signed in</span>
+      <span class="pill" id="whoami">Loading…</span>
       <button class="muted-btn small" id="btnSignOut" style="display:none;">Sign out</button>
     </div>
   </div>
@@ -492,12 +219,11 @@
 
 <div class="wrap">
   <div class="grid">
-    <!-- OUTLETS -->
     <section class="card" id="outletsCard">
       <div class="card-head">
         <div class="card-title">
           <strong>Outlets & Restaurants</strong>
-          <span>Toggle open/closed. If open, times are required.</span>
+          <span>Open requires open/close times (and close must be after open).</span>
         </div>
 
         <div class="controls">
@@ -523,7 +249,6 @@
 
       <div class="error" id="errorBox"></div>
 
-      <!-- Snapshot capture area -->
       <div id="snapshot">
         <div class="table-wrap" id="tableWrap">
           <table id="outletTable" aria-label="Outlet hours table"></table>
@@ -531,7 +256,6 @@
       </div>
     </section>
 
-    <!-- SERVICES -->
     <aside class="card">
       <div class="card-head">
         <div class="card-title">
@@ -549,7 +273,6 @@
   </div>
 </div>
 
-<!-- Edit Week Modal -->
 <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Edit week modal">
   <div class="modal">
     <div class="modal-head">
@@ -570,10 +293,16 @@
   </div>
 </div>
 
+<!-- IMPORTANT: scripts load at the END (fixes your window.sb timing issue) -->
+<script src="vendor/supabase-js.iife.min.js"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 <script>
 (() => {
   const TZ = "America/Toronto";
-
   const el = (id) => document.getElementById(id);
 
   function showError(msg, boxId="errorBox"){
@@ -589,9 +318,9 @@
     b.textContent = "";
     b.style.display = "none";
   }
+  function setBusy(text){ el("statusText").textContent = text; }
 
   function parseISODate(iso){
-    // Use noon UTC to avoid TZ day-shift when formatting for Toronto
     const [y,m,d] = iso.split("-").map(Number);
     return new Date(Date.UTC(y, m-1, d, 12, 0, 0));
   }
@@ -614,9 +343,25 @@
       day: "numeric"
     }).format(d);
   }
+  function todayISO(){
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year:"numeric", month:"2-digit", day:"2-digit" })
+      .formatToParts(new Date());
+    const y = parts.find(p=>p.type==="year").value;
+    const m = parts.find(p=>p.type==="month").value;
+    const d = parts.find(p=>p.type==="day").value;
+    return `${y}-${m}-${d}`;
+  }
 
-  function setBusy(text){
-    el("statusText").textContent = text;
+  // Wait until window.sb exists (extra safety)
+  async function waitForSupabaseClient(){
+    const start = Date.now();
+    while(!window.sb){
+      if(Date.now() - start > 4000) break;
+      await new Promise(r => setTimeout(r, 50));
+    }
+    if(!window.sb){
+      throw new Error("Supabase client not found (window.sb). Check that supabase.js is loaded and creates window.sb.");
+    }
   }
 
   const state = {
@@ -626,11 +371,10 @@
     days: [],
     outlets: [],
     services: [],
-    mealGroups: [],
-    outletMap: new Map(),   // key: date|outletId -> record
-    svcMap: new Map(),      // key: date|mealGroup -> record
-    dirtyOutlets: new Set(),// keys
-    dirtySvcs: new Set(),   // keys
+    outletMap: new Map(),   // date|outletId -> record
+    svcMap: new Map(),      // date|mealGroup -> record
+    dirtyOutlets: new Set(),
+    dirtySvcs: new Set(),
     modal: { outlet: null }
   };
 
@@ -642,11 +386,10 @@
     dot.classList.add(dirty ? "warn" : "ok");
   }
 
-  function keyOutlet(dateISO, outletId){ return `${dateISO}|${outletId}`; }
-  function keySvc(dateISO, mealGroup){ return `${dateISO}|${mealGroup}`; }
+  const keyOutlet = (dateISO, outletId) => `${dateISO}|${outletId}`;
+  const keySvc = (dateISO, mealGroup) => `${dateISO}|${mealGroup}`;
 
   async function getSessionUser(){
-    if(!window.sb) throw new Error("Supabase client not found. Check vendor/supabase-js.iife.min.js + supabase.js order.");
     const { data, error } = await window.sb.auth.getSession();
     if(error) throw error;
     return data.session?.user || null;
@@ -684,14 +427,6 @@
 
     state.outlets = outletsRes.data || [];
     state.services = servicesRes.data || [];
-
-    const groups = new Map();
-    for(const s of state.services){
-      const g = (s.category || "").trim() || "Other";
-      if(!groups.has(g)) groups.set(g, []);
-      groups.get(g).push(s);
-    }
-    state.mealGroups = Array.from(groups.keys());
   }
 
   function buildDays(startISO){
@@ -699,14 +434,10 @@
     state.days = [];
     for(let i=0;i<7;i++){
       const d = addDaysUTC(start, i);
-      state.days.push({
-        d,
-        iso: toISODateUTC(d),
-        label: fmtDayLabel(d)
-      });
+      state.days.push({ d, iso: toISODateUTC(d), label: fmtDayLabel(d) });
     }
-    const endISO = state.days[state.days.length - 1].iso;
-    el("rangeLabel").textContent = `${state.days[0].label} → ${state.days[6].label} (${state.days[0].iso} to ${endISO})`;
+    el("rangeLabel").textContent =
+      `${state.days[0].label} → ${state.days[6].label} (${state.days[0].iso} to ${state.days[6].iso})`;
   }
 
   async function loadWeekData(){
@@ -778,12 +509,12 @@
     return state.svcMap.get(k);
   }
 
+  // RULE: if open => times required and close > open
   function validateOutletRecord(r){
     if(r.is_open){
       if(!r.open_time || !r.close_time){
         return "If an outlet is OPEN, open and close times are required.";
       }
-      // close must be after open (simple same-day rule)
       const o = String(r.open_time).slice(0,5);
       const c = String(r.close_time).slice(0,5);
       if(c <= o){
@@ -806,7 +537,7 @@
 
     for(const day of state.days){
       const th = document.createElement("th");
-      th.textContent = `${day.label}`;
+      th.textContent = day.label;
       const sub = document.createElement("div");
       sub.style.fontSize = "11px";
       sub.style.color = "var(--muted)";
@@ -815,7 +546,6 @@
       th.appendChild(sub);
       hr.appendChild(th);
     }
-
     thead.appendChild(hr);
     table.appendChild(thead);
 
@@ -824,7 +554,6 @@
     for(const outlet of state.outlets){
       const tr = document.createElement("tr");
 
-      // First sticky col
       const tdName = document.createElement("td");
       const wrap = document.createElement("div");
       wrap.className = "outlet-name";
@@ -835,7 +564,7 @@
 
       const meta = document.createElement("div");
       meta.className = "meta";
-      meta.textContent = outlet.department ? outlet.department : "—";
+      meta.textContent = outlet.department || "—";
 
       const actions = document.createElement("div");
       actions.className = "row-actions";
@@ -844,7 +573,6 @@
       btnWeek.className = "small";
       btnWeek.textContent = "Edit week";
       btnWeek.addEventListener("click", () => openWeekModal(outlet));
-
       actions.appendChild(btnWeek);
 
       wrap.appendChild(nameLine);
@@ -854,7 +582,6 @@
       tdName.appendChild(wrap);
       tr.appendChild(tdName);
 
-      // 7 day cells
       for(const day of state.days){
         const td = document.createElement("td");
         const cell = document.createElement("div");
@@ -888,13 +615,11 @@
         const tOpen = document.createElement("input");
         tOpen.type = "time";
         tOpen.value = r.open_time ? String(r.open_time).slice(0,5) : "";
-        tOpen.placeholder = "Open";
         tOpen.disabled = !r.is_open;
 
         const tClose = document.createElement("input");
         tClose.type = "time";
         tClose.value = r.close_time ? String(r.close_time).slice(0,5) : "";
-        tClose.placeholder = "Close";
         tClose.disabled = !r.is_open;
 
         timeBox.appendChild(tOpen);
@@ -905,22 +630,20 @@
         notes.value = r.notes || "";
         notes.rows = 2;
 
-        function markDirty(){
+        const markDirty = () => {
           const k = keyOutlet(day.iso, outlet.id);
           state.dirtyOutlets.add(k);
           cell.classList.add("dirty");
           updateUnsavedUI();
-        }
-
-        function refreshBadge(){
+        };
+        const refreshBadge = () => {
           badge.className = "badge " + (r.is_open ? "open" : "closed");
           badge.textContent = r.is_open ? "Open" : "Closed";
-        }
+        };
 
         cb.addEventListener("change", () => {
           r.is_open = cb.checked;
           if(!r.is_open){
-            // Keep notes, but clear times on save (set null)
             tOpen.value = "";
             tClose.value = "";
             r.open_time = null;
@@ -931,25 +654,9 @@
           refreshBadge();
           markDirty();
         });
-
-        tOpen.addEventListener("change", () => {
-          r.open_time = tOpen.value || null;
-          markDirty();
-        });
-
-        tClose.addEventListener("change", () => {
-          r.close_time = tClose.value || null;
-          markDirty();
-        });
-
-        notes.addEventListener("change", () => {
-          r.notes = notes.value || "";
-          markDirty();
-        });
-
-        // If already dirty, show
-        const existingKey = keyOutlet(day.iso, outlet.id);
-        if(state.dirtyOutlets.has(existingKey)) cell.classList.add("dirty");
+        tOpen.addEventListener("change", () => { r.open_time = tOpen.value || null; markDirty(); });
+        tClose.addEventListener("change", () => { r.close_time = tClose.value || null; markDirty(); });
+        notes.addEventListener("change", () => { r.notes = notes.value || ""; markDirty(); });
 
         cell.appendChild(rowTop);
         cell.appendChild(timeBox);
@@ -1029,20 +736,9 @@
         notes.rows = 2;
         notes.value = r.notes || "";
 
-        function markDirtySvc(){
-          const k = keySvc(day.iso, mealGroup);
-          state.dirtySvcs.add(k);
-          updateUnsavedUI();
-        }
-
-        sel.addEventListener("change", () => {
-          r.service_item_id = sel.value || null;
-          markDirtySvc();
-        });
-        notes.addEventListener("change", () => {
-          r.notes = notes.value || "";
-          markDirtySvc();
-        });
+        const markDirtySvc = () => { state.dirtySvcs.add(keySvc(day.iso, mealGroup)); updateUnsavedUI(); };
+        sel.addEventListener("change", () => { r.service_item_id = sel.value || null; markDirtySvc(); });
+        notes.addEventListener("change", () => { r.notes = notes.value || ""; markDirtySvc(); });
 
         right.appendChild(sel);
         right.appendChild(notes);
@@ -1068,13 +764,12 @@
       return;
     }
 
-    // Validate first
     for(const k of state.dirtyOutlets){
       const [dateISO, outletId] = k.split("|");
       const r = getOutletRecord(dateISO, outletId);
       const msg = validateOutletRecord(r);
       if(msg){
-        showError(`${msg}\n\nOutlet: ${outletId}\nDate: ${dateISO}`, "errorBox");
+        showError(`${msg}\n\nDate: ${dateISO}`, "errorBox");
         setBusy("Fix required fields");
         return;
       }
@@ -1109,7 +804,7 @@
     }
 
     state.dirtyOutlets.clear();
-    renderOutletTable(); // clears dirty highlights
+    renderOutletTable();
     setBusy("Saved outlet changes");
     updateUnsavedUI();
   }
@@ -1118,9 +813,7 @@
     clearError("errorBoxSvc");
     if(!state.user) return;
 
-    if(state.dirtySvcs.size === 0){
-      return;
-    }
+    if(state.dirtySvcs.size === 0) return;
 
     const rows = [];
     for(const k of state.dirtySvcs){
@@ -1153,7 +846,6 @@
   function openWeekModal(outlet){
     state.modal.outlet = outlet;
     clearError("errorBoxModal");
-
     el("modalTitle").textContent = `Edit week: ${outlet.name}`;
     el("modalSubtitle").textContent = "Open/closed + times + notes for all 7 days";
 
@@ -1162,7 +854,7 @@
 
     const thead = document.createElement("thead");
     const trh = document.createElement("tr");
-    ["Day", "Open", "Open time", "Close time", "Notes"].forEach(t => {
+    ["Day","Open","Open time","Close time","Notes"].forEach(t => {
       const th = document.createElement("th");
       th.textContent = t;
       trh.appendChild(th);
@@ -1171,11 +863,10 @@
     wk.appendChild(thead);
 
     const tbody = document.createElement("tbody");
-
     for(const day of state.days){
       const r = getOutletRecord(day.iso, outlet.id);
-
       const tr = document.createElement("tr");
+      tr.dataset.date = day.iso;
 
       const tdDay = document.createElement("td");
       tdDay.innerHTML = `<div style="font-weight:650">${day.label}</div><div style="font-size:12px;color:var(--muted)">${day.iso}</div>`;
@@ -1211,41 +902,27 @@
       tdN.appendChild(ta);
       tr.appendChild(tdN);
 
-      // Store controls on the row
-      tr.dataset.date = day.iso;
-
       cb.addEventListener("change", () => {
         const open = cb.checked;
         inOT.disabled = !open;
         inCT.disabled = !open;
-        if(!open){
-          inOT.value = "";
-          inCT.value = "";
-        }
+        if(!open){ inOT.value=""; inCT.value=""; }
       });
 
       tbody.appendChild(tr);
     }
-
     wk.appendChild(tbody);
 
     el("modalBackdrop").style.display = "flex";
   }
+  function closeWeekModal(){ el("modalBackdrop").style.display = "none"; state.modal.outlet = null; }
 
-  function closeWeekModal(){
-    el("modalBackdrop").style.display = "none";
-    state.modal.outlet = null;
-  }
-
-  async function saveWeekModal(){
+  function saveWeekModal(){
     clearError("errorBoxModal");
     const outlet = state.modal.outlet;
     if(!outlet) return;
 
-    const wk = el("wkTable");
-    const rows = Array.from(wk.querySelectorAll("tbody tr"));
-
-    // Apply to state + validate
+    const rows = Array.from(el("wkTable").querySelectorAll("tbody tr"));
     for(const tr of rows){
       const dateISO = tr.dataset.date;
       const cb = tr.querySelector('input[type="checkbox"]');
@@ -1265,13 +942,11 @@
       }
     }
 
-    // Mark dirty keys
     for(const day of state.days){
       state.dirtyOutlets.add(keyOutlet(day.iso, outlet.id));
     }
     updateUnsavedUI();
 
-    // Close + rerender
     closeWeekModal();
     renderOutletTable();
   }
@@ -1279,15 +954,10 @@
   async function downloadPdf(){
     clearError("errorBox");
     setBusy("Preparing PDF…");
-
-    const snap = el("snapshot");
-    // Make sure it's scrolled to top for clean capture
     el("tableWrap").scrollTop = 0;
-
-    // Wait a tick for any layout updates
     await new Promise(r => setTimeout(r, 80));
 
-    const canvas = await window.html2canvas(snap, {
+    const canvas = await window.html2canvas(el("snapshot"), {
       backgroundColor: "#ffffff",
       scale: 2,
       useCORS: true
@@ -1295,12 +965,11 @@
 
     const imgData = canvas.toDataURL("image/png");
     const { jsPDF } = window.jspdf;
-
     const pdf = new jsPDF("p", "pt", "letter");
+
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
 
-    // Fit to page width
     const imgW = pageW;
     const imgH = canvas.height * (imgW / canvas.width);
 
@@ -1312,12 +981,11 @@
       remaining -= pageH;
       if(remaining > 0){
         pdf.addPage();
-        y -= pageH; // move image up for the next slice
+        y -= pageH;
       }
     }
 
-    const fname = `FNB_Outlets_${state.days[0].iso}_to_${state.days[6].iso}.pdf`;
-    pdf.save(fname);
+    pdf.save(`FNB_Outlets_${state.days[0].iso}_to_${state.days[6].iso}.pdf`);
     setBusy("PDF downloaded");
   }
 
@@ -1330,7 +998,6 @@
       btnOut.style.display = "none";
       return;
     }
-
     const name = state.profile?.full_name?.trim() || state.user.email || "Signed in";
     const role = state.profile?.role || "user";
     who.textContent = `${name} (${role})`;
@@ -1342,19 +1009,7 @@
     location.href = "index.html";
   }
 
-  function setDatePicker(iso){
-    el("datePick").value = iso;
-  }
-
-  function todayISO(){
-    // Build ISO date in Toronto
-    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year:"numeric", month:"2-digit", day:"2-digit" })
-      .formatToParts(new Date());
-    const y = parts.find(p=>p.type==="year").value;
-    const m = parts.find(p=>p.type==="month").value;
-    const d = parts.find(p=>p.type==="day").value;
-    return `${y}-${m}-${d}`;
-  }
+  function setDatePicker(iso){ el("datePick").value = iso; }
 
   async function changeStart(newISO){
     state.startISO = newISO;
@@ -1365,36 +1020,39 @@
 
   async function init(){
     try{
-      setBusy("Checking sign-in…");
-      state.user = await getSessionUser();
+      setBusy("Loading…");
 
+      await waitForSupabaseClient();
+
+      state.user = await getSessionUser();
       if(!state.user){
         setUserUI();
         setBusy("Not signed in");
-        showError("You are not signed in. Go to your home page and sign in first.\n\nTip: If your login page is not index.html, change the redirect in this file.", "errorBox");
+        showError("You are not signed in. Go to your home page and sign in first.\n\nIf your login page is not index.html, change the redirect in this file.", "errorBox");
         return;
       }
 
       state.profile = await loadProfile(state.user.id);
       setUserUI();
 
-      setBusy("Loading lists…");
+      setBusy("Loading outlets & services…");
       await loadMasterData();
 
-      const start = todayISO();
-      state.startISO = start;
+      state.startISO = todayISO();
       buildDays(state.startISO);
       setDatePicker(state.startISO);
 
       await loadWeekData();
-    } catch (e){
+
+    } catch(e){
       console.error(e);
       showError(String(e?.message || e), "errorBox");
       setBusy("Error");
+      el("whoami").textContent = "Error";
     }
   }
 
-  // Events
+  // Buttons
   el("btnPrev").addEventListener("click", async () => {
     const d = parseISODate(state.startISO);
     await changeStart(toISODateUTC(addDaysUTC(d, -7)));
@@ -1403,33 +1061,24 @@
     const d = parseISODate(state.startISO);
     await changeStart(toISODateUTC(addDaysUTC(d, 7)));
   });
-  el("btnToday").addEventListener("click", async () => {
-    await changeStart(todayISO());
-  });
+  el("btnToday").addEventListener("click", async () => { await changeStart(todayISO()); });
   el("datePick").addEventListener("change", async () => {
     const iso = el("datePick").value;
-    if(!iso) return;
-    await changeStart(iso);
+    if(iso) await changeStart(iso);
   });
 
   el("btnSave").addEventListener("click", saveOutlets);
   el("btnSaveServices").addEventListener("click", saveServices);
   el("btnPdf").addEventListener("click", downloadPdf);
-
   el("btnSignOut").addEventListener("click", signOut);
 
   el("btnModalClose").addEventListener("click", closeWeekModal);
   el("btnModalCancel").addEventListener("click", closeWeekModal);
   el("btnModalSave").addEventListener("click", saveWeekModal);
-
-  // Close modal on backdrop click
-  el("modalBackdrop").addEventListener("click", (e) => {
-    if(e.target === el("modalBackdrop")) closeWeekModal();
-  });
+  el("modalBackdrop").addEventListener("click", (e) => { if(e.target === el("modalBackdrop")) closeWeekModal(); });
 
   init();
 })();
 </script>
 </body>
 </html>
-
