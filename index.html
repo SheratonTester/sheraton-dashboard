@@ -2,932 +2,458 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sheraton Niagara Falls — Ops Dashboard</title>
-
-  <!-- Local Supabase library (must exist in repo root) -->
-  <script src="./supabase.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sheraton Niagara Falls — Ops</title>
   <style>
     :root{
-      --bg:#f6f8ff;
+      --bg:#f6f8fb;
       --card:#ffffff;
       --text:#0f172a;
-      --muted:#475569;
-      --line:#e5e7eb;
-
-      --brand:#2563eb;
-      --brand2:#1d4ed8;
-
-      --green:#0f5132;  /* dark green */
-      --red:#7f1d1d;    /* dark red */
-
-      --shadow: 0 10px 30px rgba(15,23,42,.08);
-      --radius: 16px;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow: 0 10px 24px rgba(15, 23, 42, .08);
+      --green:#0b5d3a;
+      --red:#7a1120;
+      --accent:#0f3d2e;
+      --focus: 0 0 0 4px rgba(11,93,58,.18);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(11,93,58,.10), transparent 55%),
+                  radial-gradient(900px 500px at 100% 10%, rgba(122,17,32,.08), transparent 55%),
+                  var(--bg);
       color:var(--text);
-      background:linear-gradient(180deg,#f6f8ff 0%, #eef2ff 100%);
     }
-    header{
-      position:sticky; top:0;
-      z-index:20;
-      background:rgba(246,248,255,.85);
+    a{color:inherit}
+    .wrap{max-width:980px;margin:0 auto;padding:24px}
+    .topbar{
+      display:flex;gap:14px;align-items:center;justify-content:space-between;
+      padding:16px 18px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.75);
       backdrop-filter: blur(8px);
-      border-bottom:1px solid var(--line);
+      box-shadow: var(--shadow);
     }
-    .wrap{max-width:1200px; margin:0 auto; padding:16px;}
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
-    h1{
-      margin:0;
-      font-size:20px;
-      letter-spacing:.2px;
+    .brand{
+      display:flex;flex-direction:column;gap:2px;
     }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:var(--card);
-      color:var(--muted);
-      font-size:12px;
+    .brand h1{
+      margin:0;font-size:18px;letter-spacing:.2px
     }
-    .spacer{flex:1}
+    .brand .sub{color:var(--muted);font-size:13px}
+    .userpill{
+      display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;
+    }
+    .badge{
+      font-size:12px;color:var(--accent);background:rgba(11,93,58,.10);
+      border:1px solid rgba(11,93,58,.18);
+      padding:6px 10px;border-radius:999px;
+    }
+    .badge.red{
+      color:var(--red);background:rgba(122,17,32,.08);border-color:rgba(122,17,32,.15);
+    }
     .btn{
-      border:0;
-      background:var(--brand);
-      color:#fff;
-      padding:10px 14px;
-      border-radius:12px;
-      font-weight:700;
-      cursor:pointer;
-      box-shadow: 0 8px 18px rgba(37,99,235,.18);
+      border:1px solid var(--border);background:#fff;color:var(--text);
+      border-radius:12px;padding:10px 12px;font-weight:600;cursor:pointer;
+      transition:.15s transform, .15s box-shadow, .15s border-color;
     }
-    .btn:hover{background:var(--brand2)}
-    .btn.ghost{
-      background:transparent;
-      color:var(--brand2);
-      border:1px solid #c7d2fe;
-      box-shadow:none;
+    .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.10)}
+    .btn:active{transform:translateY(0)}
+    .btn.primary{
+      border-color:rgba(11,93,58,.35);
+      background:linear-gradient(180deg, rgba(11,93,58,.10), rgba(11,93,58,.04));
     }
-    .btn.danger{
-      background:#dc2626;
-      box-shadow: 0 8px 18px rgba(220,38,38,.18);
+    .btn.logout{
+      border-color:rgba(122,17,32,.25);
+      background:linear-gradient(180deg, rgba(122,17,32,.08), rgba(122,17,32,.03));
     }
-    .inp{
-      padding:10px 12px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:var(--card);
-      min-width:170px;
-      font-weight:600;
-      color:var(--text);
+    .btn:focus{outline:none;box-shadow:var(--focus)}
+    .grid{
+      display:grid;gap:16px;
+      grid-template-columns: repeat(12, 1fr);
+      margin-top:18px;
     }
-    .section{
-      margin-top:14px;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
+    .panel{
+      grid-column: span 12;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:rgba(255,255,255,.82);
+      box-shadow: var(--shadow);
       overflow:hidden;
     }
-    .section .title{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-      display:flex; align-items:center; gap:10px;
-      background:linear-gradient(90deg,#ffffff 0%, #f8fafc 100%);
-      font-weight:900;
+    .panelHeader{
+      padding:16px 18px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      border-bottom:1px solid var(--border);
     }
-    .hint{font-size:12px; color:var(--muted); font-weight:600}
-    .err{
-      margin-top:12px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid #fecaca;
-      background:#fff1f2;
-      color:#991b1b;
-      font-weight:700;
-      display:none;
-      white-space:pre-wrap;
-    }
-
-    /* Auth */
-    .authBox{
-      max-width:420px;
-      margin:50px auto 0;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
-    }
-    .authBox h2{margin:0 0 8px 0}
-    .authBox label{display:block; font-size:12px; color:var(--muted); margin:12px 0 6px}
-    .authBox .inp{width:100%}
-    .authBox .btn{width:100%; margin-top:12px}
-
-    /* Occupancy cards */
+    .panelHeader h2{margin:0;font-size:16px}
+    .panelHeader p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .panelBody{padding:18px}
     .cards{
-      display:flex;
-      gap:12px;
-      padding:14px 16px;
-      overflow-x:auto;
-      scroll-snap-type:x mandatory;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
     }
     .card{
-      min-width:210px;
-      scroll-snap-align:start;
-      border:1px solid var(--line);
+      grid-column: span 6;
+      border:1px solid var(--border);
       border-radius:18px;
-      padding:12px;
-      background:#fff;
-      box-shadow: 0 8px 20px rgba(15,23,42,.06);
+      background:var(--card);
+      padding:16px;
+      box-shadow:0 10px 18px rgba(15,23,42,.06);
+      transition:.15s transform, .15s box-shadow, .15s border-color;
       cursor:pointer;
+      position:relative;
+      min-height:120px;
     }
-    .card:hover{border-color:#c7d2fe}
-    .card .d1{font-weight:900}
-    .card .d2{color:var(--muted); font-weight:700; font-size:12px}
-    .card .pct{font-size:28px; font-weight:1000; margin:10px 0 6px}
-    .card .meta{font-size:12px; color:var(--muted); font-weight:650}
-
-    /* Status grid */
-    .gridWrap{padding:14px 16px}
-    .groupHeader{
-      margin-top:12px;
-      padding:10px 12px;
-      border-radius:14px;
-      background:#f1f5f9;
-      border:1px solid var(--line);
-      font-weight:1000;
-      letter-spacing:.3px;
+    .card:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.10)}
+    .card:focus{outline:none;box-shadow:var(--focus)}
+    .card.disabled{
+      cursor:not-allowed;
+      opacity:.62;
+      background:linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.55));
     }
-    .statusGrid{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      margin-top:10px;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:16px;
-    }
-    .statusGrid th, .statusGrid td{
-      border-bottom:1px solid var(--line);
-      border-right:1px solid var(--line);
-      padding:10px;
-      text-align:center;
-      font-weight:800;
+    .cardTitle{margin:0;font-size:16px}
+    .cardDesc{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
+    .tagRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tag{
+      font-size:12px;padding:6px 10px;border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
       background:#fff;
     }
-    .statusGrid th:first-child, .statusGrid td:first-child{
-      text-align:left;
-      width:280px;
-      background:#fbfdff;
+    .tag.ok{
+      color:var(--green);
+      border-color:rgba(11,93,58,.25);
+      background:rgba(11,93,58,.06);
     }
-    .statusGrid tr:last-child td{border-bottom:0}
-    .statusGrid th:last-child, .statusGrid td:last-child{border-right:0}
-
-    .box{
-      height:36px;
-      border-radius:10px;
-      cursor:pointer;
-      border:1px solid rgba(0,0,0,.08);
-      transition: transform .04s ease;
+    .tag.lock{
+      color:var(--red);
+      border-color:rgba(122,17,32,.20);
+      background:rgba(122,17,32,.06);
     }
-    .box:active{transform: scale(.985)}
-    .box.red{background:var(--red)}
-    .box.green{background:var(--green)}
-    .box.disabled{opacity:.35; cursor:not-allowed}
-    .small{font-size:11px; color:var(--muted); font-weight:650}
-
-    /* Modal */
-    .modalBack{
-      position:fixed; inset:0;
-      background:rgba(15,23,42,.55);
+    .error{
       display:none;
-      align-items:center;
-      justify-content:center;
-      padding:14px;
-      z-index:50;
+      margin:0 0 14px 0;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(122,17,32,.22);
+      background:rgba(122,17,32,.07);
+      color:#5b0a14;
+      font-size:13px;
     }
-    .modal{
-      width:min(680px, 100%);
-      background:#fff;
+    .loginBox{
+      max-width:420px;
+      margin:10px auto 0;
+      padding:18px;
+      border:1px solid var(--border);
       border-radius:18px;
-      border:1px solid rgba(255,255,255,.25);
-      box-shadow: 0 22px 60px rgba(0,0,0,.25);
-      overflow:hidden;
+      background:rgba(255,255,255,.88);
+      box-shadow: var(--shadow);
     }
-    .modalTop{
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      border-bottom:1px solid var(--line);
-      background:#f8fafc;
-      font-weight:950;
-    }
-    .modalBody{padding:14px 16px}
-    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-    .grid2 .inp{width:100%}
-    textarea{
+    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
+    input{
       width:100%;
-      border:1px solid var(--line);
+      padding:12px 12px;
       border-radius:12px;
-      padding:10px 12px;
-      min-height:140px;
-      resize:vertical;
-      font-weight:650;
-      font-family:inherit;
+      border:1px solid var(--border);
+      font-size:14px;
+      background:#fff;
     }
-    .modalActions{
-      padding:14px 16px;
-      border-top:1px solid var(--line);
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      background:#f8fafc;
+    input:focus{outline:none;box-shadow:var(--focus);border-color:rgba(11,93,58,.35)}
+    .row{display:flex;gap:10px;align-items:center;margin-top:14px}
+    .row .btn{flex:1}
+    .small{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.35}
+    .foot{
+      margin-top:14px;color:var(--muted);font-size:12px;text-align:center
     }
-    @media (max-width:720px){
-      .grid2{grid-template-columns:1fr}
-      .statusGrid th:first-child, .statusGrid td:first-child{width:200px}
+    @media (max-width:760px){
+      .card{grid-column: span 12}
+      .topbar{flex-direction:column;align-items:flex-start}
+      .userpill{justify-content:flex-start}
     }
   </style>
 </head>
 
 <body>
-<header>
   <div class="wrap">
-    <div class="row">
-      <h1>Sheraton Niagara Falls — Ops Dashboard</h1>
-      <span class="pill" id="pillRole">Role: —</span>
-      <span class="pill" id="pillDept">Dept: —</span>
-      <span class="pill" id="pillUser">User: —</span>
-      <span class="spacer"></span>
-
-      <label class="small" style="font-weight:900;">Start date</label>
-      <input class="inp" type="date" id="startDate" />
-      <button class="btn ghost" id="btnToday">Today</button>
-      <button class="btn" id="btnRefresh">Refresh</button>
-      <button class="btn danger" id="btnLogout">Logout</button>
+    <div class="topbar">
+      <div class="brand">
+        <h1>Sheraton Niagara Falls — Ops</h1>
+        <div class="sub">Home</div>
+      </div>
+      <div class="userpill" id="userPill" style="display:none;">
+        <span class="badge" id="userNameBadge">Signed in</span>
+        <span class="badge" id="roleBadge">role</span>
+        <span class="badge" id="deptBadge">dept</span>
+        <button class="btn logout" id="logoutBtn" type="button">Logout</button>
+      </div>
     </div>
 
-    <div id="err" class="err"></div>
-  </div>
-</header>
-
-<!-- AUTH -->
-<div id="authRoot" class="wrap" style="display:none;">
-  <div class="authBox">
-    <h2>Sign in</h2>
-    <div class="hint">Use your hotel email + password.</div>
-
-    <label>Email</label>
-    <input id="authEmail" class="inp" type="email" placeholder="name@niagarafallshotels.com" />
-
-    <label>Password</label>
-    <input id="authPass" class="inp" type="password" placeholder="••••••••" />
-
-    <button class="btn" id="btnSignIn">Sign in</button>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="appRoot" class="wrap" style="display:none;">
-  <div class="section">
-    <div class="title">
-      7-Day Occupancy Forecast
-      <span class="hint">Click a card to edit (Guest Service + Admin only).</span>
-    </div>
-    <div id="occCards" class="cards"></div>
-  </div>
-
-  <div class="section">
-    <div class="title">
-      Restaurant Status
-      <span class="hint">Green = active. Red = inactive. Double-click green to clear (closed).</span>
-    </div>
-    <div class="gridWrap" id="svcWrap"></div>
-  </div>
-
-  <div class="section">
-    <div class="title">
-      Massimo Status
-      <span class="hint">Massimo can have multiple greens (toggle each).</span>
-    </div>
-    <div class="gridWrap" id="massimoWrap"></div>
-  </div>
-</div>
-
-<!-- Occupancy modal -->
-<div id="modalBack" class="modalBack">
-  <div class="modal">
-    <div class="modalTop">
-      <span id="modalTitle">Edit occupancy</span>
-      <span class="spacer"></span>
-      <button class="btn ghost" id="btnCloseModal">Close</button>
-    </div>
-    <div class="modalBody">
-      <div class="grid2">
-        <div>
-          <div class="small" style="font-weight:900;margin-bottom:6px;">Occupancy % (0–100)</div>
-          <input id="occPct" class="inp" type="number" min="0" max="100" step="0.1" />
+    <div class="grid">
+      <div class="panel" id="loginPanel">
+        <div class="panelHeader">
+          <div>
+            <h2>Sign in</h2>
+            <p>Use your Supabase account (email + password).</p>
+          </div>
         </div>
-        <div>
-          <div class="small" style="font-weight:900;margin-bottom:6px;">Short note</div>
-          <input id="occShort" class="inp" type="text" placeholder="Optional" />
+        <div class="panelBody">
+          <div class="error" id="errorBox"></div>
+
+          <div class="loginBox">
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" placeholder="name@company.com" />
+
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+
+            <div class="row">
+              <button class="btn primary" id="loginBtn" type="button">Login</button>
+            </div>
+
+            <div class="small">
+              If you’re using an invite link or password reset link, just open it in this browser and it should complete automatically.
+            </div>
+          </div>
+
+          <div class="foot">GitHub Pages + Supabase Auth (static site)</div>
         </div>
       </div>
-      <div style="margin-top:12px;">
-        <div class="small" style="font-weight:900;margin-bottom:6px;">Long note</div>
-        <textarea id="occLong" placeholder="Optional (bigger box for easy notes)"></textarea>
+
+      <div class="panel" id="homePanel" style="display:none;">
+        <div class="panelHeader">
+          <div>
+            <h2>Dashboards</h2>
+            <p>Only pages you have access to will be clickable.</p>
+          </div>
+          <div class="tagRow" style="margin:0;">
+            <span class="tag ok" id="accessTag">Access loaded</span>
+          </div>
+        </div>
+
+        <div class="panelBody">
+          <div class="error" id="errorBox2"></div>
+
+          <div class="cards">
+            <div class="card" id="cardFB" tabindex="0" role="button" aria-label="Open F&B Dashboard">
+              <h3 class="cardTitle">F&amp;B Dashboard</h3>
+              <p class="cardDesc">Breakfast / Lunch / Dinner selections, Massimo toggles, Lobby Bar hours.</p>
+              <div class="tagRow">
+                <span class="tag ok">Live</span>
+                <span class="tag">Viewers can view</span>
+              </div>
+            </div>
+
+            <div class="card" id="cardOutlets" tabindex="0" role="button" aria-label="Open Outlets Dashboard">
+              <h3 class="cardTitle">Outlets Dashboard</h3>
+              <p class="cardDesc">Starbucks, Sweet Jesus, Freshii hours + weekly edit mode.</p>
+              <div class="tagRow">
+                <span class="tag ok">Live</span>
+                <span class="tag">Viewers can view</span>
+              </div>
+            </div>
+
+            <div class="card disabled" id="cardMaintenance" aria-disabled="true">
+              <h3 class="cardTitle">Maintenance Dashboard</h3>
+              <p class="cardDesc">Coming soon. This spot is reserved for future work.</p>
+              <div class="tagRow">
+                <span class="tag lock">Coming soon</span>
+              </div>
+            </div>
+
+            <div class="card disabled" id="cardHousekeeping" aria-disabled="true">
+              <h3 class="cardTitle">Housekeeping Dashboard</h3>
+              <p class="cardDesc">Coming soon. This spot is reserved for future work.</p>
+              <div class="tagRow">
+                <span class="tag lock">Coming soon</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="small" style="margin-top:14px;">
+            Rules: <b>Admin</b> sees all + can edit. <b>User</b> sees only their department’s page(s). <b>Viewer</b> can view everything but cannot edit.
+          </div>
+        </div>
       </div>
-      <div class="hint" style="margin-top:8px;">Saved changes are tracked by the database history tables.</div>
-    </div>
-    <div class="modalActions">
-      <button class="btn" id="btnSaveOcc">Save</button>
     </div>
   </div>
-</div>
 
-<script>
-(() => {
-  // ====== Supabase config ======
-  const SUPABASE_URL = "https://jiarjsvoumbbilfsqftj.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_AB6JsEiTT1V5Bu5ANA0Qmw_yFE8M0NV";
+  <!-- Local Supabase library (no CDN) -->
+  <script src="vendor/supabase-js.iife.min.js"></script>
+  <!-- Your project URL + anon key -->
+  <script src="supabase.js"></script>
 
-  // Guard: local supabase.js must exist
-  if (!window.supabase || !window.supabase.createClient) {
-    const e = document.getElementById("err");
-    e.style.display = "block";
-    e.textContent =
-      "Supabase client not found. Make sure supabase.js is in the repo root (same folder as index.html).";
-    document.getElementById("authRoot").style.display = "block";
-    return;
-  }
+  <script>
+    // -------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------
+    const $ = (id) => document.getElementById(id);
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // ====== DOM helpers ======
-  const $ = (id) => document.getElementById(id);
-  const errBox = $("err");
-  function showErr(msg){
-    errBox.style.display = "block";
-    errBox.textContent = msg;
-  }
-  function clearErr(){
-    errBox.style.display = "none";
-    errBox.textContent = "";
-  }
-
-  // ====== State ======
-  let me = null;            // auth user
-  let profile = null;       // profiles row
-  let startDate = null;     // yyyy-mm-dd
-  let days = [];            // array of date strings
-  let profilesMap = new Map(); // user_id -> name
-
-  let serviceItems = [];    // service_items (breakfast/lunch/dinner)
-  let svcSel = [];          // daily_service_selection rows
-  let massimoItems = [];    // service_items group=massimo
-  let massimoRows = [];     // daily_massimo_status rows
-
-  // ====== Permissions ======
-  function canEditOccupancy(){
-    if (!profile) return false;
-    if (profile.role === "admin") return true;
-    return (profile.role === "user" && profile.department === "Guest Service");
-  }
-  function canEditRestaurants(){
-    if (!profile) return false;
-    if (profile.role === "admin") return true;
-    return (profile.role === "user" && profile.department === "F&B");
-  }
-  function canEditMassimo(){
-    // Massimo is still F&B-managed in this simple version
-    return canEditRestaurants();
-  }
-
-  // ====== Date helpers ======
-  function toYMD(d){
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    const dd = String(d.getDate()).padStart(2,"0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-  function addDays(ymd, n){
-    const [y,m,d] = ymd.split("-").map(Number);
-    const dt = new Date(y, m-1, d);
-    dt.setDate(dt.getDate()+n);
-    return toYMD(dt);
-  }
-  function niceDay(ymd){
-    const [y,m,d] = ymd.split("-").map(Number);
-    const dt = new Date(y, m-1, d);
-    return dt.toLocaleDateString("en-CA", { weekday:"short", month:"short", day:"numeric" });
-  }
-  function torontoTime(iso){
-    if(!iso) return "";
-    try{
-      const dt = new Date(iso);
-      return new Intl.DateTimeFormat("en-CA",{
-        timeZone:"America/Toronto",
-        year:"numeric", month:"short", day:"2-digit",
-        hour:"2-digit", minute:"2-digit"
-      }).format(dt);
-    }catch{ return ""; }
-  }
-
-  // ====== Loaders ======
-  async function loadProfilesMap(){
-    const { data, error } = await sb.from("profiles").select("user_id,name");
-    if(error) throw error;
-    profilesMap = new Map((data||[]).map(r => [r.user_id, r.name || "Unknown"]));
-  }
-
-  async function loadMyProfile(){
-    const { data: ures } = await sb.auth.getUser();
-    me = ures?.user || null;
-    if(!me) return;
-
-    const { data, error } = await sb
-      .from("profiles")
-      .select("*")
-      .eq("user_id", me.id)
-      .maybeSingle();
-
-    if(error) throw error;
-    profile = data || null;
-
-    $("pillRole").textContent = "Role: " + (profile?.role || "—");
-    $("pillDept").textContent = "Dept: " + (profile?.department || "—");
-    $("pillUser").textContent = "User: " + (profile?.name || me.email || "—");
-  }
-
-  async function loadServiceItems(){
-    const { data, error } = await sb
-      .from("service_items")
-      .select("id,name,group_name,sort_order")
-      .order("sort_order", { ascending:true });
-
-    if(error) throw error;
-
-    const all = data || [];
-    serviceItems = all.filter(x => ["breakfast","lunch","dinner"].includes(x.group_name));
-    massimoItems = all.filter(x => x.group_name === "massimo");
-  }
-
-  async function loadSelections(){
-    const fromDate = startDate;
-    const toDate = addDays(startDate, 6);
-
-    const svcQ = sb
-      .from("daily_service_selection")
-      .select("*")
-      .gte("date", fromDate)
-      .lte("date", toDate);
-
-    const masQ = sb
-      .from("daily_massimo_status")
-      .select("*")
-      .gte("date", fromDate)
-      .lte("date", toDate);
-
-    const [{ data: svcData, error: svcErr }, { data: masData, error: masErr }] =
-      await Promise.all([svcQ, masQ]);
-
-    if(svcErr) throw svcErr;
-    if(masErr) throw masErr;
-
-    svcSel = svcData || [];
-    massimoRows = masData || [];
-  }
-
-  async function loadForecast(){
-    const fromDate = startDate;
-    const toDate = addDays(startDate, 6);
-
-    const { data, error } = await sb
-      .from("daily_forecast")
-      .select("*")
-      .gte("date", fromDate)
-      .lte("date", toDate);
-
-    if(error) throw error;
-    return data || [];
-  }
-
-  // ====== Renderers ======
-  function buildDays(){
-    days = Array.from({length:7}).map((_,i)=>addDays(startDate,i));
-  }
-
-  async function renderOccupancy(){
-    const occ = await loadForecast();
-    const byDate = new Map(occ.map(r => [r.date, r]));
-    const wrap = $("occCards");
-    wrap.innerHTML = "";
-
-    for(const d of days){
-      const row = byDate.get(d) || null;
-      const pct = row?.occupancy_percent ?? row?.occupancy ?? null; // tolerate older column names if any
-      const pctText = (pct === null || pct === undefined) ? "—" : (Number(pct).toFixed(1) + "%");
-
-      const who = row?.updated_by ? (profilesMap.get(row.updated_by) || "Unknown") : "—";
-      const when = row?.updated_at ? torontoTime(row.updated_at) : "";
-
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="d1">${niceDay(d)}</div>
-        <div class="d2">${d}</div>
-        <div class="pct">${pctText}</div>
-        <div class="meta">Last update: ${escapeHtml(who)} ${when ? "• " + escapeHtml(when) : ""}</div>
-      `;
-      card.addEventListener("click", () => openOccModal(d, row));
-      wrap.appendChild(card);
+    function showError(msg, which = 1) {
+      const box = which === 1 ? $("errorBox") : $("errorBox2");
+      box.textContent = msg;
+      box.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }
-
-  function renderServiceGrid(){
-    const container = $("svcWrap");
-    container.innerHTML = "";
-
-    const groups = [
-      { key:"breakfast", label:"BREAKFAST" },
-      { key:"lunch",     label:"LUNCH" },
-      { key:"dinner",    label:"DINNER" }
-    ];
-
-    const selectedByDateGroup = new Map();
-    // daily_service_selection: one row per (date, group_name) with service_item_id
-    for(const r of svcSel){
-      selectedByDateGroup.set(`${r.date}::${r.group_name}`, r);
+    function clearErrors() {
+      $("errorBox").style.display = "none";
+      $("errorBox").textContent = "";
+      $("errorBox2").style.display = "none";
+      $("errorBox2").textContent = "";
     }
 
-    for(const g of groups){
-      const hdr = document.createElement("div");
-      hdr.className = "groupHeader";
-      hdr.textContent = g.label;
-      container.appendChild(hdr);
+    function safeText(v) {
+      return (v ?? "").toString().trim();
+    }
 
-      const tbl = document.createElement("table");
-      tbl.className = "statusGrid";
+    function setUserPill(profile) {
+      $("userPill").style.display = "flex";
+      $("userNameBadge").textContent = safeText(profile.full_name) || safeText(profile.email) || "Signed in";
+      $("roleBadge").textContent = (profile.role || "viewer").toUpperCase();
+      $("deptBadge").textContent = safeText(profile.department || "—");
+    }
 
-      // header row
-      const thead = document.createElement("thead");
-      const hr = document.createElement("tr");
-      const th0 = document.createElement("th");
-      th0.textContent = "Service";
-      hr.appendChild(th0);
-      for(const d of days){
-        const th = document.createElement("th");
-        th.innerHTML = `${escapeHtml(niceDay(d))}<div class="small">${escapeHtml(d)}</div>`;
-        hr.appendChild(th);
+    function canAccessPage(profile, page) {
+      const role = (profile.role || "viewer");
+      const dept = (profile.department || "");
+
+      if (role === "admin") return true;
+      if (role === "viewer") return true;
+
+      // role === "user"
+      if (page === "fb") return dept === "F&B";
+      if (page === "outlets") return dept === "Outlets";
+      return false;
+    }
+
+    function setCardEnabled(cardEl, enabled) {
+      if (!enabled) {
+        cardEl.classList.add("disabled");
+        cardEl.setAttribute("aria-disabled", "true");
+        cardEl.tabIndex = -1;
+      } else {
+        cardEl.classList.remove("disabled");
+        cardEl.removeAttribute("aria-disabled");
+        cardEl.tabIndex = 0;
       }
-      thead.appendChild(hr);
-      tbl.appendChild(thead);
+    }
 
-      const tbody = document.createElement("tbody");
-      const rows = serviceItems.filter(x => x.group_name === g.key);
+    async function loadProfile(userId) {
+      const { data, error } = await window.sb
+        .from("profiles")
+        .select("user_id,email,full_name,role,department,is_active")
+        .eq("user_id", userId)
+        .single();
 
-      for(const item of rows){
-        const tr = document.createElement("tr");
-        const tdName = document.createElement("td");
-        tdName.textContent = item.name;
-        tr.appendChild(tdName);
+      if (error) throw error;
+      if (!data) throw new Error("Profile not found.");
+      if (data.is_active === false) throw new Error("Your account is inactive. Contact an admin.");
+      return data;
+    }
 
-        for(const d of days){
-          const td = document.createElement("td");
+    function showHome(profile) {
+      $("loginPanel").style.display = "none";
+      $("homePanel").style.display = "block";
+      setUserPill(profile);
 
-          const selRow = selectedByDateGroup.get(`${d}::${g.key}`) || null;
-          const isGreen = selRow && selRow.service_item_id === item.id;
+      const fbOk = canAccessPage(profile, "fb");
+      const outOk = canAccessPage(profile, "outlets");
 
-          const who = selRow?.updated_by ? (profilesMap.get(selRow.updated_by) || "Unknown") : "—";
-          const when = selRow?.updated_at ? torontoTime(selRow.updated_at) : "";
+      setCardEnabled($("cardFB"), fbOk);
+      setCardEnabled($("cardOutlets"), outOk);
 
-          const box = document.createElement("div");
-          box.className = "box " + (isGreen ? "green" : "red");
+      // wire clicks
+      $("cardFB").onclick = () => { if (fbOk) location.href = "fb.html"; };
+      $("cardOutlets").onclick = () => { if (outOk) location.href = "outlets.html"; };
 
-          // tooltip
-          box.title = isGreen
-            ? `Updated by ${who}${when ? " • " + when : ""} (double-click to clear)`
-            : "Click to set active";
+      // keyboard accessibility
+      $("cardFB").onkeydown = (e) => { if (e.key === "Enter" && fbOk) location.href = "fb.html"; };
+      $("cardOutlets").onkeydown = (e) => { if (e.key === "Enter" && outOk) location.href = "outlets.html"; };
+    }
 
-          const editable = canEditRestaurants();
-          if(!editable){
-            box.classList.add("disabled");
-          } else {
-            // Single click: set it active
-            box.addEventListener("click", () => setServiceSelection(d, g.key, item.id));
-            // Double click on green: clear selection (closed)
-            box.addEventListener("dblclick", () => {
-              if(isGreen) clearServiceSelection(d, g.key);
-            });
-          }
+    function showLogin() {
+      $("homePanel").style.display = "none";
+      $("loginPanel").style.display = "block";
+      $("userPill").style.display = "none";
+    }
 
-          td.appendChild(box);
-          tr.appendChild(td);
+    // -------------------------------------------------------
+    // Auth
+    // -------------------------------------------------------
+    $("loginBtn").addEventListener("click", async () => {
+      clearErrors();
+      const email = safeText($("email").value);
+      const password = $("password").value;
+
+      if (!email || !password) return showError("Please enter email and password.");
+
+      $("loginBtn").disabled = true;
+      $("loginBtn").textContent = "Logging in...";
+
+      try {
+        const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        const user = data.user;
+        if (!user) throw new Error("Login failed. Try again.");
+
+        const profile = await loadProfile(user.id);
+        showHome(profile);
+      } catch (err) {
+        showError(err.message || "Login error. Please try again.");
+      } finally {
+        $("loginBtn").disabled = false;
+        $("loginBtn").textContent = "Login";
+      }
+    });
+
+    $("logoutBtn").addEventListener("click", async () => {
+      clearErrors();
+      try {
+        const { error } = await window.sb.auth.signOut();
+        if (error) throw error;
+        showLogin();
+      } catch (err) {
+        showError(err.message || "Logout error.", 2);
+      }
+    });
+
+    // -------------------------------------------------------
+    // On load: check existing session (also handles invite/reset URL)
+    // -------------------------------------------------------
+    (async function init() {
+      clearErrors();
+      try {
+        const { data, error } = await window.sb.auth.getSession();
+        if (error) throw error;
+
+        const session = data.session;
+        if (!session?.user) {
+          showLogin();
+          return;
         }
 
-        tbody.appendChild(tr);
+        const profile = await loadProfile(session.user.id);
+        showHome(profile);
+
+      } catch (err) {
+        showLogin();
+        showError(err.message || "Could not load session.");
       }
 
-      tbl.appendChild(tbody);
-      container.appendChild(tbl);
-
-      const note = document.createElement("div");
-      note.className = "hint";
-      note.style.marginTop = "8px";
-      note.textContent = "Tip: green means the selected option for that day. If all red, that meal period is effectively closed.";
-      container.appendChild(note);
-    }
-  }
-
-  function renderMassimoGrid(){
-    const container = $("massimoWrap");
-    container.innerHTML = "";
-
-    const byDateItem = new Map();
-    for(const r of massimoRows){
-      byDateItem.set(`${r.date}::${r.service_item_id}`, r);
-    }
-
-    const tbl = document.createElement("table");
-    tbl.className = "statusGrid";
-
-    const thead = document.createElement("thead");
-    const hr = document.createElement("tr");
-    const th0 = document.createElement("th");
-    th0.textContent = "Service";
-    hr.appendChild(th0);
-    for(const d of days){
-      const th = document.createElement("th");
-      th.innerHTML = `${escapeHtml(niceDay(d))}<div class="small">${escapeHtml(d)}</div>`;
-      hr.appendChild(th);
-    }
-    thead.appendChild(hr);
-    tbl.appendChild(thead);
-
-    const tbody = document.createElement("tbody");
-
-    for(const item of massimoItems){
-      const tr = document.createElement("tr");
-      const tdName = document.createElement("td");
-      tdName.textContent = item.name;
-      tr.appendChild(tdName);
-
-      for(const d of days){
-        const td = document.createElement("td");
-        const row = byDateItem.get(`${d}::${item.id}`) || null;
-        const isGreen = !!(row && row.is_active === true);
-
-        const who = row?.updated_by ? (profilesMap.get(row.updated_by) || "Unknown") : "—";
-        const when = row?.updated_at ? torontoTime(row.updated_at) : "";
-
-        const box = document.createElement("div");
-        box.className = "box " + (isGreen ? "green" : "red");
-        box.title = isGreen
-          ? `Updated by ${who}${when ? " • " + when : ""} (click to turn off)`
-          : "Click to turn on";
-
-        const editable = canEditMassimo();
-        if(!editable){
-          box.classList.add("disabled");
-        } else {
-          box.addEventListener("click", () => toggleMassimo(d, item.id, !isGreen));
+      // Keep UI in sync if auth state changes
+      window.sb.auth.onAuthStateChange(async (event, session) => {
+        try {
+          if (!session?.user) return showLogin();
+          const profile = await loadProfile(session.user.id);
+          showHome(profile);
+        } catch (e) {
+          showLogin();
+          showError(e.message || "Auth state error.");
         }
-
-        td.appendChild(box);
-        tr.appendChild(td);
-      }
-
-      tbody.appendChild(tr);
-    }
-
-    tbl.appendChild(tbody);
-    container.appendChild(tbl);
-  }
-
-  // ====== Actions ======
-  async function setServiceSelection(date, group, serviceItemId){
-    clearErr();
-    try{
-      // Upsert row for that date+group_name with the selected service_item_id
-      const payload = { date, group_name: group, service_item_id: serviceItemId };
-      const { error } = await sb
-        .from("daily_service_selection")
-        .upsert(payload, { onConflict: "date,group_name" });
-
-      if(error) throw error;
-
-      await refreshAll();
-    }catch(e){
-      showErr("Restaurant update failed:\n" + (e?.message || JSON.stringify(e)));
-    }
-  }
-
-  async function clearServiceSelection(date, group){
-    clearErr();
-    try{
-      // Clearing means: no green at all (closed). We delete the row for that date+group.
-      const { error } = await sb
-        .from("daily_service_selection")
-        .delete()
-        .eq("date", date)
-        .eq("group_name", group);
-
-      if(error) throw error;
-
-      await refreshAll();
-    }catch(e){
-      showErr("Clear selection failed:\n" + (e?.message || JSON.stringify(e)));
-    }
-  }
-
-  async function toggleMassimo(date, serviceItemId, isActive){
-    clearErr();
-    try{
-      const payload = { date, service_item_id: serviceItemId, is_active: isActive };
-      const { error } = await sb
-        .from("daily_massimo_status")
-        .upsert(payload, { onConflict: "date,service_item_id" });
-
-      if(error) throw error;
-
-      await refreshAll();
-    }catch(e){
-      showErr("Massimo update failed:\n" + (e?.message || JSON.stringify(e)));
-    }
-  }
-
-  // Occupancy modal
-  let occEditingDate = null;
-
-  function openOccModal(date, row){
-    clearErr();
-    if(!canEditOccupancy()){
-      showErr("You do not have permission to edit occupancy (Guest Service + Admin only).");
-      return;
-    }
-
-    occEditingDate = date;
-    $("modalTitle").textContent = `Edit occupancy — ${date}`;
-
-    // Prefill from last entry
-    const pct = row?.occupancy_percent ?? row?.occupancy ?? "";
-    $("occPct").value = (pct === null || pct === undefined) ? "" : pct;
-    $("occShort").value = row?.notes_short ?? "";
-    $("occLong").value = row?.notes_long ?? "";
-
-    $("modalBack").style.display = "flex";
-  }
-
-  function closeOccModal(){
-    $("modalBack").style.display = "none";
-    occEditingDate = null;
-  }
-
-  async function saveOcc(){
-    clearErr();
-    try{
-      if(!occEditingDate) return;
-      const date = occEditingDate;
-
-      const pct = $("occPct").value.trim();
-      const shortN = $("occShort").value.trim();
-      const longN = $("occLong").value.trim();
-
-      // ALWAYS include date (fixes your null date issue)
-      const payload = {
-        date,
-        occupancy_percent: pct === "" ? null : Number(pct),
-        notes_short: shortN === "" ? null : shortN,
-        notes_long: longN === "" ? null : longN
-      };
-
-      const { error } = await sb
-        .from("daily_forecast")
-        .upsert(payload, { onConflict: "date" });
-
-      if(error) throw error;
-
-      closeOccModal();
-      await refreshAll();
-    }catch(e){
-      showErr("Occupancy save failed:\n" + (e?.message || JSON.stringify(e)));
-    }
-  }
-
-  // ====== Boot / Refresh ======
-  async function refreshAll(){
-    clearErr();
-
-    // Build days
-    buildDays();
-
-    // Load everything we need
-    await loadProfilesMap();
-    await loadServiceItems();
-    await loadSelections();
-
-    // Render
-    await renderOccupancy();
-    renderServiceGrid();
-    renderMassimoGrid();
-  }
-
-  async function startApp(){
-    clearErr();
-    // start date default today
-    if(!startDate){
-      startDate = toYMD(new Date());
-    }
-    $("startDate").value = startDate;
-
-    await loadMyProfile();
-
-    // If profile is inactive, block edits but still allow view
-    if(profile && profile.is_active === false){
-      showErr("Your account is marked inactive. Contact an admin.");
-    }
-
-    await refreshAll();
-  }
-
-  // ====== Events ======
-  $("btnToday").addEventListener("click", async () => {
-    startDate = toYMD(new Date());
-    $("startDate").value = startDate;
-    await refreshAll();
-  });
-
-  $("btnRefresh").addEventListener("click", async () => {
-    startDate = $("startDate").value || startDate;
-    await refreshAll();
-  });
-
-  $("startDate").addEventListener("change", async () => {
-    startDate = $("startDate").value || startDate;
-    await refreshAll();
-  });
-
-  $("btnLogout").addEventListener("click", async () => {
-    clearErr();
-    await sb.auth.signOut();
-  });
-
-  $("btnSignIn").addEventListener("click", async () => {
-    clearErr();
-    try{
-      const email = $("authEmail").value.trim();
-      const password = $("authPass").value;
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if(error) throw error;
-    }catch(e){
-      showErr("Login failed:\n" + (e?.message || JSON.stringify(e)));
-    }
-  });
-
-  $("btnCloseModal").addEventListener("click", closeOccModal);
-  $("modalBack").addEventListener("click", (ev) => {
-    if(ev.target === $("modalBack")) closeOccModal();
-  });
-  $("btnSaveOcc").addEventListener("click", saveOcc);
-
-  // ====== Auth routing ======
-  async function route(){
-    clearErr();
-    const { data } = await sb.auth.getUser();
-    const user = data?.user || null;
-
-    if(!user){
-      $("authRoot").style.display = "block";
-      $("appRoot").style.display = "none";
-      $("pillRole").textContent = "Role: —";
-      $("pillDept").textContent = "Dept: —";
-      $("pillUser").textContent = "User: —";
-      return;
-    }
-
-    $("authRoot").style.display = "none";
-    $("appRoot").style.display = "block";
-    startApp().catch(e => showErr(e?.message || String(e)));
-  }
-
-  sb.auth.onAuthStateChange(() => route());
-  route().catch(e => showErr(e?.message || String(e)));
-
-  // ====== tiny utility ======
-  function escapeHtml(s){
-    return String(s ?? "").replace(/[&<>"]/g, c => (
-      c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : "&quot;"
-    ));
-  }
-})();
-</script>
-
+      });
+    })();
+  </script>
 </body>
 </html>
