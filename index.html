@@ -6,16 +6,9 @@
   <title>Sheraton Niagara Falls — Ops</title>
   <style>
     :root{
-      --bg:#f6f8fb;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --border:#e2e8f0;
+      --bg:#f6f8fb; --card:#fff; --text:#0f172a; --muted:#64748b; --border:#e2e8f0;
       --shadow: 0 10px 24px rgba(15, 23, 42, .08);
-      --green:#0b5d3a;
-      --red:#7a1120;
-      --accent:#0f3d2e;
-      --focus: 0 0 0 4px rgba(11,93,58,.18);
+      --green:#0b5d3a; --red:#7a1120; --focus: 0 0 0 4px rgba(11,93,58,.18);
     }
     *{box-sizing:border-box}
     body{
@@ -26,7 +19,6 @@
                   var(--bg);
       color:var(--text);
     }
-    a{color:inherit}
     .wrap{max-width:980px;margin:0 auto;padding:24px}
     .topbar{
       display:flex;gap:14px;align-items:center;justify-content:space-between;
@@ -34,147 +26,66 @@
       backdrop-filter: blur(8px);
       box-shadow: var(--shadow);
     }
-    .brand{
-      display:flex;flex-direction:column;gap:2px;
-    }
-    .brand h1{
-      margin:0;font-size:18px;letter-spacing:.2px
-    }
+    .brand{display:flex;flex-direction:column;gap:2px}
+    .brand h1{margin:0;font-size:18px}
     .brand .sub{color:var(--muted);font-size:13px}
-    .userpill{
-      display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;
-    }
+    .userpill{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .badge{
-      font-size:12px;color:var(--accent);background:rgba(11,93,58,.10);
+      font-size:12px;color:var(--green);background:rgba(11,93,58,.10);
       border:1px solid rgba(11,93,58,.18);
       padding:6px 10px;border-radius:999px;
     }
-    .badge.red{
-      color:var(--red);background:rgba(122,17,32,.08);border-color:rgba(122,17,32,.15);
-    }
+    .badge.red{color:var(--red);background:rgba(122,17,32,.08);border-color:rgba(122,17,32,.15)}
     .btn{
       border:1px solid var(--border);background:#fff;color:var(--text);
-      border-radius:12px;padding:10px 12px;font-weight:600;cursor:pointer;
-      transition:.15s transform, .15s box-shadow, .15s border-color;
+      border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer;
+      transition:.15s transform, .15s box-shadow;
     }
     .btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.10)}
-    .btn:active{transform:translateY(0)}
-    .btn.primary{
-      border-color:rgba(11,93,58,.35);
-      background:linear-gradient(180deg, rgba(11,93,58,.10), rgba(11,93,58,.04));
-    }
-    .btn.logout{
-      border-color:rgba(122,17,32,.25);
-      background:linear-gradient(180deg, rgba(122,17,32,.08), rgba(122,17,32,.03));
-    }
     .btn:focus{outline:none;box-shadow:var(--focus)}
-    .grid{
-      display:grid;gap:16px;
-      grid-template-columns: repeat(12, 1fr);
-      margin-top:18px;
-    }
+    .btn.logout{border-color:rgba(122,17,32,.25);background:linear-gradient(180deg, rgba(122,17,32,.08), rgba(122,17,32,.03))}
+    .grid{display:grid;gap:16px;margin-top:18px}
     .panel{
-      grid-column: span 12;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background:rgba(255,255,255,.82);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+      border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.82);
+      box-shadow: var(--shadow);overflow:hidden;
     }
-    .panelHeader{
-      padding:16px 18px;
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      border-bottom:1px solid var(--border);
-    }
+    .panelHeader{padding:16px 18px;border-bottom:1px solid var(--border)}
     .panelHeader h2{margin:0;font-size:16px}
-    .panelHeader p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .panelHeader p{margin:6px 0 0;color:var(--muted);font-size:13px}
     .panelBody{padding:18px}
-    .cards{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:14px;
-    }
-    .card{
-      grid-column: span 6;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background:var(--card);
-      padding:16px;
-      box-shadow:0 10px 18px rgba(15,23,42,.06);
-      transition:.15s transform, .15s box-shadow, .15s border-color;
-      cursor:pointer;
-      position:relative;
-      min-height:120px;
-    }
-    .card:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.10)}
-    .card:focus{outline:none;box-shadow:var(--focus)}
-    .card.disabled{
-      cursor:not-allowed;
-      opacity:.62;
-      background:linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.55));
-    }
-    .cardTitle{margin:0;font-size:16px}
-    .cardDesc{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
-    .tagRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .tag{
-      font-size:12px;padding:6px 10px;border-radius:999px;
-      border:1px solid var(--border);
-      color:var(--muted);
-      background:#fff;
-    }
-    .tag.ok{
-      color:var(--green);
-      border-color:rgba(11,93,58,.25);
-      background:rgba(11,93,58,.06);
-    }
-    .tag.lock{
-      color:var(--red);
-      border-color:rgba(122,17,32,.20);
-      background:rgba(122,17,32,.06);
-    }
     .error{
-      display:none;
-      margin:0 0 14px 0;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(122,17,32,.22);
-      background:rgba(122,17,32,.07);
-      color:#5b0a14;
-      font-size:13px;
+      display:none;margin:0 0 14px 0;padding:12px 14px;border-radius:14px;
+      border:1px solid rgba(122,17,32,.22);background:rgba(122,17,32,.07);color:#5b0a14;font-size:13px;
     }
     .loginBox{
-      max-width:420px;
-      margin:10px auto 0;
-      padding:18px;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background:rgba(255,255,255,.88);
-      box-shadow: var(--shadow);
+      max-width:420px;margin:10px auto 0;padding:18px;border:1px solid var(--border);
+      border-radius:18px;background:rgba(255,255,255,.88);box-shadow: var(--shadow);
     }
     label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
     input{
-      width:100%;
-      padding:12px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      font-size:14px;
-      background:#fff;
+      width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);font-size:14px;background:#fff;
     }
     input:focus{outline:none;box-shadow:var(--focus);border-color:rgba(11,93,58,.35)}
     .row{display:flex;gap:10px;align-items:center;margin-top:14px}
     .row .btn{flex:1}
-    .small{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.35}
-    .foot{
-      margin-top:14px;color:var(--muted);font-size:12px;text-align:center
+    .cards{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .card{
+      grid-column:span 6;border:1px solid var(--border);border-radius:18px;background:var(--card);
+      padding:16px;box-shadow:0 10px 18px rgba(15,23,42,.06);cursor:pointer;
+      transition:.15s transform,.15s box-shadow;min-height:120px;
     }
-    @media (max-width:760px){
-      .card{grid-column: span 12}
-      .topbar{flex-direction:column;align-items:flex-start}
-      .userpill{justify-content:flex-start}
-    }
+    .card:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(15,23,42,.10)}
+    .card.disabled{cursor:not-allowed;opacity:.62}
+    .cardTitle{margin:0;font-size:16px}
+    .cardDesc{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
+    .tagRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tag{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);background:#fff}
+    .tag.ok{color:var(--green);border-color:rgba(11,93,58,.25);background:rgba(11,93,58,.06)}
+    .tag.lock{color:var(--red);border-color:rgba(122,17,32,.20);background:rgba(122,17,32,.06)}
+    .small{color:var(--muted);font-size:12px;margin-top:12px;line-height:1.35}
+    @media (max-width:760px){ .card{grid-column:span 12} .topbar{flex-direction:column;align-items:flex-start}}
   </style>
 </head>
-
 <body>
   <div class="wrap">
     <div class="topbar">
@@ -184,8 +95,8 @@
       </div>
       <div class="userpill" id="userPill" style="display:none;">
         <span class="badge" id="userNameBadge">Signed in</span>
-        <span class="badge" id="roleBadge">role</span>
-        <span class="badge" id="deptBadge">dept</span>
+        <span class="badge" id="roleBadge">ROLE</span>
+        <span class="badge" id="deptBadge">DEPT</span>
         <button class="btn logout" id="logoutBtn" type="button">Logout</button>
       </div>
     </div>
@@ -209,250 +120,134 @@
             <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
 
             <div class="row">
-              <button class="btn primary" id="loginBtn" type="button">Login</button>
+              <button class="btn" id="loginBtn" type="button" style="border-color:rgba(11,93,58,.35);background:linear-gradient(180deg, rgba(11,93,58,.10), rgba(11,93,58,.04));">
+                Login
+              </button>
             </div>
 
             <div class="small">
-              If you’re using an invite link or password reset link, just open it in this browser and it should complete automatically.
+              If you used an invite/reset link, open it in this browser and it should complete automatically.
             </div>
           </div>
-
-          <div class="foot">GitHub Pages + Supabase Auth (static site)</div>
         </div>
       </div>
 
       <div class="panel" id="homePanel" style="display:none;">
         <div class="panelHeader">
-          <div>
-            <h2>Dashboards</h2>
-            <p>Only pages you have access to will be clickable.</p>
-          </div>
-          <div class="tagRow" style="margin:0;">
-            <span class="tag ok" id="accessTag">Access loaded</span>
-          </div>
+          <h2>Dashboards</h2>
+          <p>Only pages you have access to will be clickable.</p>
         </div>
-
         <div class="panelBody">
           <div class="error" id="errorBox2"></div>
 
           <div class="cards">
-            <div class="card" id="cardFB" tabindex="0" role="button" aria-label="Open F&B Dashboard">
-              <h3 class="cardTitle">F&amp;B Dashboard</h3>
-              <p class="cardDesc">Breakfast / Lunch / Dinner selections, Massimo toggles, Lobby Bar hours.</p>
+            <div class="card" id="cardFnbOutlets" tabindex="0" role="button" aria-label="Open F&B + Outlets Dashboard">
+              <h3 class="cardTitle">F&amp;B + Outlets Dashboard</h3>
+              <p class="cardDesc">Restaurant selections, Massimo toggles, Lobby Bar, Starbucks/Sweet Jesus/Freshii. One screen.</p>
               <div class="tagRow">
                 <span class="tag ok">Live</span>
-                <span class="tag">Viewers can view</span>
+                <span class="tag">Viewer can view</span>
               </div>
             </div>
 
-            <div class="card" id="cardOutlets" tabindex="0" role="button" aria-label="Open Outlets Dashboard">
-              <h3 class="cardTitle">Outlets Dashboard</h3>
-              <p class="cardDesc">Starbucks, Sweet Jesus, Freshii hours + weekly edit mode.</p>
-              <div class="tagRow">
-                <span class="tag ok">Live</span>
-                <span class="tag">Viewers can view</span>
-              </div>
-            </div>
-
-            <div class="card disabled" id="cardMaintenance" aria-disabled="true">
+            <div class="card disabled" aria-disabled="true">
               <h3 class="cardTitle">Maintenance Dashboard</h3>
               <p class="cardDesc">Coming soon. This spot is reserved for future work.</p>
-              <div class="tagRow">
-                <span class="tag lock">Coming soon</span>
-              </div>
+              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
             </div>
 
-            <div class="card disabled" id="cardHousekeeping" aria-disabled="true">
+            <div class="card disabled" aria-disabled="true">
               <h3 class="cardTitle">Housekeeping Dashboard</h3>
               <p class="cardDesc">Coming soon. This spot is reserved for future work.</p>
-              <div class="tagRow">
-                <span class="tag lock">Coming soon</span>
-              </div>
+              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
+            </div>
+
+            <div class="card disabled" aria-disabled="true">
+              <h3 class="cardTitle">Guest Service Dashboard</h3>
+              <p class="cardDesc">Coming soon. Occupancy & notes (7-day view).</p>
+              <div class="tagRow"><span class="tag lock">Coming soon</span></div>
             </div>
           </div>
 
-          <div class="small" style="margin-top:14px;">
-            Rules: <b>Admin</b> sees all + can edit. <b>User</b> sees only their department’s page(s). <b>Viewer</b> can view everything but cannot edit.
+          <div class="small">
+            Rules: <b>Admin</b> can edit all. <b>User</b> can edit only their department parts. <b>Viewer</b> can view all but never edit.
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Local Supabase library (no CDN) -->
   <script src="vendor/supabase-js.iife.min.js"></script>
-  <!-- Your project URL + anon key -->
   <script src="supabase.js"></script>
+  <script src="app.js"></script>
 
   <script>
-    // -------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------
-    const $ = (id) => document.getElementById(id);
+    (async function(){
+      App.initCommon();
 
-    function showError(msg, which = 1) {
-      const box = which === 1 ? $("errorBox") : $("errorBox2");
-      box.textContent = msg;
-      box.style.display = "block";
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    function clearErrors() {
-      $("errorBox").style.display = "none";
-      $("errorBox").textContent = "";
-      $("errorBox2").style.display = "none";
-      $("errorBox2").textContent = "";
-    }
-
-    function safeText(v) {
-      return (v ?? "").toString().trim();
-    }
-
-    function setUserPill(profile) {
-      $("userPill").style.display = "flex";
-      $("userNameBadge").textContent = safeText(profile.full_name) || safeText(profile.email) || "Signed in";
-      $("roleBadge").textContent = (profile.role || "viewer").toUpperCase();
-      $("deptBadge").textContent = safeText(profile.department || "—");
-    }
-
-    function canAccessPage(profile, page) {
-      const role = (profile.role || "viewer");
-      const dept = (profile.department || "");
-
-      if (role === "admin") return true;
-      if (role === "viewer") return true;
-
-      // role === "user"
-      if (page === "fb") return dept === "F&B";
-      if (page === "outlets") return dept === "Outlets";
-      return false;
-    }
-
-    function setCardEnabled(cardEl, enabled) {
-      if (!enabled) {
-        cardEl.classList.add("disabled");
-        cardEl.setAttribute("aria-disabled", "true");
-        cardEl.tabIndex = -1;
-      } else {
-        cardEl.classList.remove("disabled");
-        cardEl.removeAttribute("aria-disabled");
-        cardEl.tabIndex = 0;
-      }
-    }
-
-    async function loadProfile(userId) {
-      const { data, error } = await window.sb
-        .from("profiles")
-        .select("user_id,email,full_name,role,department,is_active")
-        .eq("user_id", userId)
-        .single();
-
-      if (error) throw error;
-      if (!data) throw new Error("Profile not found.");
-      if (data.is_active === false) throw new Error("Your account is inactive. Contact an admin.");
-      return data;
-    }
-
-    function showHome(profile) {
-      $("loginPanel").style.display = "none";
-      $("homePanel").style.display = "block";
-      setUserPill(profile);
-
-      const fbOk = canAccessPage(profile, "fb");
-      const outOk = canAccessPage(profile, "outlets");
-
-      setCardEnabled($("cardFB"), fbOk);
-      setCardEnabled($("cardOutlets"), outOk);
-
-      // wire clicks
-      $("cardFB").onclick = () => { if (fbOk) location.href = "fb.html"; };
-      $("cardOutlets").onclick = () => { if (outOk) location.href = "outlets.html"; };
-
-      // keyboard accessibility
-      $("cardFB").onkeydown = (e) => { if (e.key === "Enter" && fbOk) location.href = "fb.html"; };
-      $("cardOutlets").onkeydown = (e) => { if (e.key === "Enter" && outOk) location.href = "outlets.html"; };
-    }
-
-    function showLogin() {
-      $("homePanel").style.display = "none";
-      $("loginPanel").style.display = "block";
-      $("userPill").style.display = "none";
-    }
-
-    // -------------------------------------------------------
-    // Auth
-    // -------------------------------------------------------
-    $("loginBtn").addEventListener("click", async () => {
-      clearErrors();
-      const email = safeText($("email").value);
-      const password = $("password").value;
-
-      if (!email || !password) return showError("Please enter email and password.");
-
-      $("loginBtn").disabled = true;
-      $("loginBtn").textContent = "Logging in...";
-
-      try {
-        const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        const user = data.user;
-        if (!user) throw new Error("Login failed. Try again.");
-
-        const profile = await loadProfile(user.id);
-        showHome(profile);
-      } catch (err) {
-        showError(err.message || "Login error. Please try again.");
-      } finally {
-        $("loginBtn").disabled = false;
-        $("loginBtn").textContent = "Login";
-      }
-    });
-
-    $("logoutBtn").addEventListener("click", async () => {
-      clearErrors();
-      try {
-        const { error } = await window.sb.auth.signOut();
-        if (error) throw error;
-        showLogin();
-      } catch (err) {
-        showError(err.message || "Logout error.", 2);
-      }
-    });
-
-    // -------------------------------------------------------
-    // On load: check existing session (also handles invite/reset URL)
-    // -------------------------------------------------------
-    (async function init() {
-      clearErrors();
-      try {
-        const { data, error } = await window.sb.auth.getSession();
-        if (error) throw error;
-
-        const session = data.session;
-        if (!session?.user) {
-          showLogin();
-          return;
+      const card = document.getElementById("cardFnbOutlets");
+      const setEnabled = (enabled) => {
+        if (!enabled) {
+          card.classList.add("disabled");
+          card.setAttribute("aria-disabled","true");
+          card.tabIndex = -1;
+        } else {
+          card.classList.remove("disabled");
+          card.removeAttribute("aria-disabled");
+          card.tabIndex = 0;
         }
+      };
 
-        const profile = await loadProfile(session.user.id);
-        showHome(profile);
+      const showLogin = () => {
+        document.getElementById("homePanel").style.display = "none";
+        document.getElementById("loginPanel").style.display = "block";
+        document.getElementById("userPill").style.display = "none";
+      };
 
-      } catch (err) {
-        showLogin();
-        showError(err.message || "Could not load session.");
-      }
+      const showHome = (profile) => {
+        document.getElementById("loginPanel").style.display = "none";
+        document.getElementById("homePanel").style.display = "block";
+        document.getElementById("userPill").style.display = "flex";
+        document.getElementById("userNameBadge").textContent = profile.full_name || profile.email || "Signed in";
+        document.getElementById("roleBadge").textContent = (profile.role || "viewer").toUpperCase();
+        document.getElementById("deptBadge").textContent = profile.department || "—";
 
-      // Keep UI in sync if auth state changes
-      window.sb.auth.onAuthStateChange(async (event, session) => {
-        try {
-          if (!session?.user) return showLogin();
-          const profile = await loadProfile(session.user.id);
+        // Access: admin + viewer always; user only if dept is F&B or Outlets
+        const ok = (profile.role === "admin") || (profile.role === "viewer") || (profile.role === "user" && (profile.department === "F&B" || profile.department === "Outlets"));
+        setEnabled(ok);
+
+        card.onclick = () => { if (ok) location.href = "fnb-outlets.html"; };
+        card.onkeydown = (e) => { if (e.key === "Enter" && ok) location.href = "fnb-outlets.html"; };
+      };
+
+      document.getElementById("loginBtn").addEventListener("click", async () => {
+        App.clearErrors();
+        const email = (document.getElementById("email").value || "").trim();
+        const password = document.getElementById("password").value || "";
+        if (!email || !password) return App.showError("Please enter email and password.", "errorBox");
+        try{
+          await App.signIn(email, password);
+          const profile = await App.requireProfile();
           showHome(profile);
-        } catch (e) {
-          showLogin();
-          showError(e.message || "Auth state error.");
+        }catch(e){
+          App.showError(e.message || "Login error.", "errorBox");
         }
       });
+
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        App.clearErrors();
+        try { await App.signOut(); showLogin(); }
+        catch(e){ App.showError(e.message || "Logout error.", "errorBox2"); }
+      });
+
+      try{
+        const profile = await App.requireProfile(false);
+        if (!profile) return showLogin();
+        showHome(profile);
+      }catch(e){
+        showLogin();
+        App.showError(e.message || "Could not load session.", "errorBox");
+      }
     })();
   </script>
 </body>
